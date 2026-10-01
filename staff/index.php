@@ -222,7 +222,7 @@ require __DIR__ . '/../includes/layout_header.php';
                 <span class="h5 mb-0 text-white-emphasis text-uppercase fw-bold"><?= e(__('ready_to_start')) ?></span>
             </div>
             <div class="dash-hero-status-meta text-muted small">
-                <?= e(__('server_time')) ?>: <span class="font-monospace text-light"><?= e(now()->format('g:i A')) ?></span>
+                <?= e(__('server_time')) ?>: <span class="font-monospace text-light" data-live-server-time><?= e(now()->format('g:i A')) ?></span>
             </div>
         </div>
         <p class="text-muted mb-4 fs-6">
@@ -305,7 +305,7 @@ require __DIR__ . '/../includes/layout_header.php';
                 <span class="h5 mb-0 text-white-emphasis text-uppercase fw-bold"><?= e(__('shift_completed')) ?></span>
             </div>
             <div class="dash-hero-status-meta text-muted small d-none d-md-block">
-                <?= e(__('server_time')) ?>: <?= e(now()->format('g:i A')) ?>
+                <?= e(__('server_time')) ?>: <span data-live-server-time><?= e(now()->format('g:i A')) ?></span>
             </div>
         </div>
 

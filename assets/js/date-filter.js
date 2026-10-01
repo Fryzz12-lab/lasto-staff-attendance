@@ -90,7 +90,7 @@
       const diffToMonday = (dayOfWeek === 0 ? -6 : 1) - dayOfWeek;
       const monday = new Date(y, m, d + diffToMonday);
       const sunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6);
-      return { from: formatYmd(monday), to: formatYmd(mode === 'leave' ? sunday : t) };
+      return { from: formatYmd(monday), to: formatYmd(sunday) };
     }
     if (key === 'next_week') {
       const dayOfWeek = t.getDay();
@@ -124,12 +124,9 @@
       return { from: formatYmd(new Date(y, m, d - 29)), to: formatYmd(t) };
     }
     if (key === 'this_month') {
-      if (mode === 'leave') {
-        const first = new Date(y, m, 1);
-        const last = new Date(y, m + 1, 0);
-        return { from: formatYmd(first), to: formatYmd(last) };
-      }
-      return { from: formatYmd(new Date(y, m, 1)), to: formatYmd(t) };
+      const first = new Date(y, m, 1);
+      const last = new Date(y, m + 1, 0);
+      return { from: formatYmd(first), to: formatYmd(last) };
     }
     if (key === 'last_month') {
       const first = new Date(y, m - 1, 1);

@@ -66,8 +66,10 @@ $workDaysArr = array_map('intval', explode(',', (string) ($schedule['work_days']
 
 // Human-friendly working days label
 $workDayNames = array_map(fn($d) => weekday_name($d, lang_current()), $workDaysArr);
-if (count($workDaysArr) === 6 && $offDayNum === 0) {
-    $workDaysSummary = weekday_name(1, lang_current()) . ' — ' . weekday_name(6, lang_current());
+if (count($workDaysArr) === 6 && !in_array($offDayNum, $workDaysArr, true)) {
+    $firstWorkDay = ($offDayNum + 1) % 7;
+    $lastWorkDay = ($offDayNum + 6) % 7;
+    $workDaysSummary = weekday_name($firstWorkDay, lang_current()) . ' — ' . weekday_name($lastWorkDay, lang_current());
 } elseif (count($workDaysArr) === 5 && !in_array(0, $workDaysArr, true) && !in_array(6, $workDaysArr, true)) {
     $workDaysSummary = weekday_name(1, lang_current()) . ' — ' . weekday_name(5, lang_current());
 } else {

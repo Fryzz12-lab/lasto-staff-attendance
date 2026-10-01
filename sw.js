@@ -3,7 +3,7 @@
  * Strategy: Network-First for dynamic PHP pages & APIs; Cache-First for static assets.
  */
 
-const CACHE_NAME = 'sas-static-v1';
+const CACHE_NAME = 'sas-static-v2';
 const STATIC_ASSETS = [
   './manifest.webmanifest',
   './assets/css/app.css',
@@ -50,6 +50,8 @@ self.addEventListener('fetch', (event) => {
   // Dynamic pages (*.php), API requests, or navigation MUST be Network-First
   // This guarantees live clock times, fresh CSRF tokens, and zero stale attendance states.
   const isDynamic = request.mode === 'navigate' ||
+                    request.destination === 'document' ||
+                    (request.headers.get('Accept') || '').includes('text/html') ||
                     url.pathname.endsWith('.php') ||
                     url.pathname.includes('/api/');
 

@@ -150,15 +150,16 @@
   async function apiPost(path, data) {
     showLoading(true);
     try {
+      const token = document.querySelector('meta[name="csrf-token"]')?.content || window.CSRF_TOKEN || '';
       const res = await fetch((window.APP_BASE || '') + path, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Requested-With': 'XMLHttpRequest',
-          'X-CSRF-Token': window.CSRF_TOKEN || '',
+          'X-CSRF-Token': token,
           Accept: 'application/json',
         },
-        body: JSON.stringify(Object.assign({}, data || {}, { csrf_token: window.CSRF_TOKEN })),
+        body: JSON.stringify(Object.assign({}, data || {}, { csrf_token: token })),
       });
       const json = await res.json().catch(() => ({ success: false, message: 'Unexpected server response.' }));
       return json;
@@ -328,13 +329,7 @@
           if (action === 'clock_in') earthPulse('in');
           else if (action === 'clock_out') earthPulse('out');
           showToast(result.message || 'Done', result.exceeded ? 'warning' : 'success');
-          setTimeout(() => {
-            if (window.ChronosSpa && typeof window.ChronosSpa.reload === 'function') {
-              window.ChronosSpa.reload();
-            } else {
-              window.location.reload();
-            }
-          }, 500);
+          setTimeout(() => window.location.reload(), 500);
         } else {
           showToast((result && result.message) || 'Action failed', 'danger');
           btn.disabled = false;
@@ -387,6 +382,15 @@
   }
 
   function tickLiveTimers() {
+    const clock = document.getElementById('chronoClock');
+    const serverIso = clock?.getAttribute('data-server-now');
+    const serverMs = serverIso ? Date.parse(serverIso) : NaN;
+    const displayedNow = Number.isNaN(serverMs) ? new Date() : new Date(Date.now() + serverMs - (window.__SAS_CLOCK_BOOT__ || Date.now()));
+    document.querySelectorAll('[data-live-server-time]').forEach((el) => {
+      el.textContent = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Kuala_Lumpur', hour: 'numeric', minute: '2-digit', hour12: true,
+      }).format(displayedNow);
+    });
     document.querySelectorAll('[data-live-start]').forEach((el) => {
       const start = el.getAttribute('data-live-start');
       if (!start) return;
@@ -417,6 +421,7 @@
 
   if (!window.__SAS_LIVE_TIMER__) {
     window.__SAS_LIVE_TIMER__ = true;
+    window.__SAS_CLOCK_BOOT__ = Date.now();
     tickLiveTimers();
     setInterval(tickLiveTimers, 1000);
   }

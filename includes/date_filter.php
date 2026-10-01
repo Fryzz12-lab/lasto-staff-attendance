@@ -154,8 +154,8 @@ function date_preset_active_key(
                 $t->modify('-1 day')->format('Y-m-d'),
                 $t->modify('-1 day')->format('Y-m-d'),
             ],
-            'this_week' => [$t->modify('monday this week')->format('Y-m-d'), $t->format('Y-m-d')],
-            'this_month' => [$t->modify('first day of this month')->format('Y-m-d'), $t->format('Y-m-d')],
+            'this_week' => [$t->modify('monday this week')->format('Y-m-d'), $t->modify('sunday this week')->format('Y-m-d')],
+            'this_month' => [$t->modify('first day of this month')->format('Y-m-d'), $t->modify('last day of this month')->format('Y-m-d')],
             'last_month' => [
                 $t->modify('first day of last month')->format('Y-m-d'),
                 $t->modify('last day of last month')->format('Y-m-d'),

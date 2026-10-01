@@ -471,15 +471,15 @@ a:hover {
 @media (min-width: 768px) {
   .staff-leave-history-table {
     width: 100%;
-    min-width: 0;
+    min-width: 920px;
     table-layout: fixed;
   }
 
-  .staff-leave-history-table :is(th, td):nth-child(1) { width: 13%; }
-  .staff-leave-history-table :is(th, td):nth-child(2) { width: 12%; }
-  .staff-leave-history-table :is(th, td):nth-child(3) { width: 49%; }
-  .staff-leave-history-table :is(th, td):nth-child(4) { width: 10%; }
-  .staff-leave-history-table :is(th, td):nth-child(5) { width: 16%; }
+  .staff-leave-history-table :is(th, td):nth-child(1) { width: 14%; }
+  .staff-leave-history-table :is(th, td):nth-child(2) { width: 20%; }
+  .staff-leave-history-table :is(th, td):nth-child(3) { width: 29%; }
+  .staff-leave-history-table :is(th, td):nth-child(4) { width: 15%; }
+  .staff-leave-history-table :is(th, td):nth-child(5) { width: 22%; }
 
   .staff-leave-history-table td:nth-child(2),
   .staff-leave-history-table td:nth-child(3),
