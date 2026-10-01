@@ -1,0 +1,28 @@
+# Production Database Handoff
+
+## Fresh installation
+
+Use a blank database created in cPanel. Import in this order:
+
+1. `database/schema.sql`
+2. `database/seed.sql`
+
+`schema.sql` drops application tables. Never run it against a live database.
+
+## Existing installation
+
+Apply only the migration files required by the current database version, one at a time, after taking a backup. Review each migration before running it. The migration files are in `database/`.
+
+## Before go-live
+
+- Create a database backup with `php cli/maintenance.php backup`.
+- Copy the generated SQL outside the web root.
+- Restore the backup into a separate empty database.
+- Compare users, attendance, breaks, leave requests, corrections, and audit-log counts.
+- Remove UAT accounts with `php cli/seed_uat.php --remove` only after browser UAT is complete.
+- Verify no `uat_` username remains and delete `storage/uat-manifest.json`.
+
+## Initial administrator
+
+The first administrator must use a unique password and complete security-question setup. Do not distribute the seeded demo credentials. Keep at least one second trusted admin account or document the admin-assisted recovery procedure.
+

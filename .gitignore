@@ -1,0 +1,10 @@
+uploads/profiles/*
+!uploads/profiles/.gitkeep
+!uploads/profiles/.htaccess
+.env
+*.log
+.DS_Store
+storage/*
+!storage/.htaccess
+scratch/*
+!scratch/.htaccess

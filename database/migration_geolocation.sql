@@ -1,0 +1,2 @@
+-- Retired: geolocation collection has been removed.
+-- Existing nullable location columns are unused and retained to preserve historical data.
