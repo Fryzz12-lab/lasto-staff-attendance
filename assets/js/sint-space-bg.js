@@ -359,7 +359,6 @@
   }
 
   function initSintSpaceBackground() {
-    if (window.matchMedia('(max-width: 767.98px)').matches) return;
     if (window.__CHRONOS_BG_RUNTIME__) return;
 
     const host = document.getElementById('chronoAmbient');
@@ -710,18 +709,64 @@
       currentTheme = theme === 'day' ? 'day' : 'night';
       host.classList.toggle('chrono-ambient--day', currentTheme === 'day');
       const day = currentTheme === 'day';
-      const mul = day ? 0.62 : 1;
-      earthMat.opacity = base.earthOp * (day ? 0.78 : 1);
+      const mul = day ? 0.72 : 1;
+      earthMat.opacity = base.earthOp * (day ? 0.82 : 1);
       wire.material.opacity = base.wireOp * mul;
-      atmos.material.opacity = base.atmosOp * (day ? 0.85 : 1);
-      atmosMagenta.material.opacity = day ? 0.025 : base.magentaOp;
-      starsFar.material.opacity = base.starsFar * (day ? 0.22 : 1);
-      starsMid.material.opacity = base.starsMid * (day ? 0.18 : 1);
-      if (constellations.userData.links) {
-        constellations.userData.links.material.opacity = base.links * (day ? 0.4 : 1);
+      atmos.material.opacity = base.atmosOp * (day ? 0.88 : 1);
+      atmosMagenta.material.opacity = day ? 0.03 : base.magentaOp;
+
+      // Ensure stars and constellations are clearly visible in day and night modes
+      if (day) {
+        starsFar.material.color.setHex(0x0284c7);
+        starsMid.material.color.setHex(0x0369a1);
+        starsFar.material.blending = THREE.NormalBlending;
+        starsMid.material.blending = THREE.NormalBlending;
+        starsFar.material.opacity = 0.82;
+        starsMid.material.opacity = 0.88;
+        starsFar.material.size = 2.0;
+        starsMid.material.size = 2.6;
+      } else {
+        starsFar.material.color.setHex(0xe8f0ff);
+        starsMid.material.color.setHex(0xd6e4ff);
+        starsFar.material.blending = THREE.AdditiveBlending;
+        starsMid.material.blending = THREE.AdditiveBlending;
+        starsFar.material.opacity = base.starsFar;
+        starsMid.material.opacity = base.starsMid;
+        starsFar.material.size = 1.35;
+        starsMid.material.size = 1.9;
       }
+      starsFar.material.needsUpdate = true;
+      starsMid.material.needsUpdate = true;
+
+      if (constellations.userData.links) {
+        if (day) {
+          constellations.userData.links.material.color.setHex(0x0f766e);
+          constellations.userData.links.material.blending = THREE.NormalBlending;
+          constellations.userData.links.material.opacity = 0.45;
+        } else {
+          constellations.userData.links.material.color.setHex(0x00ffe0);
+          constellations.userData.links.material.blending = THREE.AdditiveBlending;
+          constellations.userData.links.material.opacity = base.links;
+        }
+        constellations.userData.links.material.needsUpdate = true;
+      }
+
+      const nodes = constellations.userData.nodes || [];
+      nodes.forEach((node) => {
+        if (node.sprite) {
+          node.sprite.material.blending = day ? THREE.NormalBlending : THREE.AdditiveBlending;
+          node.sprite.material.color.setHex(day ? 0x0284c7 : 0x88aacc);
+          node.sprite.material.needsUpdate = true;
+        }
+        if (node.reticle) {
+          node.reticle.material.blending = day ? THREE.NormalBlending : THREE.AdditiveBlending;
+          node.reticle.material.color.setHex(day ? 0x0f766e : 0x66fff0);
+          node.reticle.material.needsUpdate = true;
+        }
+      });
+
       if (revealed) {
-        renderer.domElement.style.opacity = day ? '0.55' : '1';
+        renderer.domElement.style.opacity = day ? '0.85' : '1';
       }
     }
 
@@ -756,16 +801,16 @@
       starsFar.rotation.copy(constellations.rotation);
       starsMid.rotation.copy(constellations.rotation);
 
-      const dayMul = currentTheme === 'day' ? 0.4 : 1;
+      const dayMul = currentTheme === 'day' ? 0.8 : 1;
       const nodes = constellations.userData.nodes || [];
       nodes.forEach((node, i) => {
         const breath = Math.sin(t * 1.2 + i * 0.5) * 0.04;
         const op = (node.baseOpacity + breath) * dayMul;
         if (node.sprite) {
-          node.sprite.material.opacity = Math.min(1, Math.max(0.05, op));
+          node.sprite.material.opacity = Math.min(1, Math.max(0.08, op));
         }
         if (node.reticle) {
-          node.reticle.material.opacity = 0.12 * dayMul;
+          node.reticle.material.opacity = (currentTheme === 'day' ? 0.25 : 0.12);
         }
       });
 
@@ -807,17 +852,31 @@
       saveTick += 1;
       if (saveTick % 30 === 0) persist();
 
-      raf = requestAnimationFrame(frame);
+      if (isGlobeEnabled) {
+        raf = requestAnimationFrame(frame);
+      } else {
+        raf = null;
+      }
     }
 
-    raf = requestAnimationFrame(frame);
+    if (isGlobeEnabled) {
+      raf = requestAnimationFrame(frame);
+    } else {
+      raf = null;
+      if (host) host.style.display = 'none';
+    }
 
     window.addEventListener('pagehide', persist);
     window.addEventListener('beforeunload', persist);
 
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden) cancelAnimationFrame(raf);
-      else raf = requestAnimationFrame(frame);
+      if (document.hidden) {
+        if (raf) cancelAnimationFrame(raf);
+        raf = null;
+      } else if (isGlobeEnabled && !raf) {
+        lastNow = performance.now();
+        raf = requestAnimationFrame(frame);
+      }
     });
 
     window.__CHRONOS_BG_RUNTIME__ = {
@@ -825,6 +884,17 @@
       alive: true,
       pulse: triggerPulse,
       setTheme: applyThemeVisuals,
+      setEnabled: function (val) {
+        isGlobeEnabled = val !== false;
+        if (host) host.style.display = isGlobeEnabled ? '' : 'none';
+        if (isGlobeEnabled && !raf) {
+          lastNow = performance.now();
+          raf = requestAnimationFrame(frame);
+        } else if (!isGlobeEnabled && raf) {
+          cancelAnimationFrame(raf);
+          raf = null;
+        }
+      },
     };
 
     // Apply queued theme / pulse
@@ -838,6 +908,28 @@
     if (pendingPulse) {
       triggerPulse(pendingPulse);
       pendingPulse = null;
+    }
+  }
+
+  let isGlobeEnabled = true;
+  try {
+    const saved = localStorage.getItem('chrono_globe');
+    if (saved === 'off') {
+      isGlobeEnabled = false;
+    }
+  } catch (e) {}
+
+  function setEnabled(enabled) {
+    isGlobeEnabled = enabled !== false;
+    try {
+      localStorage.setItem('chrono_globe', isGlobeEnabled ? 'on' : 'off');
+    } catch (e) {}
+    const host = document.getElementById('chronoAmbient');
+    if (host) {
+      host.style.display = isGlobeEnabled ? '' : 'none';
+    }
+    if (window.__CHRONOS_BG_RUNTIME__ && typeof window.__CHRONOS_BG_RUNTIME__.setEnabled === 'function') {
+      window.__CHRONOS_BG_RUNTIME__.setEnabled(isGlobeEnabled);
     }
   }
 
@@ -860,5 +952,19 @@
     }
   }
 
-  window.ChronosSpaceBg = { init: initSintSpaceBackground, pulse: pulse, setTheme: setTheme };
+  window.ChronosSpaceBg = {
+    init: initSintSpaceBackground,
+    pulse: pulse,
+    setTheme: setTheme,
+    setEnabled: setEnabled,
+    isEnabled: function () {
+      return isGlobeEnabled;
+    },
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSintSpaceBackground);
+  } else {
+    initSintSpaceBackground();
+  }
 })();

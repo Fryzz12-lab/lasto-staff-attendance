@@ -144,11 +144,17 @@
     initCardEnergy();
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      initAmbient();
+      initChronometer();
+      refreshContent();
+    });
+  } else {
     initAmbient();
     initChronometer();
     refreshContent();
-  });
+  }
 
   window.ChronosUI = { refreshContent };
 })();

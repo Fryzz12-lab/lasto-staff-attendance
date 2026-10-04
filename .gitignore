@@ -2,8 +2,10 @@ uploads/profiles/*
 !uploads/profiles/.gitkeep
 !uploads/profiles/.htaccess
 .env
+config/local.php
 *.log
 .DS_Store
+deployment-artifacts/
 storage/*
 !storage/.htaccess
 scratch/*

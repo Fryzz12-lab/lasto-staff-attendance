@@ -1,4 +1,18 @@
 Options -Indexes
-<FilesMatch "(^\.|\.(sql|log|md|json|lock|bak)$)">
+DirectoryIndex index.php
+
+<FilesMatch "(^\.|\.(sql|log|md|json|lock|bak|dist)$)">
     Require all denied
 </FilesMatch>
+<Files "local.php">
+    Require all denied
+</Files>
+<Files "local.php.example">
+    Require all denied
+</Files>
+
+RewriteEngine On
+RewriteCond %{HTTP_HOST} ^attendance\.lastotechnology\.my$ [NC]
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !https
+RewriteRule ^ https://attendance.lastotechnology.my%{REQUEST_URI} [L,R=301]

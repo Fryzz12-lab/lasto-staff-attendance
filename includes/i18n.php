@@ -59,7 +59,7 @@ function lang_switcher(): string
     unset($query['lang']);
 
     $html = '<div class="lang-switcher dropdown" data-chrono-lang="' . e($current) . '">';
-    $html .= '<button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">' . e($langs[$current]) . '</button>';
+    $html .= '<button class="btn btn-sm btn-outline-secondary dropdown-toggle lang-switcher__btn" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-translate me-1 opacity-75"></i>' . e($langs[$current]) . '</button>';
     $html .= '<ul class="dropdown-menu dropdown-menu-end">';
     foreach ($langs as $code => $label) {
         $q = $query;

@@ -150,7 +150,7 @@ require __DIR__ . '/../includes/layout_header.php';
 ?>
 
 <!-- 1. TOP: SINGLE CLEAN TITLE (No duplicate "My Schedule" heading) -->
-<div class="schedule-top-bar mb-3">
+<div class="schedule-top-bar mb-3 d-none d-md-block">
     <h1 class="h4 mb-1 text-white fw-bold d-flex align-items-center gap-2">
         <i class="bi bi-calendar3 text-accent"></i> <?= e(__('my_work_week')) ?>
     </h1>
@@ -235,11 +235,6 @@ require __DIR__ . '/../includes/layout_header.php';
             </div>
         </div>
         <div class="schedule-week-nav d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-2">
-            <?php if ($weekOffset !== 0): ?>
-                <a href="?week_offset=0" class="btn btn-sm btn-accent schedule-current-week-link text-nowrap w-100 w-md-auto">
-                    <i class="bi bi-calendar3 me-1"></i><?= e(__('back_to_current_week')) ?>
-                </a>
-            <?php endif; ?>
             <div class="btn-group w-100 w-md-auto" role="group" aria-label="<?= e(__('week_navigation')) ?>">
                 <a href="?week_offset=<?= $weekOffset - 1 ?>" class="btn btn-sm btn-outline-secondary text-nowrap <?= $weekOffset <= -12 ? 'disabled' : '' ?>" <?= $weekOffset <= -12 ? 'aria-disabled="true" tabindex="-1"' : '' ?>>
                     <i class="bi bi-chevron-left me-1"></i><?= e(__('earlier_week')) ?>
@@ -248,6 +243,11 @@ require __DIR__ . '/../includes/layout_header.php';
                     <?= e(__('later_week')) ?><i class="bi bi-chevron-right ms-1"></i>
                 </a>
             </div>
+            <?php if ($weekOffset !== 0): ?>
+                <a href="?week_offset=0" class="btn btn-sm btn-accent schedule-current-week-link text-nowrap w-100 w-md-auto">
+                    <i class="bi bi-calendar3 me-1"></i><?= e(__('back_to_current_week')) ?>
+                </a>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -366,9 +366,9 @@ require __DIR__ . '/../includes/layout_header.php';
         </div>
 
         <!-- Weekly Summary Footer Bar -->
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 pt-3 mt-3 border-top">
+        <div class="schedule-week-summary d-flex flex-wrap justify-content-between align-items-center gap-3 pt-3 mt-3 border-top">
             <div class="d-flex align-items-center gap-2">
-                <span class="text-muted"><?= e(__('scheduled_target')) ?>:</span>
+                <span class="text-muted"><span class="d-md-none"><?= e(__('scheduled_hours')) ?></span><span class="d-none d-md-inline"><?= e(__('scheduled_target')) ?></span>:</span>
                 <strong class="text-white font-mono fs-6"><?= e(format_minutes($totalScheduledMins)) ?></strong>
             </div>
             <div class="d-flex align-items-center gap-2">
@@ -387,7 +387,7 @@ require __DIR__ . '/../includes/layout_header.php';
                 </strong>
             </div>
             <div class="d-flex align-items-center gap-2">
-                <span class="text-muted"><?= e(__('st_completed')) ?>:</span>
+                <span class="text-muted"><span class="d-md-none"><?= e(__('days_completed')) ?></span><span class="d-none d-md-inline"><?= e(__('st_completed')) ?></span>:</span>
                 <strong class="text-teal font-mono fs-6"><?= e($completedCount === 1 ? __('schedule_day_single', ['count' => $completedCount]) : __('schedule_days_count', ['count' => $completedCount])) ?></strong>
             </div>
         </div>

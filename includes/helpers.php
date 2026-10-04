@@ -19,8 +19,10 @@ function normalize_full_name(string $value): string
 
 function valid_account_email(string $value): bool
 {
-    return filter_var($value, FILTER_VALIDATE_EMAIL) !== false
-        && preg_match('/\A[^\s@]+@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+com\z/i', $value) === 1;
+    if (str_contains($value, ' ') || str_contains($value, '..')) {
+        return false;
+    }
+    return filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
 }
 
 function normalize_account_phone(string $value): string

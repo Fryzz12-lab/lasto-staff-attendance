@@ -20,7 +20,7 @@ if (is_post()) {
             flash_set('warning', 'Set a real email address and configure mail delivery first.');
         } else {
             $token = recovery_issue_token($userId, 'verify_email');
-            $sent = recovery_send_link((string) $user['email'], $token, 'verify_email');
+            $sent = recovery_send_link((string) $user['email'], $token, 'verify_email', (string) $user['full_name']);
             flash_set($sent ? 'success' : 'danger', $sent ? 'Email verification sent.' : 'Email verification could not be sent.');
         }
         redirect('/admin/profile.php');
@@ -207,6 +207,23 @@ require __DIR__ . '/../includes/layout_header.php';
             <?php foreach (['new_leave_request' => 'New leave request', 'new_wfh_request' => 'New WFH request', 'new_correction' => 'New attendance correction', 'missing_clock_out' => 'Missing clock-out', 'staff_setup' => 'Staff account setup completed', 'job_failure' => 'Backup or scheduled job failure'] as $key => $notice): ?>
                 <label class="notification-preference"><span><?= e(__('notice_' . $key)) ?></span><input type="checkbox" class="notification-option" data-notification-key="<?= e($key) ?>"><span class="notification-checkbox" aria-hidden="true">✓</span></label>
             <?php endforeach; ?>
+        </div>
+    </div>
+<div class="card-soft staff-profile-card mt-3">
+    <div class="card-header"><i class="bi bi-sliders me-1"></i> <?= e(__('display_preferences')) ?></div>
+    <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+            <div>
+                <strong class="d-block text-white-emphasis"><i class="bi bi-globe2 me-1 text-accent"></i> <?= e(__('globe_3d')) ?></strong>
+                <p class="form-hint mb-0"><?= e(__('globe_3d_hint')) ?></p>
+            </div>
+            <div>
+                <label class="notification-preference m-0" data-label-on="<?= e(__('globe_on')) ?>" data-label-off="<?= e(__('globe_off')) ?>">
+                    <span class="globe-profile-label"><?= e(__('globe_on')) ?></span>
+                    <input type="checkbox" id="globeProfileToggleAdmin" class="notification-toggle globe-profile-toggle" checked>
+                    <span class="notification-switch" aria-hidden="true"></span>
+                </label>
+            </div>
         </div>
     </div>
 </div>

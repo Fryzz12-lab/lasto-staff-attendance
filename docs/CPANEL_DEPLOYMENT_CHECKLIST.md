@@ -1,80 +1,66 @@
 # cPanel Production Deployment Checklist
 
-This checklist is for the internet-facing deployment of the Staff Attendance System. Use a temporary subdomain for staging before changing the live domain.
+Target for this install:
+
+- Public URL: `https://attendance.lastotechnology.my/`
+- Document root: `/home/lgsubsc1/attendance.lastotechnology.my`
+- Do not import into any other database on this cPanel account.
 
 ## Hosting requirements
 
-- PHP 8.0 or later
+- PHP 8.0 or later (MultiPHP: select 8.1+ if available)
 - PHP extensions: `pdo_mysql`, `mbstring`, `fileinfo`, `openssl`
-- MySQL/MariaDB with permission to create the application database
-- HTTPS certificate and forced HTTPS redirect
-- cPanel Cron Jobs
-- Writable `storage/` and `uploads/profiles/` directories
-- Apache rules enabled (`.htaccess` support)
+- A **new empty** MySQL/MariaDB database and a dedicated user (not `root`)
+- AutoSSL / HTTPS on this subdomain
+- Cron Jobs
+- Writable `storage/` and `uploads/profiles/`
+- Apache `.htaccess` honoured
 
-## cPanel values to obtain
+## Configuration on the server
 
-- Domain and document root
-- cPanel username and application path
-- PHP version and selected extensions
-- Database name, database user, password, host and port
-- Server timezone (the application policy is `Asia/Kuala_Lumpur`)
-- Cron PHP binary path
-- Backup and restore method
-
-## Application configuration
-
-Set these as cPanel environment variables if the host supports them, or in the host's protected configuration mechanism:
+Do **not** rely on cPanel “environment variables” alone. Cron does not read `.htaccess` `SetEnv`. After upload, copy `config/local.php.example` to `config/local.php` **on the server** and fill the real database name, user, and password from MySQL Databases.
 
 ```text
 LASTO_APP_ENV=production
-LASTO_BASE_PATH=/              # use the real subdirectory if not at the domain root
-LASTO_DB_HOST=127.0.0.1
+LASTO_BASE_PATH=                 (empty: site is at domain root)
+LASTO_DB_HOST=localhost
 LASTO_DB_PORT=3306
-LASTO_DB_NAME=<production database>
-LASTO_DB_USER=<dedicated database user>
+LASTO_DB_NAME=<cPanel database, often prefixed lgsubsc1_>
+LASTO_DB_USER=<cPanel database user>
 LASTO_DB_PASS=<long random password>
-LASTO_PUBLIC_ORIGIN=https://<real-domain>
+LASTO_PUBLIC_ORIGIN=https://attendance.lastotechnology.my
 ```
 
-Do not use the MySQL `root` account. Do not place secrets in a committed file.
+Do not commit `config/local.php`. Do not use the MySQL `root` account.
 
 ## Upload and protect
 
-1. Upload the application files using File Manager or SFTP.
-2. Keep `config`, `includes`, `database`, `cli`, `tests`, `docs`, `scratch`, and `storage` inaccessible over HTTP.
-3. Keep `uploads/profiles` writable but prevent PHP execution there.
-4. Keep backups outside the document root.
-5. Confirm `.htaccess` rules are honored by requesting protected paths and expecting denial.
+1. Upload only the paths listed in the deployment notes (see `deploy-exclude.txt`).
+2. Confirm HTTP 403 for `/config/`, `/includes/`, `/database/`, `/cli/`, `/storage/`, `/docs/`, `/tests/`.
+3. Confirm `/uploads/profiles/` cannot execute PHP.
+4. Keep SQL backups **outside** this document root (for example `/home/lgsubsc1/backups/attendance/`).
 
 ## Database
 
-1. Create a blank production database and dedicated user.
-2. Import `database/schema.sql` only into the blank database.
-3. Import `database/seed.sql` only for the initial application policy/settings.
-4. Do not import UAT accounts or `storage/uat-manifest.json`.
-5. Create the first real admin account, change its password, and create security questions.
+1. Create a blank database in cPanel MySQL Databases. Do not reuse WordPress or other sites’ databases.
+2. With that database selected in phpMyAdmin, import `database/cpanel_schema.sql`, then `database/cpanel_seed.sql`.
+3. Keep both import files on your computer; they do not belong in the public document root. Check that the selected database has zero tables before importing. The cPanel schema now fails if tables already exist.
+4. Do **not** import `database/schema.sql` (it issues `CREATE DATABASE staff_attendance`) or `database/seed.sql` (demo accounts).
+5. On the server, run `php cli/create_admin.php --username=... --name='...' --email=...` and enter the password when prompted. Do not put a password in the command line. Use a private terminal, since input masking depends on the terminal's `stty` support.
+6. Sign in and set security questions.
 
 ## Cron
 
-Create a daily cPanel Cron Job at 00:05 Malaysia time. Use the host's PHP binary and absolute application path:
-
 ```text
-05 00 * * * /usr/local/bin/php /home/CPANEL_USER/path-to-app/cli/daily_attendance.php >> /home/CPANEL_USER/logs/attendance-cron.log 2>&1
+05 00 * * * /usr/local/bin/php /home/lgsubsc1/attendance.lastotechnology.my/cli/daily_attendance.php >> /home/lgsubsc1/logs/attendance-cron.log 2>&1
 ```
 
-Replace both paths after checking cPanel's actual PHP binary and home directory. Run a manual catch-up test with `--from YYYY-MM-DD --to YYYY-MM-DD` and retain the exit log.
+Confirm the PHP binary path in cPanel. `config/local.php` must exist so Cron uses the same database. Test once with `--from YYYY-MM-DD --to YYYY-MM-DD`.
 
 ## Go-live checks
 
-- HTTPS works and HTTP redirects to HTTPS.
-- `php cli/preflight.php` has no failures.
-- No active account uses `Admin@123` or `Staff@123`.
-- No `uat_` users remain.
-- UAT manifest is removed from `storage/`.
-- Backup is copied outside the web root and restored into a separate empty database.
-- Admin-only approval for leave and corrections is verified.
-- English, Bahasa Melayu, and Chinese are checked on desktop and mobile.
-- PDF/CSV reports download correctly.
-- Login, logout, session expiry, password setup, and security-question recovery work.
-
+- HTTPS works; HTTP redirects to HTTPS for this host.
+- `php cli/preflight.php` has no FAIL.
+- No `Admin@123` / `Staff@123` / `uat_` accounts.
+- Login, logout, clock in/out, leave, corrections, PDF/CSV, and mobile layout checked.
+- Login rate limiting is configured at the server/proxy (the app has no persistent brute-force lock).

@@ -1,0 +1,24 @@
+<?php
+/**
+ * Copy this file to config/local.php on the cPanel server only.
+ * Do not commit config/local.php. Do not upload a copy that contains real passwords
+ * from your laptop. Fill values from cPanel → MySQL Databases.
+ *
+ * Apache and Cron both load this file through config/config.php, so secrets work
+ * for the website and for cli/daily_attendance.php.
+ */
+declare(strict_types=1);
+
+return [
+    'LASTO_APP_ENV' => 'production',
+    'LASTO_BASE_PATH' => '',
+    'LASTO_DB_HOST' => 'localhost',
+    'LASTO_DB_PORT' => '3306',
+    'LASTO_DB_NAME' => 'REPLACE_WITH_CPANEL_DATABASE_NAME',
+    'LASTO_DB_USER' => 'REPLACE_WITH_CPANEL_DATABASE_USER',
+    'LASTO_DB_PASS' => 'REPLACE_WITH_LONG_RANDOM_PASSWORD',
+    'LASTO_PUBLIC_ORIGIN' => 'https://attendance.lastotechnology.my',
+    // Optional: enable PHP mail() after the host mailbox is tested.
+    // 'LASTO_MAIL_TRANSPORT' => 'php_mail',
+    // 'LASTO_MAIL_FROM' => 'noreply@lastotechnology.my',
+];

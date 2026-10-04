@@ -11,7 +11,6 @@
         </footer>
     </div>
 </div>
-<div class="sidebar-backdrop d-lg-none" id="sidebarBackdrop"></div>
 <?php else: ?>
 </div>
 <?php endif; ?>

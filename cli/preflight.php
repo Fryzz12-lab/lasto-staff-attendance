@@ -13,11 +13,14 @@ foreach (['pdo_mysql', 'mbstring', 'fileinfo', 'openssl'] as $extension) {
     $report(extension_loaded($extension), 'PHP extension: ' . $extension);
 }
 $report(APP_ENV === 'production', 'LASTO_APP_ENV=production');
+$report(BASE_PATH === '', 'BASE_PATH is empty (application at domain root)');
 $report(DB_USER !== 'root' && DB_PASS !== '', 'Dedicated database account with a non-empty password');
 $origin = parse_url((string) getenv('LASTO_PUBLIC_ORIGIN'));
 $report(is_array($origin) && ($origin['scheme'] ?? '') === 'https' && !empty($origin['host'])
     && !isset($origin['user']) && !isset($origin['pass']) && !isset($origin['query']) && !isset($origin['fragment'])
     && in_array($origin['path'] ?? '', ['', '/'], true), 'Public HTTPS origin configured');
+$report(($origin['host'] ?? '') === 'attendance.lastotechnology.my', 'Public origin host is attendance.lastotechnology.my');
+$report(is_file(__DIR__ . '/../config/local.php') || (getenv('LASTO_DB_PASS') !== false && getenv('LASTO_DB_PASS') !== ''), 'Secrets provided via config/local.php or environment');
 foreach (['storage', 'uploads/profiles'] as $directory) {
     $report(is_dir(__DIR__ . '/../' . $directory) && is_writable(__DIR__ . '/../' . $directory), 'Writable directory: ' . $directory);
 }

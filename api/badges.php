@@ -16,6 +16,9 @@ if (!is_logged_in()) {
 }
 
 $user = current_user();
+// Polling is read-only; release the PHP session lock before database work so
+// a page navigation or login from the same browser is not queued behind it.
+session_write_close();
 $badges = chrono_badge_counts($user);
 
 json_response([

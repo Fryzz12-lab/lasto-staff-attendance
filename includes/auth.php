@@ -15,13 +15,18 @@ function is_request_secure(): bool
         || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
 }
 
+function cookie_is_secure(): bool
+{
+    return APP_ENV === 'production' || is_request_secure();
+}
+
 function start_app_session(): void
 {
     if (session_status() === PHP_SESSION_ACTIVE) {
         return;
     }
     session_name(SESSION_NAME);
-    $isSecure = is_request_secure();
+    $isSecure = cookie_is_secure();
     session_set_cookie_params([
         'lifetime' => 0,
         'path'     => '/',
@@ -172,7 +177,7 @@ function create_remember_token(int $userId): void
         $stmt->execute([$userId, $selector, $tokenHash, $expiresAt]);
 
         $cookieVal = $selector . ':' . $validator;
-        $isSecure = is_request_secure();
+        $isSecure = cookie_is_secure();
         setcookie('sas_remember', $cookieVal, [
             'expires'  => time() + (30 * 86400),
             'path'     => '/',
@@ -240,7 +245,7 @@ function check_remember_token(): ?array
         $upd->execute([$newTokenHash, (int) $row['token_id']]);
 
         $newCookieVal = $selector . ':' . $newValidator;
-        $isSecure = is_request_secure();
+        $isSecure = cookie_is_secure();
         setcookie('sas_remember', $newCookieVal, [
             'expires'  => time() + (30 * 86400),
             'path'     => '/',
@@ -268,7 +273,7 @@ function clear_remember_cookie(): void
             } catch (Throwable) {}
         }
     }
-    $isSecure = is_request_secure();
+    $isSecure = cookie_is_secure();
     setcookie('sas_remember', '', [
         'expires'  => time() - 3600,
         'path'     => '/',

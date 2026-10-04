@@ -4,10 +4,10 @@
 
 Use a blank database created in cPanel. Import in this order:
 
-1. `database/schema.sql`
-2. `database/seed.sql`
+1. `database/cpanel_schema.sql`
+2. `database/cpanel_seed.sql`
 
-`schema.sql` drops application tables. Never run it against a live database.
+Select the newly created, empty attendance database in phpMyAdmin before either import. `schema.sql` is for local XAMPP development and drops application tables. Never run it on the hosting account.
 
 ## Existing installation
 
@@ -25,4 +25,3 @@ Apply only the migration files required by the current database version, one at 
 ## Initial administrator
 
 The first administrator must use a unique password and complete security-question setup. Do not distribute the seeded demo credentials. Keep at least one second trusted admin account or document the admin-assisted recovery procedure.
-

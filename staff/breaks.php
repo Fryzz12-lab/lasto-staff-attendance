@@ -42,7 +42,7 @@ $bodyClass = 'staff-history-page';
 require __DIR__ . '/../includes/layout_header.php';
 ?>
 
-<h2 class="h4 mb-3"><?= e(__('my_breaks')) ?></h2>
+<h2 class="h4 mb-3 d-none d-lg-block"><?= e(__('my_breaks')) ?></h2>
 
 <div class="card-soft attendance-filter-card mb-3">
     <div class="card-body">
@@ -108,28 +108,26 @@ require __DIR__ . '/../includes/layout_header.php';
             <!-- Mobile Stacked Card Feed (< 768px): Only affects mobile -->
             <div class="staff-breaks-mobile-feed d-md-none p-3">
                 <?php foreach ($rows as $r): ?>
-                    <div class="attendance-mobile-record-card p-3 mb-2 rounded border <?= (int)$r['exceeded'] ? 'border-warning-subtle' : '' ?>">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="fw-bold text-white-emphasis">
+                    <div class="attendance-mobile-record-card staff-break-record p-2 px-3 mb-2 rounded border <?= (int)$r['exceeded'] ? 'border-warning-subtle' : '' ?>">
+                        <div class="staff-break-record__heading">
+                            <span class="staff-break-record__title fw-bold text-white-emphasis">
                                 <?= e(break_label($r['break_type'], (int) $r['sequence_no'])) ?>
                             </span>
-                            <span class="font-monospace text-muted small">
-                                <?= e(format_date($r['work_date'])) ?>
-                            </span>
+                            <div class="staff-break-record__status">
+                                <?= (int)$r['exceeded'] ? '<span class="status-badge badge-exceeded">' . e(__('exceeded')) . '</span>' : '<span class="text-success small"><i class="bi bi-check2"></i> ' . e(__('badge_within_limit')) . '</span>' ?>
+                            </div>
                         </div>
-                        <div class="d-flex align-items-baseline justify-content-between font-monospace small mb-2">
+                        <div class="staff-break-record__details font-monospace small">
+                            <span class="text-muted"><?= e(format_date($r['work_date'])) ?></span>
                             <span class="text-white-emphasis">
                                 <?= e(format_time($r['start_time'])) ?>
                                 <span class="text-muted">→</span>
                                 <?= $r['end_time'] ? e(format_time($r['end_time'])) : '<span class="text-warning">' . e(__('open')) . '</span>' ?>
                             </span>
-                            <span>
-                                <?= break_duration_html($r['start_time'], $r['end_time'], (int) $r['duration_minutes']) ?>
-                            </span>
                         </div>
-                        <div class="d-flex align-items-center justify-content-between pt-2 border-top border-secondary-subtle small font-monospace">
-                            <span class="text-muted"><?= e(__('allowed')) ?>: <?= e(format_minutes((int) $r['allowed_minutes'])) ?></span>
-                            <span><?= (int)$r['exceeded'] ? '<span class="status-badge badge-exceeded">' . e(__('exceeded')) . '</span>' : '<span class="text-success"><i class="bi bi-check2"></i> ' . e(__('badge_within_limit')) . '</span>' ?></span>
+                        <div class="staff-break-record__duration font-monospace small">
+                            <span><span class="text-muted"><?= e(__('duration')) ?>:</span> <strong><?= break_duration_html($r['start_time'], $r['end_time'], (int) $r['duration_minutes']) ?></strong></span>
+                            <span><span class="text-muted"><?= e(__('allowed')) ?>:</span> <strong><?= e(format_minutes((int) $r['allowed_minutes'])) ?></strong></span>
                         </div>
                     </div>
                 <?php endforeach; ?>

@@ -28,10 +28,14 @@ $ogUrl = $ogUrl ?? current_url();
 
     <!-- Progressive Web App / Mobile Standalone -->
     <link rel="manifest" href="<?= e(url('manifest.webmanifest')) ?>">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="<?= e(company_name()) ?>">
     <link rel="apple-touch-icon" href="<?= e(asset('img/icon-192.png')) ?>">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?= e(asset('img/icon-192.png')) ?>">
+    <link rel="apple-touch-icon" sizes="192x192" href="<?= e(asset('img/icon-192.png')) ?>">
+    <link rel="apple-touch-icon" sizes="512x512" href="<?= e(asset('img/icon-512.png')) ?>">
 
     <!-- Open Graph / WhatsApp / Facebook / LinkedIn -->
     <meta property="og:type" content="website">
@@ -57,13 +61,18 @@ $ogUrl = $ogUrl ?? current_url();
           var t = localStorage.getItem('chrono_theme') || 'night';
           if (t !== 'day' && t !== 'night') t = 'night';
           document.documentElement.setAttribute('data-theme', t);
+          var g = localStorage.getItem('chrono_globe') || 'on';
+          if (g !== 'off') g = 'on';
+          document.documentElement.setAttribute('data-globe', g);
         } catch (e) {
           document.documentElement.setAttribute('data-theme', 'night');
+          document.documentElement.setAttribute('data-globe', 'on');
         }
       })();
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" rel="stylesheet">
@@ -103,23 +112,33 @@ $ogUrl = $ogUrl ?? current_url();
                     <div class="user-role"><?= e(ucfirst($user['role'])) ?></div>
                 </div>
             </div>
-            <div class="sidebar-mobile-controls d-lg-none mt-3 pt-3 border-top border-secondary-subtle">
-                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary theme-toggle flex-grow-1"
+            <div class="sidebar-mobile-controls d-lg-none">
+                <div class="sidebar-mobile-controls__grid">
+                    <button type="button" class="btn btn-sm globe-toggle"
+                            title="<?= e(__('globe_toggle')) ?>" aria-label="<?= e(__('globe_toggle')) ?>"
+                            data-label-on="<?= e(__('globe_on')) ?>" data-label-off="<?= e(__('globe_off')) ?>">
+                        <i class="bi bi-globe2 globe-toggle__icon"></i>
+                        <span class="globe-toggle__text"></span>
+                    </button>
+                    <button type="button" class="btn btn-sm theme-toggle"
                             title="<?= e(__('theme_toggle')) ?>" aria-label="<?= e(__('theme_toggle')) ?>"
                             data-label-night="<?= e(__('theme_night')) ?>" data-label-day="<?= e(__('theme_day')) ?>">
                         <i class="bi bi-moon-stars theme-toggle__icon-night"></i>
                         <i class="bi bi-sun theme-toggle__icon-day"></i>
                         <span class="theme-toggle__text"></span>
                     </button>
+                </div>
+                <div class="sidebar-mobile-controls__lang">
                     <?= lang_switcher() ?>
                 </div>
-                <a href="<?= e(url('/logout.php')) ?>" class="btn btn-sm btn-outline-danger w-100">
-                    <i class="bi bi-box-arrow-right"></i> <?= e(__('logout')) ?>
+                <a href="<?= e(url('/logout.php')) ?>" class="btn btn-sm sidebar-logout-btn">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span><?= e(__('logout')) ?></span>
                 </a>
             </div>
         </div>
     </aside>
+    <div class="sidebar-backdrop d-lg-none" id="sidebarBackdrop"></div>
     <div class="app-main">
         <header class="app-topbar">
             <button type="button" class="btn btn-light btn-sm sidebar-toggle d-lg-none" id="sidebarToggle" aria-label="Menu">
@@ -148,6 +167,12 @@ $ogUrl = $ogUrl ?? current_url();
                 </div>
             </div>
             <div class="topbar-actions d-none d-lg-flex">
+                <button type="button" class="btn btn-sm btn-outline-secondary globe-toggle" id="globeToggle"
+                        title="<?= e(__('globe_toggle')) ?>" aria-label="<?= e(__('globe_toggle')) ?>"
+                        data-label-on="<?= e(__('globe_on')) ?>" data-label-off="<?= e(__('globe_off')) ?>">
+                    <i class="bi bi-globe2 globe-toggle__icon"></i>
+                    <span class="globe-toggle__text"></span>
+                </button>
                 <button type="button" class="btn btn-sm btn-outline-secondary theme-toggle" id="themeToggle"
                         title="<?= e(__('theme_toggle')) ?>" aria-label="<?= e(__('theme_toggle')) ?>"
                         data-label-night="<?= e(__('theme_night')) ?>" data-label-day="<?= e(__('theme_day')) ?>">
@@ -180,6 +205,12 @@ $ogUrl = $ogUrl ?? current_url();
 <?php else: ?>
 <div class="auth-shell">
     <div class="auth-top">
+        <button type="button" class="btn btn-sm btn-outline-secondary globe-toggle" id="globeToggle"
+                title="<?= e(__('globe_toggle')) ?>" aria-label="<?= e(__('globe_toggle')) ?>"
+                data-label-on="<?= e(__('globe_on')) ?>" data-label-off="<?= e(__('globe_off')) ?>">
+            <i class="bi bi-globe2 globe-toggle__icon"></i>
+            <span class="globe-toggle__text"></span>
+        </button>
         <button type="button" class="btn btn-sm btn-outline-secondary theme-toggle" id="themeToggle"
                 title="<?= e(__('theme_toggle')) ?>" aria-label="<?= e(__('theme_toggle')) ?>"
                 data-label-night="<?= e(__('theme_night')) ?>" data-label-day="<?= e(__('theme_day')) ?>">

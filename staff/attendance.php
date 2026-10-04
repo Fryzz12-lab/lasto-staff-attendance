@@ -40,7 +40,7 @@ $bodyClass = 'staff-history-page';
 require __DIR__ . '/../includes/layout_header.php';
 ?>
 
-<h2 class="h4 mb-3"><?= e(__('my_attendance')) ?></h2>
+<h2 class="h4 mb-3 d-none d-lg-block"><?= e(__('my_attendance')) ?></h2>
 
 <div class="card-soft attendance-filter-card mb-3">
     <div class="card-body">
@@ -105,25 +105,39 @@ require __DIR__ . '/../includes/layout_header.php';
             <div class="staff-attendance-mobile-feed d-md-none p-3">
                 <?php foreach ($rows as $r): ?>
                     <?php $isToday = ($r['work_date'] ?? '') === today_str(); ?>
-                    <div class="attendance-mobile-record-card p-3 mb-2 rounded border <?= !empty($r['is_day_off']) ? 'record-day-off' : '' ?><?= $isToday ? ' record-today' : '' ?>">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="fw-bold font-monospace text-white-emphasis">
-                                <?= e(format_date($r['work_date'])) ?><?php if ($isToday): ?> <span class="attendance-today-label"><?= e(__('today')) ?></span><?php endif; ?>
-                            </span>
-                            <div>
-                                <?= attendance_status_badge($r) ?>
+                    <?php if (!empty($r['is_day_off'])): ?>
+                        <div class="attendance-mobile-record-card p-2 px-3 mb-2 rounded border record-day-off<?= $isToday ? ' record-today' : '' ?>">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span class="fw-bold font-monospace text-white-emphasis">
+                                    <?= e(format_date($r['work_date'])) ?><?php if ($isToday): ?> <span class="attendance-today-label"><?= e(__('today')) ?></span><?php endif; ?>
+                                </span>
+                                <div>
+                                    <?= attendance_status_badge($r) ?>
+                                </div>
                             </div>
                         </div>
-                        <?php if (!empty($r['is_day_off'])): ?>
-                            <div class="text-muted small">
-                                <i class="bi bi-calendar-x me-1"></i><?= e(__('st_day_off')) ?>
+                    <?php elseif (empty($r['clock_in'])): ?>
+                        <div class="attendance-mobile-record-card p-2 px-3 mb-2 rounded border<?= $isToday ? ' record-today' : '' ?>">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span class="fw-bold font-monospace text-white-emphasis">
+                                    <?= e(format_date($r['work_date'])) ?><?php if ($isToday): ?> <span class="attendance-today-label"><?= e(__('today')) ?></span><?php endif; ?>
+                                </span>
+                                <div>
+                                    <?= attendance_status_badge($r) ?>
+                                </div>
                             </div>
-                        <?php elseif (empty($r['clock_in'])): ?>
-                            <div class="text-muted small">
-                                <i class="bi bi-dash-circle me-1"></i><?= e(__('not_clocked_in')) ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="attendance-mobile-record-card p-2 px-3 mb-2 rounded border<?= $isToday ? ' record-today' : '' ?>">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <span class="fw-bold font-monospace text-white-emphasis">
+                                    <?= e(format_date($r['work_date'])) ?><?php if ($isToday): ?> <span class="attendance-today-label"><?= e(__('today')) ?></span><?php endif; ?>
+                                </span>
+                                <div>
+                                    <?= attendance_status_badge($r) ?>
+                                </div>
                             </div>
-                        <?php else: ?>
-                            <div class="d-flex align-items-baseline justify-content-between font-monospace small mb-2">
+                            <div class="d-flex align-items-baseline justify-content-between font-monospace small mb-1">
                                 <span class="text-white-emphasis fw-semibold">
                                     <?= e(format_time($r['clock_in'])) ?>
                                     <span class="text-muted">→</span>
@@ -145,18 +159,18 @@ require __DIR__ . '/../includes/layout_header.php';
                                     </span>
                                 <?php endif; ?>
                             </div>
-                            <div class="d-flex align-items-center justify-content-between pt-2 border-top border-secondary-subtle small font-monospace">
+                            <div class="d-flex align-items-center justify-content-between pt-2 mt-2 border-top border-secondary-subtle small font-monospace">
                                 <div>
                                     <span class="text-muted"><?= e(__('working_time')) ?>:</span>
-                                    <span class="text-accent fw-bold"><?= e(format_minutes((int) $r['work_minutes'])) ?></span>
+                                    <span class="text-accent fw-bold"><?= (!empty($r['clock_out']) || ($r['status'] ?? '') === 'incomplete') ? e(format_minutes((int) $r['work_minutes'])) : e(__('badge_in_progress')) ?></span>
                                 </div>
                                 <div>
                                     <span class="text-muted"><?= e(__('breaks')) ?>:</span>
                                     <span class="text-light-emphasis fw-semibold"><?= e(format_minutes((int) $r['total_break_minutes'])) ?></span>
                                 </div>
                             </div>
-                        <?php endif; ?>
-                    </div>
+                        </div>
+                    <?php endif; ?>
                 <?php endforeach; ?>
             </div>
             <?php

@@ -28,6 +28,7 @@ if (is_post()) {
 }
 
 $pageTitle = __('login');
+$bodyClass = 'login-page';
 require __DIR__ . '/includes/layout_header.php';
 ?>
 
@@ -71,7 +72,7 @@ require __DIR__ . '/includes/layout_header.php';
             </div>
         </div>
         <div class="mb-3 form-check">
-            <input type="checkbox" class="form-check-input" id="remember_me" name="remember_me" value="1" <?= is_post() ? (post('remember_me') ? 'checked' : '') : 'checked' ?>>
+            <input type="checkbox" class="form-check-input" id="remember_me" name="remember_me" value="1" <?= is_post() ? (post('remember_me') ? 'checked' : '') : (APP_ENV === 'production' ? '' : 'checked') ?>>
             <label class="form-check-label text-muted small user-select-none" for="remember_me">
                 <?= e(__('remember_me_device')) ?>
             </label>

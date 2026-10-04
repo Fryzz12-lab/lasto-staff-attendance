@@ -60,14 +60,14 @@ $isAdminArea = false;
 require __DIR__ . '/../includes/layout_header.php';
 ?>
 
-<h2 class="h4 mb-3"><?= e(__('leave_requests')) ?></h2>
+<h2 class="h4 mb-3 d-none d-lg-block"><?= e(__('leave_requests')) ?></h2>
 
 <!-- Mobile Summary Chips (< 768px) -->
 <div class="d-md-none mb-3">
     <div class="d-flex gap-2">
-        <div class="flex-fill p-2 rounded text-center leave-mobile-stat-card">
+        <div class="flex-fill p-2 rounded text-center leave-mobile-stat-card leave-mobile-stat-card--pending">
             <span class="d-block text-muted" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em;"><?= e(__('st_pending')) ?></span>
-            <span class="fw-bold font-mono text-warning fs-5"><?= $pendingCount ?></span>
+            <span class="fw-bold font-mono fs-5 leave-mobile-stat-card__pending-count"><?= $pendingCount ?></span>
         </div>
         <div class="flex-fill p-2 rounded text-center leave-mobile-stat-card">
             <span class="d-block text-muted" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em;"><?= e(__('st_approved')) ?></span>
@@ -83,7 +83,7 @@ require __DIR__ . '/../includes/layout_header.php';
 <!-- Mobile Toggle Button for New Request Form (< 768px) -->
 <?php if (!empty($rows)): ?>
     <div class="d-md-none mb-3">
-        <button class="btn btn-outline-accent w-100 py-2 d-flex align-items-center justify-content-center gap-2" type="button" data-bs-toggle="collapse" data-bs-target="#newRequestCard" aria-expanded="<?= $isFormOpen ? 'true' : 'false' ?>" aria-controls="newRequestCard">
+        <button class="btn btn-accent w-100 py-2 fw-semibold shadow-sm d-flex align-items-center justify-content-center gap-2" type="button" data-bs-toggle="collapse" data-bs-target="#newRequestCard" aria-expanded="<?= $isFormOpen ? 'true' : 'false' ?>" aria-controls="newRequestCard">
             <i class="bi bi-calendar-plus"></i>
             <span><?= e(__('new_request')) ?></span>
         </button>
@@ -91,9 +91,13 @@ require __DIR__ . '/../includes/layout_header.php';
 <?php endif; ?>
 
 <div class="row g-3 staff-leave-layout">
-    <div class="col-lg-4">
-        <div class="collapse <?= $isFormOpen ? 'show' : '' ?> d-md-block" id="newRequestCard">
-            <div class="card-soft mb-3 mb-lg-0">
+    <div class="col-12">
+        <button class="staff-leave-new-request-toggle d-none d-md-inline-flex align-items-center gap-3" type="button" data-bs-toggle="collapse" data-bs-target="#newRequestCard" aria-expanded="<?= $isFormOpen ? 'true' : 'false' ?>" aria-controls="newRequestCard">
+            <span><i class="bi bi-plus-lg me-2" aria-hidden="true"></i><?= e(__('new_request')) ?></span>
+            <i class="bi bi-chevron-down" aria-hidden="true"></i>
+        </button>
+        <div class="collapse <?= $isFormOpen ? 'show' : '' ?>" id="newRequestCard">
+            <div class="card-soft mb-3 mb-md-0">
                 <div class="card-header"><?= e(__('new_request')) ?></div>
                 <div class="card-body">
                     <p class="form-hint mb-3"><?= e(__('leave_wfh_hint')) ?></p>
@@ -108,7 +112,6 @@ require __DIR__ . '/../includes/layout_header.php';
                             <select name="leave_type" class="form-select" required>
                                 <option value="medical"><?= e(__('leave_medical')) ?></option>
                                 <option value="wfh"><?= e(__('leave_wfh')) ?></option>
-                                <option value="day_off"><?= e(__('leave_day_off')) ?></option>
                                 <option value="annual"><?= e(__('leave_annual')) ?></option>
                                 <option value="emergency"><?= e(__('leave_emergency')) ?></option>
                                 <option value="other"><?= e(__('leave_other')) ?></option>
@@ -124,14 +127,14 @@ require __DIR__ . '/../includes/layout_header.php';
             </div>
         </div>
     </div>
-    <div class="col-lg-8 staff-leave-requests-column">
+    <div class="col-12 staff-leave-requests-column">
         <div class="card-soft staff-leave-requests-card">
             <div class="card-header"><?= e(__('my_requests')) ?></div>
             <div class="card-body p-0">
                 <?php if (!$rows): ?>
                     <div class="empty-state"><?= e(__('no_leave')) ?></div>
                 <?php else: ?>
-                    <!-- Desktop Table (>= 768px: 100% untouched layout) -->
+                    <!-- Desktop request table -->
                     <div class="table-responsive-card d-none d-md-block">
                         <table class="table mb-0 staff-leave-history-table">
                             <thead>

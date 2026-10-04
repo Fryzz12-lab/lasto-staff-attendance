@@ -101,22 +101,42 @@
       if (title) curStatus.setAttribute('title', title);
     }
 
-    const nextTheme = doc.querySelector('#themeToggle');
-    const curTheme = document.querySelector('#themeToggle');
-    if (nextTheme && curTheme) {
+    const nextTheme = doc.querySelector('.theme-toggle');
+    const curThemes = document.querySelectorAll('.theme-toggle');
+    if (nextTheme && curThemes.length) {
       ['title', 'aria-label', 'data-label-night', 'data-label-day'].forEach((attr) => {
         const v = nextTheme.getAttribute(attr);
-        if (v != null) curTheme.setAttribute(attr, v);
+        if (v != null) {
+          curThemes.forEach((btn) => btn.setAttribute(attr, v));
+        }
       });
       if (window.SAS && typeof window.SAS.syncThemeToggleUi === 'function') {
         window.SAS.syncThemeToggleUi(document.documentElement.getAttribute('data-theme') || 'night');
       }
     }
 
-    // Language switcher (re-bind Bootstrap via fresh markup)
-    const curLang = document.querySelector('.lang-switcher');
-    const nextLang = doc.querySelector('.lang-switcher');
-    replaceOuter(curLang, nextLang);
+    const nextGlobe = doc.querySelector('.globe-toggle');
+    const curGlobes = document.querySelectorAll('.globe-toggle');
+    if (nextGlobe && curGlobes.length) {
+      ['title', 'aria-label', 'data-label-on', 'data-label-off'].forEach((attr) => {
+        const v = nextGlobe.getAttribute(attr);
+        if (v != null) {
+          curGlobes.forEach((btn) => btn.setAttribute(attr, v));
+        }
+      });
+      if (window.SAS && typeof window.SAS.syncGlobeToggleUi === 'function') {
+        window.SAS.syncGlobeToggleUi(document.documentElement.getAttribute('data-globe') || 'on');
+      }
+    }
+
+    // Language switcher (re-bind Bootstrap via fresh markup for both topbar & mobile sidebar)
+    const curLangs = document.querySelectorAll('.lang-switcher');
+    const nextLangs = doc.querySelectorAll('.lang-switcher');
+    curLangs.forEach((cur, idx) => {
+      if (nextLangs[idx]) {
+        replaceOuter(cur, nextLangs[idx]);
+      }
+    });
 
     // Logout button
     const curLogout = document.querySelector('.topbar-actions a[href*="logout"]');
@@ -138,8 +158,8 @@
     const nextAuthTop = doc.querySelector('.auth-top');
     if (curAuthTop && nextAuthTop) {
       replaceOuter(curAuthTop.querySelector('.lang-switcher'), nextAuthTop.querySelector('.lang-switcher'));
-      const curAuthTheme = curAuthTop.querySelector('#themeToggle');
-      const nextAuthTheme = nextAuthTop.querySelector('#themeToggle');
+      const curAuthTheme = curAuthTop.querySelector('.theme-toggle');
+      const nextAuthTheme = nextAuthTop.querySelector('.theme-toggle');
       if (curAuthTheme && nextAuthTheme) {
         ['title', 'aria-label', 'data-label-night', 'data-label-day'].forEach((attr) => {
           const v = nextAuthTheme.getAttribute(attr);
@@ -188,9 +208,12 @@
     if (window.ChronosDateFilter && typeof window.ChronosDateFilter.init === 'function') {
       window.ChronosDateFilter.init(document);
     }
-    // Re-bind theme toggle if node was replaced
+    // Re-bind theme and globe toggles if node was replaced
     if (window.SAS && typeof window.SAS.initThemeToggle === 'function') {
       window.SAS.initThemeToggle();
+    }
+    if (window.SAS && typeof window.SAS.initGlobeToggle === 'function') {
+      window.SAS.initGlobeToggle();
     }
     // Refresh admin ticker copy in new language
     if (window.SAS && typeof window.SAS.refreshLiveTicker === 'function') {

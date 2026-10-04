@@ -6,6 +6,26 @@
 
 declare(strict_types=1);
 
+$lastoLocalFile = __DIR__ . '/local.php';
+$lastoConfigPath = strtolower(str_replace('\\', '/', __DIR__));
+$lastoRunningInXampp = PHP_OS_FAMILY === 'Windows' && str_contains($lastoConfigPath, '/xampp/htdocs/');
+// A copied cPanel local.php must not replace the local XAMPP database and URL.
+// Keep the file in place so the same project archive can still be uploaded.
+if (!$lastoRunningInXampp && is_file($lastoLocalFile)) {
+    $lastoLocal = require $lastoLocalFile;
+    if (is_array($lastoLocal)) {
+        foreach ($lastoLocal as $name => $value) {
+            if (!is_string($name) || (!is_string($value) && !is_int($value) && !is_bool($value))) {
+                continue;
+            }
+            $stringValue = is_bool($value) ? ($value ? '1' : '0') : (string) $value;
+            putenv($name . '=' . $stringValue);
+            $_ENV[$name] = $stringValue;
+            $_SERVER[$name] = $stringValue;
+        }
+    }
+}
+
 // Environment: 'development' | 'production'
 define('APP_ENV', getenv('LASTO_APP_ENV') ?: 'development');
 define('APP_NAME', 'Staff Attendance System');
@@ -16,8 +36,12 @@ define('POLICY_START_TIME', '10:00:00');
 define('POLICY_END_TIME', '20:00:00');
 define('POLICY_TARGET_MINUTES', 450);
 
-// Base URL path under htdocs (no trailing slash). Adjust if folder name differs.
-define('BASE_PATH', rtrim(getenv('LASTO_BASE_PATH') !== false ? getenv('LASTO_BASE_PATH') : '/agy-staff-attendance', '/'));
+// Base URL path under the web root (no trailing slash). Empty string = domain root.
+$lastoBasePath = getenv('LASTO_BASE_PATH');
+if ($lastoBasePath === false) {
+    $lastoBasePath = APP_ENV === 'production' ? '' : '/agy-staff-attendance';
+}
+define('BASE_PATH', rtrim((string) $lastoBasePath, '/'));
 
 // Timezone — Malaysia
 date_default_timezone_set('Asia/Kuala_Lumpur');

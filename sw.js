@@ -3,7 +3,7 @@
  * Strategy: Network-First for dynamic PHP pages & APIs; Cache-First for static assets.
  */
 
-const CACHE_NAME = 'sas-static-v2';
+const CACHE_NAME = 'sas-static-v10';
 const STATIC_ASSETS = [
   './manifest.webmanifest',
   './assets/css/app.css',

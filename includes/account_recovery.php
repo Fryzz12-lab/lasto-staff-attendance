@@ -38,7 +38,7 @@ function recovery_issue_token(int $userId, string $purpose, ?int $createdBy = nu
     return $token;
 }
 
-function recovery_send_link(string $email, string $token, string $purpose): bool
+function recovery_send_link(string $email, string $token, string $purpose, ?string $recipientName = null): bool
 {
     if (!recovery_mail_ready() || !filter_var($email, FILTER_VALIDATE_EMAIL)) return false;
     $subject = match ($purpose) {
@@ -46,9 +46,18 @@ function recovery_send_link(string $email, string $token, string $purpose): bool
         'verify_email' => 'LASTO TECHNOLOGY email verification',
         default => 'LASTO TECHNOLOGY password reset',
     };
-    $body = ($purpose === 'verify_email' ? "Use this one-time link to verify your email address:\r\n" : "Use this one-time link to choose your password:\r\n") . recovery_link($token)
-        . "\r\n\r\nThe link expires " . ($purpose === 'invite' ? 'in 48 hours' : 'in 1 hour')
-        . ". If you did not request this, contact LASTO TECHNOLOGY.\r\n";
+    $name = trim((string) $recipientName);
+    $greeting = $name !== '' ? "Hello {$name},\r\n\r\n" : "Hello,\r\n\r\n";
+    if ($purpose === 'verify_email') {
+        $intro = "Please verify this email address for your LASTO TECHNOLOGY staff attendance account by opening the link below:\r\n";
+    } elseif ($purpose === 'invite') {
+        $intro = "Your LASTO TECHNOLOGY staff attendance account is ready. Open the link below to verify your email address and complete your account setup:\r\n";
+    } else {
+        $intro = "A password reset was requested for your LASTO TECHNOLOGY staff attendance account. Open the link below to choose a new password:\r\n";
+    }
+    $expiry = $purpose === 'invite' ? '48 hours' : 'one hour';
+    $body = $greeting . $intro . "\r\n" . recovery_link($token)
+        . "\r\n\r\nThis one-time link will expire in {$expiry}. If you did not request this, please contact your administrator.\r\n\r\nLASTO TECHNOLOGY\r\nStaff Attendance System\r\n";
     $from = (string) getenv('LASTO_MAIL_FROM');
     $sent = mail($email, $subject, $body, [
         'From' => $from,

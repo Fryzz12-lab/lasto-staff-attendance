@@ -65,12 +65,28 @@ if (is_post()) {
     if ($action === 'reset_password' && $staff) {
         $token = recovery_issue_token($id, 'reset', (int) current_user()['id']);
         $sent = !empty($staff['email_verified_at']) && !empty($staff['email'])
-            && recovery_send_link((string) $staff['email'], $token, 'reset');
+            && recovery_send_link((string) $staff['email'], $token, 'reset', (string) $staff['full_name']);
         if ($sent) {
             flash_set('success', 'A one-time reset link was sent to the verified email address.');
         } else {
             $_SESSION['handoff_recovery_link'] = recovery_link($token);
             flash_set('warning', 'Mail is unavailable or the email is unverified. Give the one-time link to the staff member after confirming their identity.');
+        }
+        redirect('/admin/staff_form.php?id=' . $id);
+    }
+
+    if ($action === 'verify_email' && $staff) {
+        if (empty($staff['email']) || !filter_var($staff['email'], FILTER_VALIDATE_EMAIL)) {
+            flash_set('danger', 'Add a valid email address before sending verification.');
+        } else {
+            $token = recovery_issue_token($id, 'verify_email', (int) current_user()['id']);
+            $sent = recovery_send_link((string) $staff['email'], $token, 'verify_email', (string) $staff['full_name']);
+            if ($sent) {
+                flash_set('success', 'Verification email sent to the staff member.');
+            } else {
+                $_SESSION['handoff_recovery_link'] = recovery_link($token);
+                flash_set('warning', 'Verification email could not be sent. Use the one-time link shown below after confirming the staff member’s identity.');
+            }
         }
         redirect('/admin/staff_form.php?id=' . $id);
     }
@@ -208,7 +224,9 @@ $v = function (string $key, $default = '') use ($staff) {
 
 $hasIssuedCredentials = !empty($_SESSION['new_staff_credentials']) || !empty($_SESSION['staff_override_credentials']);
 $suggestedTempPassword = 'Temp@' . rand(1000, 9999);
-$loginUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . url('/');
+$loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
+    ? rtrim((string) getenv('LASTO_PUBLIC_ORIGIN'), '/') . url('/')
+    : absolute_url('/');
 ?>
 
 <div class="mb-3">
@@ -279,7 +297,13 @@ $loginUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 
     <?php 
     $c = $_SESSION['staff_override_credentials']; 
     unset($_SESSION['staff_override_credentials']); 
-    $templateText = "Username: " . $c['username'] . "\nPassword: " . $c['temp_password'] . "\nLogin URL: " . $loginUrl;
+    $templateText = __('staff_password_reset_message', [
+        'name' => $c['full_name'],
+        'company' => company_name(),
+        'url' => $loginUrl,
+        'username' => $c['username'],
+        'password' => $c['temp_password'],
+    ]);
     ?>
     <div class="card-soft border border-warning p-3 mb-3" style="background: rgba(245, 158, 11, 0.08);">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
@@ -326,9 +350,24 @@ $loginUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 
 <?php endif; ?>
 
 <?php if (!empty($_SESSION['handoff_recovery_link'])): ?>
-    <div class="alert alert-warning">
-        <strong>One-time staff link:</strong> Give this link to the staff member after confirming their identity. It is shown only once here.
-        <input class="form-control mt-2" readonly value="<?= e((string) $_SESSION['handoff_recovery_link']) ?>" onclick="this.select()">
+    <?php
+    $handoffLink = (string) $_SESSION['handoff_recovery_link'];
+    $handoffMessage = 'Hello ' . (string) $staff['full_name'] . ",\n\n"
+        . "A password reset link has been issued for your staff attendance account. Please open the link to set a new password:\n"
+        . $handoffLink . "\n\n"
+        . 'This reset link will expire in one hour.';
+    ?>
+    <div class="staff-reset-handoff mb-3">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+            <div>
+                <strong>One-time reset message</strong>
+                <div class="small">Confirm the staff member's identity before sharing. This message is shown only once.</div>
+            </div>
+            <button type="button" class="btn btn-outline-warning btn-sm" onclick="copyCredsText(this, <?= e(json_encode($handoffMessage)) ?>)">
+                <i class="bi bi-clipboard" aria-hidden="true"></i> <span>Copy message</span>
+            </button>
+        </div>
+        <div class="staff-reset-handoff__message user-select-all"><?= e($handoffMessage) ?></div>
     </div>
     <?php unset($_SESSION['handoff_recovery_link']); ?>
 <?php endif; ?>
@@ -391,7 +430,13 @@ $loginUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 
                         <div class="col-md-6">
                             <label class="form-label"><?= e(__('email')) ?> *</label>
                             <input type="email" name="email" class="form-control" value="<?= e((string) $v('email')) ?>" autocomplete="email" required>
-                            <?php if ($staff): ?><div class="form-hint">Managed by Admin</div><?php endif; ?>
+                            <?php if ($staff): ?>
+                                <div class="d-flex align-items-center gap-2 mt-1">
+                                    <span class="form-hint">Managed by Admin</span>
+                                    <?php if (!empty($staff['email_verified_at'])): ?><span class="email-status email-status--verified">Verified</span>
+                                    <?php else: ?><span class="email-status email-status--pending">Not verified</span><?php endif; ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
 
                         <div class="col-md-6">
@@ -481,8 +526,13 @@ $loginUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 
 
                     <!-- Template to Send Box -->
                     <?php
-                    $sidebarStaffUser = (string) ($staff['username'] ?? '');
-                    $sidebarInitText  = "Username: " . $sidebarStaffUser . "\nPassword: " . $suggestedTempPassword . "\nLogin URL: " . $loginUrl;
+                    $sidebarInitText = __('staff_password_reset_message', [
+                        'name' => (string) ($staff['full_name'] ?? ''),
+                        'company' => company_name(),
+                        'url' => $loginUrl,
+                        'username' => (string) ($staff['username'] ?? ''),
+                        'password' => $suggestedTempPassword,
+                    ]);
                     ?>
                     <div class="mb-3">
                         <div class="d-flex justify-content-between align-items-center mb-1">
@@ -491,7 +541,11 @@ $loginUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 
                                 <i class="bi bi-clipboard"></i> <span>Copy Template</span>
                             </button>
                         </div>
+                        <span id="sidebar_welcome_template" hidden><?= e(__('staff_password_reset_message')) ?></span>
+                        <span id="sidebar_login_url" hidden><?= e($loginUrl) ?></span>
+                        <span id="sidebar_company_name" hidden><?= e(company_name()) ?></span>
                         <div id="sidebar_template_preview" class="p-2 rounded border bg-dark bg-opacity-50 small font-monospace text-light user-select-all" style="white-space: pre-line; line-height: 1.45; font-size: 0.82rem;"><?= e($sidebarInitText) ?></div>
+                        <div class="form-hint mt-1">Preview only. Set the temporary password before sharing this message.</div>
                     </div>
 
                     <button class="btn btn-warning w-100" id="btn_submit_temp_pw"><?= e(__('set_temp_password_btn')) ?></button>
@@ -507,6 +561,20 @@ $loginUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 
                     <?= csrf_field() ?>
                     <input type="hidden" name="form_action" value="reset_password">
                     <button class="btn btn-outline-secondary w-100">Issue reset link</button>
+                </form>
+            </div>
+        </div>
+        <div class="card-soft mb-3">
+            <div class="card-header">Verify staff email</div>
+            <div class="card-body">
+                <p class="form-hint mb-2">Current status:
+                    <?php if (!empty($staff['email_verified_at'])): ?><span class="text-success fw-semibold">Verified</span>
+                    <?php else: ?><span class="text-warning fw-semibold">Not verified</span><?php endif; ?>
+                </p>
+                <form method="post" data-confirm="Send an email verification link to this staff member?">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="form_action" value="verify_email">
+                    <button class="btn btn-outline-info w-100" <?= empty($staff['email']) ? 'disabled' : '' ?>>Send verification email</button>
                 </form>
             </div>
         </div>
@@ -577,44 +645,6 @@ $loginUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 
                 tempPwInput.value = 'Temp@' + Math.floor(1000 + Math.random() * 9000);
             });
         }
-        if (usernameInput) {
-            usernameInput.addEventListener('input', () => {
-                if (typeof window.updateSidebarPreview === 'function') {
-                    window.updateSidebarPreview();
-                }
-            });
-        }
-
-        // Sidebar Direct Password Override Template Handling
-        const sidebarPw = document.getElementById('sidebar_temp_pw');
-        const sidebarRegen = document.getElementById('btn_regen_sidebar_pw');
-        const sidebarPreview = document.getElementById('sidebar_template_preview');
-        const staffUsername = <?= json_encode($staff['username'] ?? '') ?>;
-
-        window.getSidebarTemplateText = function() {
-            const pw = (sidebarPw && sidebarPw.value.trim() !== '') ? sidebarPw.value.trim() : '';
-            const user = (usernameInput && usernameInput.value.trim() !== '') ? usernameInput.value.trim() : staffUsername;
-            return `Username: ${user}\nPassword: ${pw}\nLogin URL: ${loginUrl}`;
-        };
-
-        window.updateSidebarPreview = function() {
-            if (sidebarPreview) {
-                sidebarPreview.textContent = window.getSidebarTemplateText();
-            }
-        };
-
-        if (sidebarPw) {
-            sidebarPw.addEventListener('input', window.updateSidebarPreview);
-        }
-        if (sidebarRegen && sidebarPw) {
-            sidebarRegen.addEventListener('click', () => {
-                sidebarPw.value = 'Temp@' + Math.floor(1000 + Math.random() * 9000);
-                window.updateSidebarPreview();
-            });
-        }
-
-        // Initial preview updates immediately
-        window.updateSidebarPreview();
     }
 
     if (document.readyState === 'loading') {
@@ -625,55 +655,6 @@ $loginUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 
 })();
 
 
-function copySidebarTemplate(btn) {
-    if (typeof window.getSidebarTemplateText === 'function') {
-        copyCredsText(btn, window.getSidebarTemplateText());
-    }
-}
-
-function copyCredsText(btn, text) {
-    if (!text) return;
-
-    function showSuccess() {
-        const span = btn.querySelector('span');
-        const icon = btn.querySelector('i');
-        const originalHtml = btn.innerHTML;
-        const isWarning = btn.dataset.isWarning === '1' || btn.classList.contains('btn-outline-warning');
-
-        btn.classList.add(isWarning ? 'btn-warning' : 'btn-success');
-        btn.classList.remove('btn-outline-success', 'btn-outline-warning');
-        if (span) span.textContent = 'Copied!';
-        if (icon) icon.className = 'bi bi-check2';
-
-        setTimeout(() => {
-            btn.innerHTML = originalHtml;
-            btn.classList.remove('btn-success', 'btn-warning');
-            btn.classList.add(isWarning ? 'btn-outline-warning' : 'btn-outline-success');
-        }, 2000);
-    }
-
-    if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(text).then(showSuccess).catch(() => fallbackCopy(text, showSuccess));
-    } else {
-        fallbackCopy(text, showSuccess);
-    }
-}
-
-function fallbackCopy(text, onSuccess) {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.left = '-9999px';
-    document.body.appendChild(ta);
-    ta.select();
-    try {
-        document.execCommand('copy');
-        if (onSuccess) onSuccess();
-    } catch (e) {
-        console.error('Copy fallback failed', e);
-    }
-    document.body.removeChild(ta);
-}
 </script>
 
 <?php require __DIR__ . '/../includes/layout_footer.php'; ?>

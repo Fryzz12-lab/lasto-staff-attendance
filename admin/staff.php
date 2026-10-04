@@ -44,9 +44,8 @@ $isAdminArea = true;
 require __DIR__ . '/../includes/layout_header.php';
 ?>
 
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-    <h2 class="h4 mb-0 d-lg-none"><?= e(__('staff_accounts')) ?></h2>
-    <a href="<?= e(url('/admin/staff_form.php')) ?>" class="btn btn-accent ms-auto"><i class="bi bi-plus-lg"></i> Add New Staff</a>
+<div class="d-flex flex-wrap justify-content-end align-items-center gap-2 mb-3">
+    <a href="<?= e(url('/admin/staff_form.php')) ?>" class="btn btn-accent"><i class="bi bi-plus-lg"></i> Add New Staff</a>
 </div>
 
 <div class="card-soft mb-3">
@@ -166,30 +165,5 @@ require __DIR__ . '/../includes/layout_header.php';
         </div>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('[data-delete-staff]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const id   = btn.dataset.staffId;
-            const name = btn.dataset.staffName;
-            const csrf = btn.dataset.csrf;
-            document.getElementById('deleteStaffName').textContent = name;
-            document.getElementById('deleteStaffForm').action = <?= json_encode(url('/admin/staff_form.php?id=')) ?> + id;
-            document.getElementById('deleteStaffCsrf').value = csrf;
-            const modalEl = document.getElementById('deleteStaffModal');
-            // When modal is dismissed without submitting, stop any lingering loading overlay
-            modalEl.addEventListener('hidden.bs.modal', () => {
-                if (typeof window.stopLoading === 'function') window.stopLoading();
-                if (document.querySelector('[data-loading-overlay]')) {
-                    document.querySelector('[data-loading-overlay]').hidden = true;
-                }
-            }, { once: true });
-            const modal = new bootstrap.Modal(modalEl);
-            modal.show();
-        });
-    });
-});
-</script>
 
 <?php require __DIR__ . '/../includes/layout_footer.php'; ?>
