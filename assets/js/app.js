@@ -805,9 +805,11 @@
 
     async function refresh() {
       try {
-        const res = await fetch(feedUrl, {
+        const url = feedUrl + (feedUrl.includes('?') ? '&' : '?') + '_ts=' + Date.now();
+        const res = await fetch(url, {
           headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
           credentials: 'same-origin',
+          cache: 'no-store',
         });
         const json = await res.json();
         if (!json || !json.success || !Array.isArray(json.items)) return;
@@ -850,6 +852,9 @@
     root.dataset.bound = '1';
     refresh();
     setInterval(refresh, 20000);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') refresh();
+    });
   }
 
   function refreshLiveTicker() {
