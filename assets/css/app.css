@@ -4459,6 +4459,40 @@ html[data-theme='day'] .admin-dashboard .stat-card {
   padding-inline: .8rem;
 }
 
+@media (max-width: 575.98px) {
+  .auth-page .auth-top {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .4rem;
+    padding: .7rem .65rem;
+    width: 100%;
+  }
+
+  .auth-page .auth-top > .globe-toggle,
+  .auth-page .auth-top > .theme-toggle,
+  .auth-page .auth-top > .lang-switcher {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .auth-page .auth-top > .globe-toggle,
+  .auth-page .auth-top > .theme-toggle,
+  .auth-page .auth-top > .lang-switcher > .btn {
+    min-height: 42px;
+    padding: .45rem .3rem;
+    font-size: .78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    justify-content: center;
+  }
+
+  .auth-page .auth-top > .globe-toggle i,
+  .auth-page .auth-top > .theme-toggle i {
+    flex: 0 0 auto;
+  }
+}
+
 .auth-page .auth-card input.form-control-lg {
   font-size: 1.05rem !important;
   line-height: 1.5;
