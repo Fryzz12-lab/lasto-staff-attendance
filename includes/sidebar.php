@@ -60,7 +60,7 @@ if ($user && $user['role'] === 'admin' && ($isAdminArea ?? true)):
         $b('incomplete')
     );
     echo nav_item('breaks', '/admin/breaks.php', 'bi-cup-hot', __('break_records'), $activeMenu);
-    echo nav_item('offday_adjustments', '/admin/offday_adjustments.php', 'bi-arrow-repeat', 'Off-day Adjustments', $activeMenu);
+    echo nav_item('offday_adjustments', '/admin/offday_adjustments.php', 'bi-arrow-repeat', __('offday_adjustments'), $activeMenu);
     echo nav_item('schedules', '/admin/schedules.php', 'bi-calendar3', __('schedules'), $activeMenu);
     if (setting_bool('enable_leave_module', true)) {
         echo nav_item(
