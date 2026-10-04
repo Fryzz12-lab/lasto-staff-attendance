@@ -8232,3 +8232,92 @@ html[data-theme='day'] .staff-reset-handoff__message {
   .staff-dashboard .badge-result { padding: 4px 8px; font-size: .66rem; }
   .staff-dashboard .app-footer { padding: .55rem .75rem; font-size: .72rem; }
 }
+
+/* Attendance history mobile cards: fixed hierarchy and two-column metrics. */
+@media (max-width: 767.98px) {
+  .staff-history-page .staff-attendance-mobile-feed {
+    padding: .75rem !important;
+  }
+
+  .staff-history-page .attendance-mobile-record-card {
+    margin-bottom: .7rem !important;
+    padding: 10px 12px !important;
+    overflow: hidden;
+  }
+
+  .staff-history-page .attendance-mobile-record-card > .d-flex.align-items-center {
+    min-height: 1.7rem;
+    gap: .5rem;
+  }
+
+  .staff-history-page .attendance-mobile-record-card > .d-flex.align-items-center > span {
+    min-width: 0;
+    line-height: 1.3;
+  }
+
+  .staff-history-page .attendance-mobile-record-card > .d-flex.align-items-baseline {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: .5rem;
+    margin: .35rem 0 0 !important;
+    line-height: 1.35;
+  }
+
+  .staff-history-page .attendance-mobile-record-card > .d-flex.align-items-baseline > span:first-child {
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  .staff-history-page .attendance-mobile-record-card > .d-flex.align-items-baseline > span:last-child {
+    white-space: nowrap;
+    text-align: right;
+  }
+
+  .staff-history-page .attendance-mobile-record-card > .border-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: .75rem;
+    margin-top: .55rem !important;
+    padding-top: .55rem !important;
+    line-height: 1.3;
+  }
+
+  .staff-history-page .attendance-mobile-record-card > .border-top > div {
+    min-width: 0;
+  }
+
+  .staff-history-page .attendance-mobile-record-card > .border-top > div:last-child {
+    text-align: right;
+  }
+
+  .staff-history-page .attendance-mobile-record-card .status-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.45rem;
+    padding: .2rem .45rem;
+    border-radius: .35rem;
+    font-size: .64rem;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  .staff-history-page .attendance-mobile-record-card .badge-wfh {
+    opacity: .8;
+  }
+
+  .staff-history-page .attendance-mobile-record-card .badge-off {
+    font-size: .6rem;
+  }
+
+  .staff-history-page .attendance-filter-card .date-preset {
+    min-height: 2.45rem;
+  }
+
+  .staff-history-page .attendance-filter-card .form-hint {
+    font-size: .72rem;
+  }
+
+  .staff-history-page > .card-soft > .card-header {
+    padding: .7rem .85rem;
+  }
+}
