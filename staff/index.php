@@ -20,6 +20,8 @@ $schedule = $data['schedule'];
 $activeBreak = $data['active_break'];
 $usage = $data['break_usage'];
 $breaks = $data['breaks'];
+$scheduledOffDay = !empty($att['was_scheduled_off_day']);
+$approvedLeaveDay = !empty($att['is_day_off']) && !$scheduledOffDay;
 
 $pageTitle = __('dashboard');
 $activeMenu = 'dashboard';
@@ -203,7 +205,7 @@ require __DIR__ . '/../includes/layout_header.php';
         <h3 class="h5 text-white-emphasis"><?= e(__('not_assigned')) ?></h3>
         <p class="text-muted mb-0"><?= e(__('employment_date_unavailable')) ?></p>
     </div>
-<?php elseif ($data['is_day_off']): ?>
+<?php elseif ($approvedLeaveDay): ?>
     <!-- State: Scheduled Day Off -->
     <div class="dash-hero-panel dash-hero-off mb-4">
         <div class="d-flex align-items-center gap-3 mb-2">
@@ -226,9 +228,13 @@ require __DIR__ . '/../includes/layout_header.php';
             </div>
         </div>
         <p class="text-muted mb-4 fs-6">
-            <?= e(__('scheduled_start_hint', [
-                'time' => $schedule ? format_time($data['date'] . ' ' . $schedule['start_time']) : '10:00 AM',
-            ])) ?>
+            <?php if ($scheduledOffDay): ?>
+                This is your scheduled day off. If you are working today, clock in normally; an administrator will review the day later.
+            <?php else: ?>
+                <?= e(__('scheduled_start_hint', [
+                    'time' => $schedule ? format_time($data['date'] . ' ' . $schedule['start_time']) : '10:00 AM',
+                ])) ?>
+            <?php endif; ?>
         </p>
         <button type="button" class="btn btn-accent btn-action-lg px-5 py-3 fw-bold fs-5 shadow-sm"
                 data-action="clock_in"
