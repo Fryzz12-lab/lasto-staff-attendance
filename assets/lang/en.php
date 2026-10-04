@@ -818,4 +818,8 @@ return array (
   'copy_employee_message' => 'Copy Details',
   'preview_employee_message' => 'Preview Message',
   'employee_message_hint' => 'Share these credentials with the employee directly.',
+  'days_off_earned' => 'Days Off You’ve Earned',
+  'days_off_earned_hint' => 'Extra days off earned by working on your scheduled off day.',
+  'days_to_replace' => 'Days You Need to Replace',
+  'days_to_replace_hint' => 'Leave days that must be replaced by working on a scheduled off day.',
 );

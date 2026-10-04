@@ -818,4 +818,8 @@ return array (
   'copy_employee_message' => 'Salin Butiran',
   'preview_employee_message' => 'Pratonton Mesej',
   'employee_message_hint' => 'Kongsi kelayakan ini terus dengan pekerja.',
+  'days_off_earned' => 'Hari Cuti Yang Anda Peroleh',
+  'days_off_earned_hint' => 'Hari cuti tambahan yang diperoleh dengan bekerja pada hari off berjadual.',
+  'days_to_replace' => 'Hari Yang Perlu Anda Ganti',
+  'days_to_replace_hint' => 'Hari cuti yang perlu diganti dengan bekerja pada hari off berjadual.',
 );

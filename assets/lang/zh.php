@@ -818,4 +818,8 @@ return array (
   'copy_employee_message' => '复制信息',
   'preview_employee_message' => '预览信息',
   'employee_message_hint' => '请将此登录凭据直接发给该员工。',
+  'days_off_earned' => '您已赚取的补休天数',
+  'days_off_earned_hint' => '通过在排定休息日工作而获得的额外休息日。',
+  'days_to_replace' => '您需要补回的天数',
+  'days_to_replace_hint' => '需要通过在排定休息日工作来补回的休假天数。',
 );
