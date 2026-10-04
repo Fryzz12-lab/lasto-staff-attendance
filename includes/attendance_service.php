@@ -406,7 +406,7 @@ function ensure_attendance_rows_for_date(string $date): int
     $stmt->execute([
         $date, POLICY_START_TIME, POLICY_END_TIME, $date,
         $defaultScheduleId ?: null, $date, $date, $date, $date,
-        $date, $date, $date, $date,
+        $date, $date, $date, $date, $date,
     ]);
     return $stmt->rowCount();
 }
