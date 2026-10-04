@@ -325,6 +325,8 @@
     if (!form.matches('[data-correction-form]') || event.submitter?.matches('[data-confirm-correction]')) return;
     const modal = document.getElementById('correctionConfirmModal');
     if (!modal || !window.bootstrap?.Modal) return;
+    const originalParent = modal.parentNode;
+    if (originalParent !== document.body) document.body.appendChild(modal);
     event.preventDefault();
 
     const rows = modal.querySelector('[data-correction-review-changes]');
@@ -356,6 +358,9 @@
     modal.querySelector('[data-correction-review-reason]').textContent = form.elements.namedItem('reason').value.trim();
     modal.addEventListener('shown.bs.modal', () => {
       modal.querySelector('[data-correction-cancel]').focus();
+    }, { once: true });
+    modal.addEventListener('hidden.bs.modal', () => {
+      if (originalParent?.isConnected) originalParent.appendChild(modal);
     }, { once: true });
     bootstrap.Modal.getOrCreateInstance(modal).show();
   });

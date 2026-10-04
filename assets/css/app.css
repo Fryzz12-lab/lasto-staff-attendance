@@ -7375,6 +7375,10 @@ html[data-theme='day'] .staff-dashboard .dash-hero-panel .dash-hero-status-meta 
   z-index: 1060;
 }
 
+.correction-confirm-modal {
+  z-index: 1060;
+}
+
 .modal-backdrop {
   z-index: 1050;
 }
