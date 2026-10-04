@@ -8284,6 +8284,9 @@ html[data-theme='day'] .staff-reset-handoff__message {
 
   .staff-history-page .attendance-mobile-record-card > .border-top > div {
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .12rem;
   }
 
   .staff-history-page .attendance-mobile-record-card > .border-top > div:last-child {
@@ -8306,7 +8309,17 @@ html[data-theme='day'] .staff-reset-handoff__message {
   }
 
   .staff-history-page .attendance-mobile-record-card .badge-off {
-    font-size: .6rem;
+    font-size: .56rem;
+    opacity: .82;
+  }
+
+  .staff-history-page .attendance-mobile-record-card .attendance-today-label {
+    vertical-align: middle;
+    margin-top: -.05rem;
+  }
+
+  .staff-history-page .attendance-mobile-record-card > .d-flex.align-items-center > div {
+    margin-right: 2px;
   }
 
   .staff-history-page .attendance-filter-card .date-preset {
