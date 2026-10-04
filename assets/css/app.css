@@ -8451,3 +8451,16 @@ html[data-theme='day'] .staff-reset-handoff__message {
 @media (max-width: 379.98px) {
   .staff-profile-page .staff-profile-row .row.g-2 > .col-6 { width: 100%; }
 }
+
+/* Final profile mobile polish: spacing and control alignment only. */
+@media (max-width: 767.98px) {
+  .staff-profile-page .app-content::before { background: radial-gradient(ellipse 78% 72% at 50% 28%, rgba(8,18,34,.84) 0%, rgba(8,18,34,.66) 54%, rgba(8,18,34,.14) 100%); }
+  html[data-theme='day'] .staff-profile-page .app-content::before { background: radial-gradient(ellipse 78% 72% at 50% 28%, rgba(241,245,249,.86) 0%, rgba(241,245,249,.66) 54%, rgba(241,245,249,.14) 100%); }
+  .staff-profile-page .app-content > .row:first-of-type .card-soft { padding: .65rem .75rem !important; }
+  .staff-profile-page .notification-preference { min-height: 2.5rem; padding-block: .35rem; align-items: center; }
+  .staff-profile-page .notification-preference > span:first-child { line-height: 1.25; }
+  .staff-profile-page .notification-checkbox,
+  .staff-profile-page .notification-switch { align-self: center; }
+  .staff-profile-page .notification-settings-card + .staff-profile-card .card-body > .d-flex { align-items: center; }
+  .staff-profile-page .notification-settings-card + .staff-profile-card .notification-preference { min-height: 2.75rem; }
+}
