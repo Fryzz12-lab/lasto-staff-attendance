@@ -18,6 +18,10 @@ if ((current_user()['role'] ?? '') !== 'admin') {
     json_response(['success' => false, 'message' => 'Forbidden'], 403);
 }
 
+// This endpoint only reads session data. Let other requests from this browser
+// run while the ticker queries the workforce tables.
+session_write_close();
+
 $date = today_str();
 $pdo = db();
 $items = [];
@@ -28,7 +32,7 @@ $sql = "SELECT a.clock_in, a.clock_out, a.status, a.late_minutes, u.full_name,
         JOIN users u ON u.id = a.user_id
         LEFT JOIN break_records ob ON ob.attendance_id = a.id AND ob.end_time IS NULL
         WHERE a.work_date = ? AND u.role = 'staff' AND u.is_active = 1
-        ORDER BY u.full_name";
+        ORDER BY a.clock_in DESC, u.full_name";
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$date]);
 $rows = $stmt->fetchAll();
@@ -154,16 +158,17 @@ if ($incomplete > 0) {
     ];
 }
 
-if (count($items) > 24) {
-    $items = array_slice($items, 0, 24);
-}
-
 if (count($items) < 2) {
     $items[] = [
         'kind' => 'info',
         'text' => __('ticker_ops_online'),
     ];
 }
+
+// Keep the ticker short enough to refresh visibly. The summary is always kept.
+$summaryItems = array_values(array_filter($items, static fn(array $item): bool => ($item['kind'] ?? '') === 'summary'));
+$otherItems = array_values(array_filter($items, static fn(array $item): bool => ($item['kind'] ?? '') !== 'summary'));
+$items = array_merge(array_slice($otherItems, 0, 5), array_slice($summaryItems, 0, 1));
 
 json_response([
     'success' => true,
