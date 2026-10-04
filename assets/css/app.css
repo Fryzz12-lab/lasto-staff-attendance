@@ -8464,3 +8464,16 @@ html[data-theme='day'] .staff-reset-handoff__message {
   .staff-profile-page .notification-settings-card + .staff-profile-card .card-body > .d-flex { align-items: center; }
   .staff-profile-page .notification-settings-card + .staff-profile-card .notification-preference { min-height: 2.75rem; }
 }
+
+/* Restore balanced breathing room in the two mobile profile summary cards. */
+@media (max-width: 767.98px) {
+  .staff-profile-page .app-content > .row:first-of-type .card-soft {
+    padding: .8rem .75rem !important;
+  }
+  .staff-profile-page .app-content > .row:first-of-type .card-soft .small {
+    margin-top: .18rem;
+  }
+  .staff-profile-page .app-content > .row:first-of-type .card-soft .h3 {
+    margin-top: .42rem !important;
+  }
+}
