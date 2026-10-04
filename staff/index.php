@@ -22,6 +22,14 @@ $usage = $data['break_usage'];
 $breaks = $data['breaks'];
 $approvedLeaveDay = has_approved_leave((int) $user['id'], $data['date']);
 $scheduledOffDay = !$approvedLeaveDay && (!empty($att['was_scheduled_off_day']) || ($schedule && is_scheduled_off($schedule, $data['date'])));
+$offdayReview = null;
+if ($scheduledOffDay && $att) {
+    $reviewStmt = db()->prepare('SELECT status, decision FROM offday_adjustment_reviews WHERE attendance_id=? LIMIT 1');
+    $reviewStmt->execute([(int)$att['id']]);
+    $offdayReview = $reviewStmt->fetch() ?: null;
+}
+$offdayAttendanceLabel = !$att || !$att['clock_in'] ? __('offday_not_clocked_in') : ($att['clock_out'] ? __('offday_completed') : __('offday_working'));
+$offdayReviewLabel = !$att || !$att['clock_out'] ? __('offday_review_after_clockout') : ($offdayReview ? __('offday_review_' . $offdayReview['status']) : __('offday_review_pending'));
 
 $pageTitle = __('dashboard');
 $activeMenu = 'dashboard';
@@ -167,9 +175,14 @@ require __DIR__ . '/../includes/layout_header.php';
         </div>
         <div class="dash-meta-pill">
             <span class="meta-pill-label"><?= e(__('current_status')) ?></span>
-            <span class="meta-pill-val"><?= attendance_status_badge($att) ?></span>
+            <span class="meta-pill-val"><?= $scheduledOffDay ? e($offdayAttendanceLabel) : attendance_status_badge($att) ?></span>
         </div>
-        <?php if (!$data['is_day_off'] && $schedule): ?>
+        <?php if ($scheduledOffDay): ?>
+            <div class="dash-meta-pill">
+                <span class="meta-pill-label"><?= e(__('offday_admin_review')) ?></span>
+                <span class="meta-pill-val"><?= e($offdayReviewLabel) ?></span>
+            </div>
+        <?php elseif (!$data['is_day_off'] && $schedule): ?>
             <div class="dash-meta-pill">
                 <span class="meta-pill-label"><?= e(__('daily_target')) ?></span>
                 <span class="meta-pill-val font-monospace"><?= e(format_minutes((int) ($schedule['target_work_minutes'] ?? 450))) ?> total</span>
@@ -221,7 +234,7 @@ require __DIR__ . '/../includes/layout_header.php';
         <div class="dash-hero-status-row d-flex flex-wrap justify-content-between align-items-center mb-3">
             <div class="dash-hero-status-title d-flex align-items-center gap-2">
                 <span class="live-pulse-dot bg-secondary"></span>
-                <span class="h5 mb-0 text-white-emphasis text-uppercase fw-bold"><?= e(__('ready_to_start')) ?></span>
+                <span class="h5 mb-0 text-white-emphasis text-uppercase fw-bold"><?= e($scheduledOffDay ? __('offday_work_question') : __('ready_to_start')) ?></span>
             </div>
             <div class="dash-hero-status-meta text-muted small">
                 <?= e(__('server_time')) ?>: <span class="font-monospace text-light" data-live-server-time><?= e(now()->format('g:i A')) ?></span>
@@ -237,7 +250,7 @@ require __DIR__ . '/../includes/layout_header.php';
             <?php endif; ?>
         </p>
         <?php if ($scheduledOffDay): ?>
-            <div class="alert alert-info py-2 mb-3"><strong><?= e(__('offday_work_title')) ?></strong><br><span class="small"><?= e(__('offday_review_hint')) ?></span></div>
+            <div class="alert alert-info py-2 mb-3"><span class="small"><?= e(__('offday_review_hint')) ?></span></div>
         <?php endif; ?>
         <button type="button" class="btn btn-accent btn-action-lg px-5 py-3 fw-bold fs-5 shadow-sm"
                 data-action="clock_in"
