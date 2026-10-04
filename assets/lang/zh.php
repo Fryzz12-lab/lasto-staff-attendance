@@ -822,4 +822,11 @@ return array (
   'days_off_earned_hint' => '通过在排定休息日工作而获得的额外休息日。',
   'days_to_replace' => '您需要补回的天数',
   'days_to_replace_hint' => '需要通过在排定休息日工作来补回的休假天数。',
+  'balance_direction_hint' => '已赚取的天数属于员工；需要补回的天数由员工承担。',
+  'replacement_off_available' => '已赚取天数',
+  'cuti_perlu_ganti' => '需要补回天数',
+  'decision_replacement_off' => '给予 1 天补休',
+  'decision_settle_cuti' => '减少 1 天补回责任',
+  'decision_no_adjustment' => '余额不变',
+  'negative_balance_override' => '允许补回余额为负数',
 );

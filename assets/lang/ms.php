@@ -822,4 +822,11 @@ return array (
   'days_off_earned_hint' => 'Hari cuti tambahan yang diperoleh dengan bekerja pada hari off berjadual.',
   'days_to_replace' => 'Hari Yang Perlu Anda Ganti',
   'days_to_replace_hint' => 'Hari cuti yang perlu diganti dengan bekerja pada hari off berjadual.',
+  'balance_direction_hint' => 'Hari yang diperoleh adalah hak pekerja; hari yang perlu diganti ialah tanggungan pekerja.',
+  'replacement_off_available' => 'Hari diperoleh',
+  'cuti_perlu_ganti' => 'Hari perlu diganti',
+  'decision_replacement_off' => 'Beri 1 hari diperoleh',
+  'decision_settle_cuti' => 'Kurangkan 1 hari tanggungan',
+  'decision_no_adjustment' => 'Tiada perubahan baki',
+  'negative_balance_override' => 'Benarkan baki tanggungan negatif',
 );

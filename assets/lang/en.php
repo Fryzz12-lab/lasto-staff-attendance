@@ -822,4 +822,11 @@ return array (
   'days_off_earned_hint' => 'Extra days off earned by working on your scheduled off day.',
   'days_to_replace' => 'Days You Need to Replace',
   'days_to_replace_hint' => 'Leave days that must be replaced by working on a scheduled off day.',
+  'balance_direction_hint' => 'Earned days belong to the employee; days to replace are owed by the employee.',
+  'replacement_off_available' => 'Earned days',
+  'cuti_perlu_ganti' => 'Days to replace',
+  'decision_replacement_off' => 'Give 1 earned day',
+  'decision_settle_cuti' => 'Reduce 1 day owed',
+  'decision_no_adjustment' => 'No balance change',
+  'negative_balance_override' => 'Allow a negative owed balance',
 );
