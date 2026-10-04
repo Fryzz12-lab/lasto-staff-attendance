@@ -57,6 +57,30 @@
     button.setAttribute('aria-pressed', String(show));
   });
   window.initPasswordToggles = initPasswordToggles;
+  // Staff delete controls are replaced during soft navigation, so handle clicks
+  // on the document. Bootstrap modals must sit outside .app-wrapper's stacking
+  // context or the backdrop covers the dialog and blocks its buttons.
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-delete-staff]');
+    if (!button) return;
+    const modalEl = document.getElementById('deleteStaffModal');
+    const id = Number(button.dataset.staffId);
+    if (!modalEl || !Number.isSafeInteger(id) || id <= 0 || !window.bootstrap?.Modal) return;
+
+    document.getElementById('deleteStaffName').textContent = button.dataset.staffName || '';
+    document.getElementById('deleteStaffForm').action = (window.APP_BASE || '') + '/admin/staff_form.php?id=' + id;
+    document.getElementById('deleteStaffCsrf').value = button.dataset.csrf || '';
+
+    const parent = modalEl.parentNode;
+    document.body.appendChild(modalEl);
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modalEl.addEventListener('hidden.bs.modal', () => {
+      modal.dispose();
+      if (parent?.isConnected) parent.appendChild(modalEl);
+      showLoading(false);
+    }, { once: true });
+    modal.show();
+  });
   function syncSecurityQuestions() {
     const first = document.getElementById('question_1');
     const second = document.getElementById('question_2');
@@ -147,6 +171,70 @@
     el.addEventListener('hidden.bs.toast', () => el.remove());
   }
 
+  function sidebarTemplateText() {
+    const template = document.getElementById('sidebar_welcome_template')?.textContent || '';
+    const values = {
+      name: document.getElementById('input_full_name')?.value || '',
+      company: document.getElementById('sidebar_company_name')?.textContent || '',
+      url: document.getElementById('sidebar_login_url')?.textContent || '',
+      username: document.getElementById('input_username')?.value || '',
+      password: document.getElementById('sidebar_temp_pw')?.value || '',
+    };
+    return template.replace(/:(name|company|url|username|password)\b/g, (_, key) => values[key]);
+  }
+
+  function updateSidebarPreview() {
+    const preview = document.getElementById('sidebar_template_preview');
+    if (preview) preview.textContent = sidebarTemplateText();
+  }
+
+  document.addEventListener('input', (event) => {
+    if (event.target.matches('#sidebar_temp_pw, #input_username, #input_full_name')) updateSidebarPreview();
+  });
+  document.addEventListener('click', (event) => {
+    if (!event.target.closest('#btn_regen_sidebar_pw')) return;
+    const input = document.getElementById('sidebar_temp_pw');
+    if (input) {
+      input.value = 'Temp@' + Math.floor(1000 + Math.random() * 9000);
+      updateSidebarPreview();
+    }
+  });
+
+  async function copyCredsText(button, value) {
+    if (!value) return;
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard API unavailable');
+      await navigator.clipboard.writeText(value);
+    } catch (_) {
+      const field = document.createElement('textarea');
+      field.value = value;
+      field.style.cssText = 'position:fixed;left:-9999px;top:0';
+      document.body.appendChild(field);
+      let copied = false;
+      try {
+        field.select();
+        copied = document.execCommand('copy');
+      } catch (_) {
+        copied = false;
+      } finally {
+        field.remove();
+      }
+      if (!copied) {
+        showToast('Could not copy. Please select and copy the text manually.', 'danger');
+        return;
+      }
+    }
+    showToast('Copied to clipboard.');
+    const label = button?.querySelector('span');
+    if (label) {
+      const original = label.textContent;
+      label.textContent = 'Copied!';
+      setTimeout(() => { if (label.isConnected) label.textContent = original; }, 2000);
+    }
+  }
+  window.copyCredsText = copyCredsText;
+  window.copySidebarTemplate = (button) => copyCredsText(button, sidebarTemplateText());
+
   async function apiPost(path, data) {
     showLoading(true);
     try {
@@ -182,9 +270,9 @@
       const instance = bootstrap.Modal.getOrCreateInstance(modal);
       const yes = modal.querySelector('[data-confirm-yes]');
       modal.querySelector('.modal-body').textContent = message;
-      const finish = (ok) => { yes.onclick = null; modal.removeEventListener('hidden.bs.modal', onHidden); resolve(ok); };
-      const onHidden = () => finish(false);
-      yes.onclick = () => { modal.addEventListener('hidden.bs.modal', () => finish(true), {once:true}); instance.hide(); };
+      let accepted = false;
+      const onHidden = () => { yes.onclick = null; modal.removeEventListener('hidden.bs.modal', onHidden); resolve(accepted); };
+      yes.onclick = () => { accepted = true; instance.hide(); };
       modal.addEventListener('hidden.bs.modal', onHidden, {once:true});
       instance.show();
     });
@@ -194,6 +282,11 @@
     const modal = document.getElementById('dashboardConfirmModal');
     if (!modal || !window.bootstrap?.Modal) return Promise.resolve(confirmAction(message));
     return new Promise((resolve) => {
+      const originalParent = modal.parentNode;
+      // Keep Bootstrap's modal and backdrop in the document root. The app shell
+      // has transformed stacking contexts that can otherwise place the backdrop
+      // above the modal buttons, making the entire screen appear unclickable.
+      if (originalParent !== document.body) document.body.appendChild(modal);
       const confirmButton = modal.querySelector('[data-action-confirm]');
       const cancelButton = modal.querySelector('[data-action-cancel]');
       const instance = bootstrap.Modal.getOrCreateInstance(modal);
@@ -208,6 +301,7 @@
       const onHidden = () => {
         confirmButton.removeEventListener('click', onConfirm);
         modal.removeEventListener('hidden.bs.modal', onHidden);
+        if (originalParent?.isConnected) originalParent.appendChild(modal);
         resolve(accepted);
       };
       confirmButton.addEventListener('click', onConfirm);
@@ -272,24 +366,153 @@
     }
   }
 
-  // Sidebar mobile toggle (once)
+  // Sidebar mobile toggle & swipe gestures (once)
   const sidebar = document.getElementById('appSidebar');
   const toggle = document.getElementById('sidebarToggle');
   const backdrop = document.getElementById('sidebarBackdrop');
+
+  function openSidebar() {
+    sidebar && sidebar.classList.add('open');
+    backdrop && backdrop.classList.add('show');
+  }
+
   function closeSidebar() {
     sidebar && sidebar.classList.remove('open');
     backdrop && backdrop.classList.remove('show');
   }
-  if (toggle && sidebar && !toggle.dataset.bound) {
-    toggle.dataset.bound = '1';
-    toggle.addEventListener('click', () => {
-      sidebar.classList.toggle('open');
-      backdrop && backdrop.classList.toggle('show');
-    });
+
+  function toggleSidebar() {
+    if (sidebar && sidebar.classList.contains('open')) {
+      closeSidebar();
+    } else {
+      openSidebar();
+    }
   }
+
+  // Handle taps on hamburger menu button AND mobile topbar profile picture/avatar
+  document.addEventListener('click', (event) => {
+    if (event.target.closest('#sidebarToggle, #mobileUserBtn, .sidebar-toggle, .topbar-mobile-avatar')) {
+      event.preventDefault();
+      toggleSidebar();
+    }
+  });
+
   if (backdrop && !backdrop.dataset.bound) {
     backdrop.dataset.bound = '1';
     backdrop.addEventListener('click', closeSidebar);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && sidebar && sidebar.classList.contains('open')) {
+      closeSidebar();
+    }
+  });
+
+  // Mobile swipe gestures: swipe right from left edge to open, swipe left to close
+  if (sidebar && !sidebar.dataset.swipeBound) {
+    sidebar.dataset.swipeBound = '1';
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartTime = 0;
+    let isTracking = false;
+    let swipeDirection = null;
+    let sidebarWasOpen = false;
+
+    const isMobileView = () => window.matchMedia('(max-width: 991.98px)').matches;
+
+    document.addEventListener('touchstart', (e) => {
+      if (!isMobileView() || e.touches.length !== 1) return;
+      if (e.target.closest('input, textarea, select, .modal')) return;
+
+      sidebarWasOpen = sidebar.classList.contains('open');
+      const touch = e.touches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+      touchStartTime = Date.now();
+      swipeDirection = null;
+
+      // When closed: only trigger if touch starts within 60px of the left edge
+      if (!sidebarWasOpen && touchStartX > 60) {
+        isTracking = false;
+        return;
+      }
+
+      isTracking = true;
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+      if (!isTracking || !isMobileView() || e.touches.length !== 1) return;
+
+      const touch = e.touches[0];
+      const dx = touch.clientX - touchStartX;
+      const dy = touch.clientY - touchStartY;
+
+      if (!swipeDirection) {
+        // If movement is mostly vertical, let native scrolling handle it
+        if (Math.abs(dy) >= 8 && Math.abs(dy) > Math.abs(dx)) {
+          swipeDirection = 'vertical';
+          isTracking = false;
+          return;
+        }
+        // If movement is clearly horizontal in the expected direction
+        if (Math.abs(dx) >= 8 && Math.abs(dx) > Math.abs(dy)) {
+          if ((!sidebarWasOpen && dx > 0) || (sidebarWasOpen && dx < 0)) {
+            swipeDirection = 'horizontal';
+          } else {
+            isTracking = false;
+            return;
+          }
+        }
+      }
+
+      if (swipeDirection === 'horizontal') {
+        if (e.cancelable) e.preventDefault();
+
+        if (!sidebarWasOpen && dx >= 50) {
+          openSidebar();
+          isTracking = false;
+        } else if (sidebarWasOpen && dx <= -50) {
+          closeSidebar();
+          isTracking = false;
+        }
+      }
+    }, { passive: false });
+
+    const handleTouchEnd = (e) => {
+      if (!isTracking || swipeDirection !== 'horizontal' || !isMobileView()) {
+        isTracking = false;
+        swipeDirection = null;
+        return;
+      }
+
+      const touch = e.changedTouches[0];
+      if (touch) {
+        const dx = touch.clientX - touchStartX;
+        const dy = touch.clientY - touchStartY;
+        const dt = Date.now() - touchStartTime;
+
+        const isFlick = dt < 350 && Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy) * 1.2;
+        const isSubstantialSwipe = Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.2;
+
+        if (isFlick || isSubstantialSwipe) {
+          if (!sidebarWasOpen && dx > 0) {
+            openSidebar();
+          } else if (sidebarWasOpen && dx < 0) {
+            closeSidebar();
+          }
+        }
+      }
+
+      isTracking = false;
+      swipeDirection = null;
+    };
+
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
+    document.addEventListener('touchcancel', () => {
+      isTracking = false;
+      swipeDirection = null;
+    }, { passive: true });
   }
 
   function bindPageActions() {
@@ -444,7 +667,7 @@
   }
 
   function syncThemeToggleUi(theme) {
-    document.querySelectorAll('#themeToggle').forEach((btn) => {
+    document.querySelectorAll('.theme-toggle').forEach((btn) => {
       const night = theme !== 'day';
       btn.classList.toggle('is-day', !night);
       const text = btn.querySelector('.theme-toggle__text');
@@ -467,16 +690,95 @@
         }
       })();
     applyTheme(initial, false);
+  }
 
-    document.querySelectorAll('#themeToggle').forEach((btn) => {
-      if (btn.dataset.bound === '1') return;
-      btn.dataset.bound = '1';
-      btn.addEventListener('click', () => {
-        const cur = document.documentElement.getAttribute('data-theme') || 'night';
-        applyTheme(cur === 'day' ? 'night' : 'day', true);
-      });
+  // Delegated click handler ensures mobile sidebar, topbar, and dynamic buttons always toggle
+  document.addEventListener('click', (event) => {
+    const btn = event.target.closest('.theme-toggle');
+    if (!btn) return;
+    const cur = document.documentElement.getAttribute('data-theme') || 'night';
+    applyTheme(cur === 'day' ? 'night' : 'day', true);
+  });
+
+  // ——— 3D Globe toggle (on / off) ———
+  function applyGlobe(state, persist) {
+    const on = state !== 'off';
+    const val = on ? 'on' : 'off';
+    document.documentElement.setAttribute('data-globe', val);
+    if (persist !== false) {
+      try {
+        localStorage.setItem('chrono_globe', val);
+      } catch (e) {}
+    }
+    const host = document.getElementById('chronoAmbient');
+    if (host) {
+      if (on) {
+        host.style.removeProperty('display');
+        host.style.removeProperty('visibility');
+      } else {
+        host.style.setProperty('display', 'none', 'important');
+        host.style.setProperty('visibility', 'hidden', 'important');
+      }
+    }
+    if (window.ChronosSpaceBg && typeof window.ChronosSpaceBg.setEnabled === 'function') {
+      window.ChronosSpaceBg.setEnabled(on);
+    }
+    syncGlobeToggleUi(val);
+  }
+
+  function syncGlobeToggleUi(state) {
+    const on = state !== 'off';
+    document.querySelectorAll('.globe-toggle').forEach((btn) => {
+      btn.classList.toggle('is-off', !on);
+      btn.classList.toggle('is-on', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      const text = btn.querySelector('.globe-toggle__text');
+      if (text) {
+        text.textContent = on
+          ? btn.getAttribute('data-label-on') || ''
+          : btn.getAttribute('data-label-off') || '';
+      }
+    });
+
+    document.querySelectorAll('.globe-profile-toggle').forEach((input) => {
+      input.checked = on;
+    });
+    document.querySelectorAll('.globe-profile-label').forEach((span) => {
+      const parent = span.closest('.notification-preference');
+      const onLabel = parent ? parent.getAttribute('data-label-on') : null;
+      const offLabel = parent ? parent.getAttribute('data-label-off') : null;
+      if (onLabel && offLabel) {
+        span.textContent = on ? onLabel : offLabel;
+      }
     });
   }
+
+  function initGlobeToggle() {
+    const initial =
+      document.documentElement.getAttribute('data-globe') ||
+      (function () {
+        try {
+          return localStorage.getItem('chrono_globe') || 'on';
+        } catch (e) {
+          return 'on';
+        }
+      })();
+    applyGlobe(initial, false);
+  }
+
+  // Delegated click & change handlers for globe toggle buttons & profile switches
+  document.addEventListener('click', (event) => {
+    const btn = event.target.closest('.globe-toggle');
+    if (!btn) return;
+    const cur = document.documentElement.getAttribute('data-globe') || 'on';
+    applyGlobe(cur === 'off' ? 'on' : 'off', true);
+  });
+
+  document.addEventListener('change', (event) => {
+    const input = event.target.closest('.globe-profile-toggle');
+    if (!input) return;
+    applyGlobe(input.checked ? 'on' : 'off', true);
+  });
 
   // ——— Admin live ticker ———
   let tickerRefreshFn = null;
@@ -716,6 +1018,7 @@
 
   bindPageActions();
   initThemeToggle();
+  initGlobeToggle();
   initLiveTicker();
   initBadgePoller();
   initServiceWorker();
@@ -730,6 +1033,9 @@
     earthPulse,
     initThemeToggle,
     syncThemeToggleUi,
+    applyGlobe,
+    initGlobeToggle,
+    syncGlobeToggleUi,
     refreshLiveTicker,
     refreshBadges: function () {
       return fetchBadges(false);
