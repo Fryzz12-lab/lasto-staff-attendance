@@ -2087,6 +2087,12 @@ html[data-theme='night'] .input-group:focus-within .input-group-text { border-co
   font-family: var(--font-ui);
 }
 
+.balance-card-title {
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
 /* ——— Combined Search Bar (Google Style) ——— */
 .search-bar-combo {
   display: flex;
