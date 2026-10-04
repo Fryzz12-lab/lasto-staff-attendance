@@ -119,6 +119,26 @@ html[data-theme='night'][data-globe='off'] #chronoAmbient canvas {
 }
 
 a {
+    margin-top: 2px;
+    gap: 2px 8px;
+  }
+
+  .staff-dashboard .activity-strip-badge-line {
+    margin-top: .35rem !important;
+  }
+
+  .staff-dashboard .badge-result {
+    padding: 4px 8px;
+    font-size: .66rem;
+  }
+
+  .staff-dashboard .app-footer {
+    padding: .55rem .75rem;
+    font-size: .72rem;
+  }
+}
+
+a {
   color: var(--accent);
   text-decoration: none;
   transition: color .2s ease;
@@ -8189,4 +8209,26 @@ html[data-theme='day'] .staff-reset-handoff__message {
   .auth-page.login-page .auth-top > .lang-switcher > .dropdown-menu {
     min-width: 11.5rem;
   }
+}
+
+/* Final mobile dashboard overrides keep the compact treatment ahead of legacy rules. */
+@media (max-width: 767.98px) {
+  .staff-dashboard .app-content { padding: .75rem .75rem 1rem; }
+  .staff-dashboard .dash-primary-layout > .dash-hero-panel { margin-bottom: .75rem !important; }
+  .staff-dashboard .dash-hero-completed { padding: 14px 16px; }
+  .staff-dashboard .dash-hero-completed .dash-hero-status-row { margin-bottom: .35rem !important; }
+  .staff-dashboard .dash-hero-completed .mobile-summary-span { margin-bottom: .75rem !important; line-height: 1.25; }
+  .staff-dashboard .dash-mobile-metrics-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; }
+  .staff-dashboard .mobile-metric-col { min-width: 0; }
+  .staff-dashboard .mobile-metric-label { font-size: .68rem; line-height: 1.2; }
+  .staff-dashboard .mobile-metric-val { line-height: 1.25; }
+  .staff-dashboard .dash-activity-card { margin-top: .75rem; padding: 14px 14px 8px; }
+  .staff-dashboard .dash-activity-header { margin-bottom: .35rem !important; padding-bottom: .55rem !important; }
+  .staff-dashboard .dash-activity-strip { padding: 8px 0; min-height: 0; gap: 6px; }
+  .staff-dashboard .activity-strip-icon { width: 34px; height: 34px; font-size: 1rem; }
+  .staff-dashboard .activity-strip-left { gap: .65rem !important; }
+  .staff-dashboard .activity-strip-meta { margin-top: 2px; gap: 2px 8px; }
+  .staff-dashboard .activity-strip-badge-line { margin-top: .35rem !important; }
+  .staff-dashboard .badge-result { padding: 4px 8px; font-size: .66rem; }
+  .staff-dashboard .app-footer { padding: .55rem .75rem; font-size: .72rem; }
 }
