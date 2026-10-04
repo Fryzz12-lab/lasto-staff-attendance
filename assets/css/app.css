@@ -8393,3 +8393,29 @@ html[data-theme='day'] .staff-reset-handoff__message {
   .staff-area .leave-mobile-stat-card__pending-count { font-size: 1.25rem !important; }
   .staff-area .d-md-none > .btn[data-bs-target="#newRequestCard"] { min-height: 44px; }
 }
+
+/* Leave page mobile atmosphere: protect the content stack while keeping edge ambience. */
+@media (max-width: 767.98px) {
+  .staff-leave-page .app-content {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .staff-leave-page .app-content::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse 78% 72% at 50% 30%, rgba(8, 18, 34, .9) 0%, rgba(8, 18, 34, .72) 54%, rgba(8, 18, 34, .18) 100%);
+  }
+
+  .staff-leave-page .app-content > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  html[data-theme='day'] .staff-leave-page .app-content::before {
+    background: radial-gradient(ellipse 78% 72% at 50% 30%, rgba(241, 245, 249, .92) 0%, rgba(241, 245, 249, .72) 54%, rgba(241, 245, 249, .18) 100%);
+  }
+}

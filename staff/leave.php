@@ -57,6 +57,7 @@ $isFormOpen = empty($rows) || is_post();
 $pageTitle = __('leave_requests');
 $activeMenu = 'leave';
 $isAdminArea = false;
+$bodyClass = 'staff-history-page staff-leave-page';
 require __DIR__ . '/../includes/layout_header.php';
 ?>
 
