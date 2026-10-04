@@ -10,6 +10,7 @@ require_login();
 
 $user = current_user();
 $userId = (int) $user['id'];
+$balances = employee_balances($userId);
 
 if (is_post()) {
     require_csrf();
@@ -31,6 +32,17 @@ if (is_post()) {
             $stmt->execute([$hash, $userId]);
             $_SESSION['auth_version'] = (int) ($user['auth_version'] ?? 0) + 1;
             flash_set('success', __('msg_password_updated'));
+        }
+        redirect('/staff/profile.php');
+    }
+
+    if ($action === 'verify_email') {
+        if (empty($user['email']) || !filter_var($user['email'], FILTER_VALIDATE_EMAIL)) {
+            flash_set('danger', 'Your account does not have a valid email address. Contact an administrator.');
+        } else {
+            $token = recovery_issue_token($userId, 'verify_email');
+            $sent = recovery_send_link((string) $user['email'], $token, 'verify_email', (string) $user['full_name']);
+            flash_set($sent ? 'success' : 'danger', $sent ? 'Verification email sent. Check your inbox and spam folder.' : 'Verification email could not be sent. Contact an administrator.');
         }
         redirect('/staff/profile.php');
     }
@@ -72,7 +84,12 @@ $isAdminArea = false;
 require __DIR__ . '/../includes/layout_header.php';
 ?>
 
-<h2 class="h4 mb-3"><?= e(__('my_profile')) ?></h2>
+<h2 class="h4 mb-3 d-none d-lg-block"><?= e(__('my_profile')) ?></h2>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-6"><div class="card-soft p-3"><div class="form-hint">Replacement Off available</div><div class="h3 mb-0"><?= e(number_format($balances['replacement_off'], 2)) ?> days</div></div></div>
+    <div class="col-md-6"><div class="card-soft p-3"><div class="form-hint">Cuti Perlu Ganti</div><div class="h3 mb-0"><?= e(number_format($balances['cuti_perlu_ganti'], 2)) ?> days</div></div></div>
+</div>
 
 <div class="row g-3 staff-profile-row">
     <div class="col-lg-8 d-flex">
@@ -98,6 +115,16 @@ require __DIR__ . '/../includes/layout_header.php';
                         <div class="col-6">
                             <label class="form-label"><i class="bi bi-lock-fill me-1" aria-hidden="true"></i><?= e(__('email')) ?></label>
                             <input type="email" class="form-control" value="<?= e((string) $user['email']) ?>" disabled>
+                            <div class="form-hint mt-1">
+                                <?= !empty($user['email_verified_at']) ? '<span class="email-status email-status--verified">Verified</span>' : '<span class="email-status email-status--pending">Not verified</span>' ?>
+                            </div>
+                            <?php if (empty($user['email_verified_at'])): ?>
+                                <form method="post" class="mt-2">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="action" value="verify_email">
+                                    <button class="btn btn-sm btn-outline-info" <?= empty($user['email']) ? 'disabled' : '' ?>>Send verification email</button>
+                                </form>
+                            <?php endif; ?>
                         </div>
                         <div class="col-6">
                             <label class="form-label"><?= e(__('phone')) ?></label>
@@ -188,5 +215,23 @@ require __DIR__ . '/../includes/layout_header.php';
             <?php endforeach; ?>
         </div>
     </div>
+<div class="card-soft staff-profile-card mt-3">
+    <div class="card-header"><i class="bi bi-sliders me-1"></i> <?= e(__('display_preferences')) ?></div>
+    <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+            <div>
+                <strong class="d-block text-white-emphasis"><i class="bi bi-globe2 me-1 text-accent"></i> <?= e(__('globe_3d')) ?></strong>
+                <p class="form-hint mb-0"><?= e(__('globe_3d_hint')) ?></p>
+            </div>
+            <div>
+                <label class="notification-preference m-0" data-label-on="<?= e(__('globe_on')) ?>" data-label-off="<?= e(__('globe_off')) ?>">
+                    <span class="globe-profile-label"><?= e(__('globe_on')) ?></span>
+                    <input type="checkbox" id="globeProfileToggleStaff" class="notification-toggle globe-profile-toggle" checked>
+                    <span class="notification-switch" aria-hidden="true"></span>
+                </label>
+            </div>
+        </div>
+    </div>
 </div>
+
 <?php require __DIR__ . '/../includes/layout_footer.php'; ?>

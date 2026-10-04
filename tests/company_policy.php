@@ -30,7 +30,7 @@ if (in_array($argv[1] ?? '', ['worker', 'render'], true)) {
         $page = $argv[4];
         $allowedPages = ['admin/reports.php', 'staff/attendance.php', 'staff/leave.php', 'admin/index.php', 'admin/attendance.php', 'admin/attendance_today.php',
             'admin/attendance_detail.php', 'admin/settings.php', 'admin/schedules.php', 'admin/staff_form.php',
-            'admin/corrections.php', 'admin/leave_requests.php', 'staff/index.php', 'staff/schedule.php', 'staff/profile.php', 'admin/profile.php'];
+            'admin/corrections.php', 'admin/leave_requests.php', 'admin/offday_adjustments.php', 'staff/index.php', 'staff/schedule.php', 'staff/profile.php', 'admin/profile.php'];
         if (!in_array($page, $allowedPages, true)) throw new RuntimeException('Invalid page');
         require_once __DIR__ . '/../includes/bootstrap.php';
         $_SESSION['user_id'] = $userId;
@@ -72,7 +72,8 @@ foreach (['012-0GG00001', 'abcdefg', '123', '0000000000', '+60123456789', '01234
 check(normalize_username('Nurul Aisyah') === 'nurul_aisyah', 'Username lowercase and space normalization');
 check(normalize_full_name('Nurul 李伟') === 'NURUL 李伟', 'Full name uppercase preserves Chinese characters');
 check(valid_account_email('nurul.aisyah+test@example.com'), 'Valid .com email accepted');
-foreach (['nurul.example.com', 'nurul@example', 'nurul@example.org', 'nurul@@example.com', 'nurul @example.com', 'nurul@example.com.evil', 'nurul..aisyah@example.com'] as $invalidEmail) {
+check(valid_account_email('admin@lastotechnology.my'), 'Valid .my email accepted');
+foreach (['nurul.example.com', 'nurul@example', 'nurul@@example.com', 'nurul @example.com', 'nurul..aisyah@example.com'] as $invalidEmail) {
     check(!valid_account_email($invalidEmail), 'Invalid account email rejected: ' . $invalidEmail);
 }
 function check(bool $condition, string $message): void
@@ -244,7 +245,12 @@ try {
     check(!start_break($user, 'solat')['success'], 'Break after clock-out rejected');
 
     $restUser = test_user((int) now()->format('w'));
-    check(!clock_in($restUser)['success'], 'Off-day clock-in rejected');
+    check(clock_in($restUser)['success'], 'Off-day clock-in allowed');
+    check(start_break($restUser, 'solat')['success'], 'Off-day break start allowed');
+    check(end_break($restUser)['success'], 'Off-day break end allowed');
+    check(clock_out($restUser)['success'], 'Off-day clock-out allowed');
+    $offReview = $pdo->query('SELECT * FROM offday_adjustment_reviews WHERE employee_id=' . $restUser . ' ORDER BY id DESC LIMIT 1')->fetch();
+    check($offReview && $offReview['status'] === 'pending', 'Completed off-day creates pending review');
     assign_employee_schedule($restUser, 1, $off);
     check((int) get_attendance($restUser, $today)['is_day_off'] === 0, 'Today reconciles after off-day change');
     assign_employee_schedule($restUser, 1, ($off + 1) % 7);

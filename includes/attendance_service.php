@@ -6,6 +6,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/adjustment_service.php';
 
 /** The company schedule is provisioned by setup/migration, never by a staff form. */
 function standard_schedule_id(): int
@@ -215,6 +216,7 @@ function correct_attendance(int $attendanceId, ?string $clockIn, ?string $clockO
             reconcile_attendance_day_status($userId, $att['work_date']);
         }
         recalculate_attendance($attendanceId);
+        ensure_offday_adjustment_review($attendanceId);
     });
 }
 
@@ -257,7 +259,7 @@ function submit_leave_request(int $userId, string $date, string $type, string $r
     });
 }
 
-function review_leave_request(int $requestId, string $decision, int $reviewerId, ?string $note): void
+function review_leave_request(int $requestId, string $decision, int $reviewerId, ?string $note, bool $requiresReplacement = false, float $replacementAmount = 0.0): void
 {
     $stmt = db()->prepare("SELECT id FROM users WHERE id=? AND role='admin' AND is_active=1");
     $stmt->execute([$reviewerId]);
@@ -296,6 +298,9 @@ function review_leave_request(int $requestId, string $decision, int $reviewerId,
         }
         db()->prepare('UPDATE leave_requests SET status=?,admin_note=?,reviewed_by=?,reviewed_at=NOW() WHERE id=?')
             ->execute([$decision, $note, $reviewerId, $requestId]);
+        if ($decision === 'approved') {
+            record_leave_replacement($requestId, $userId, $requiresReplacement, $replacementAmount, $reviewerId, $note);
+        }
         if ($decision === 'approved' && $request['leave_date'] <= today_str()) {
             $att = ensure_attendance_row($userId, $request['leave_date']);
             write_audit((int) $att['id'], $userId, $reviewerId, 'request_approved', 'work_arrangement', null, $request['leave_type'], $note);
@@ -362,25 +367,48 @@ function ensure_attendance_rows_for_date(string $date): int
     if (!$parsed || $parsed->format('Y-m-d') !== $date || $date > today_str()) {
         return 0;
     }
-    // Only query staff who actually do not have an attendance record for this date
-    $stmt = db()->prepare(
-        "SELECT u.id
-         FROM users u
-         LEFT JOIN attendance a ON a.user_id = u.id AND a.work_date = ?
-         WHERE u.role = 'staff'
-           AND u.is_active = 1
-           AND (u.joining_date IS NULL OR u.joining_date <= ?)
-           AND (u.employment_end_date IS NULL OR u.employment_end_date >= ?)
-           AND a.id IS NULL
-         ORDER BY u.id"
-    );
-    $stmt->execute([$date, $date, $date]);
-    $created = 0;
-    foreach ($stmt->fetchAll() as $staff) {
-        ensure_attendance_row((int) $staff['id'], $date);
-        $created++;
-    }
-    return $created;
+    // A report may need thousands of missing staff-days. Insert them in one
+    // statement so the first page load does not perform several queries and
+    // a row lock for every employee. The unique user/date key handles races.
+    $sql = "INSERT IGNORE INTO attendance
+            (user_id, work_date, schedule_id, scheduled_start, scheduled_end, is_day_off, was_scheduled_off_day, scheduled_off_weekday, is_wfh, status)
+            SELECT eligible.id, ?, eligible.schedule_id, ?, ?,
+                   eligible.day_off, eligible.scheduled_off,
+                   eligible.off_weekday,
+                   IF(eligible.day_off = 0 AND eligible.wfh = 1, 1, 0),
+                   IF(eligible.day_off = 1, 'day_off', IF(? < CURDATE(), 'absent', 'not_clocked_in'))
+            FROM (
+                SELECT u.id, COALESCE(sa.schedule_id, ?) AS schedule_id,
+                       IF(COALESCE(sa.weekly_off_day, u.weekly_off_day) = DAYOFWEEK(?) - 1
+                          OR EXISTS (SELECT 1 FROM leave_requests lr
+                                     WHERE lr.user_id = u.id AND lr.leave_date = ?
+                                     AND lr.status = 'approved' AND lr.leave_type <> 'wfh'), 1, 0) AS day_off,
+                       IF(COALESCE(sa.weekly_off_day, u.weekly_off_day) = DAYOFWEEK(?) - 1, 1, 0) AS scheduled_off,
+                       COALESCE(sa.weekly_off_day, u.weekly_off_day) AS off_weekday,
+                       EXISTS (SELECT 1 FROM leave_requests lr
+                               WHERE lr.user_id = u.id AND lr.leave_date = ?
+                                 AND lr.status = 'approved' AND lr.leave_type = 'wfh') AS wfh
+                FROM users u
+                LEFT JOIN schedule_assignments sa ON sa.id = (
+                    SELECT sa2.id FROM schedule_assignments sa2
+                    WHERE sa2.user_id = u.id AND sa2.effective_from <= ?
+                      AND (sa2.effective_to IS NULL OR sa2.effective_to >= ?)
+                    ORDER BY sa2.effective_from DESC, sa2.id DESC LIMIT 1
+                )
+                LEFT JOIN attendance a ON a.user_id = u.id AND a.work_date = ?
+                WHERE u.role = 'staff' AND u.is_active = 1
+                  AND (u.joining_date IS NULL OR u.joining_date <= ?)
+                  AND (u.employment_end_date IS NULL OR u.employment_end_date >= ?)
+                  AND a.id IS NULL
+            ) eligible";
+    $defaultScheduleId = db()->query("SELECT id FROM work_schedules WHERE is_default=1 AND is_active=1 LIMIT 1")->fetchColumn();
+    $stmt = db()->prepare($sql);
+    $stmt->execute([
+        $date, POLICY_START_TIME, POLICY_END_TIME, $date,
+        $defaultScheduleId ?: null, $date, $date, $date, $date,
+        $date, $date, $date, $date,
+    ]);
+    return $stmt->rowCount();
 }
 
 /** Ensure a bounded historical range exists before an admin report reads it. */
@@ -426,6 +454,8 @@ function ensure_attendance_row_locked(int $userId, string $date): array
 
     $schedule = get_schedule_for_date($userId, $date);
     $isOff = false;
+    $wasScheduledOff = false;
+    $scheduledOffWeekday = null;
     $schedId = null;
     $start = POLICY_START_TIME;
     $end = POLICY_END_TIME;
@@ -435,7 +465,9 @@ function ensure_attendance_row_locked(int $userId, string $date): array
         $schedId = $schedule['schedule_id'];
         $start = $schedule['start_time'];
         $end = $schedule['end_time'];
-        $isOff = is_scheduled_off($schedule, $date) || has_approved_leave($userId, $date);
+        $wasScheduledOff = is_scheduled_off($schedule, $date);
+        $scheduledOffWeekday = (int)($schedule['weekly_off_day'] ?? 0);
+        $isOff = $wasScheduledOff || has_approved_leave($userId, $date);
         if ($isOff) {
             $status = 'day_off';
         }
@@ -445,10 +477,10 @@ function ensure_attendance_row_locked(int $userId, string $date): array
     }
 
     $stmt = db()->prepare(
-        'INSERT INTO attendance (user_id, work_date, schedule_id, scheduled_start, scheduled_end, is_day_off, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?)'
+        'INSERT INTO attendance (user_id, work_date, schedule_id, scheduled_start, scheduled_end, is_day_off, was_scheduled_off_day, scheduled_off_weekday, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
     );
-    $stmt->execute([$userId, $date, $schedId, $start, $end, $isOff ? 1 : 0, $status]);
+    $stmt->execute([$userId, $date, $schedId, $start, $end, $isOff ? 1 : 0, $wasScheduledOff ? 1 : 0, $scheduledOffWeekday, $status]);
 
     return reconcile_attendance_day_status($userId, $date, get_attendance($userId, $date));
 }
@@ -465,18 +497,19 @@ function reconcile_attendance_day_status(int $userId, string $date, ?array $att 
     }
 
     $schedule = get_schedule_for_date($userId, $date);
-    $shouldOff = ($schedule && is_scheduled_off($schedule, $date)) || has_approved_leave($userId, $date);
+    $scheduledOff = $schedule && is_scheduled_off($schedule, $date);
+    $shouldOff = $scheduledOff || has_approved_leave($userId, $date);
     $isWfh = !$shouldOff && has_approved_wfh($userId, $date);
     if (!empty($att['clock_in'])) {
         // Preserve punches and their status; WFH remains visible throughout the shift.
-        db()->prepare('UPDATE attendance SET is_wfh=?, is_day_off=? WHERE id=?')
-            ->execute([(int) $isWfh, $isWfh ? 0 : (int) $att['is_day_off'], $att['id']]);
+        db()->prepare('UPDATE attendance SET is_wfh=?, is_day_off=?, was_scheduled_off_day=?, scheduled_off_weekday=? WHERE id=?')
+            ->execute([(int) $isWfh, $isWfh ? 0 : (int) $att['is_day_off'], $scheduledOff ? 1 : (int)($att['was_scheduled_off_day'] ?? 0), $schedule['weekly_off_day'] ?? ($att['scheduled_off_weekday'] ?? null), $att['id']]);
         if ($att['status'] === 'wfh') recalculate_attendance((int) $att['id']);
         return get_attendance($userId, $date);
     }
     $status = $shouldOff ? 'day_off' : ($date < today_str() ? 'absent' : 'not_clocked_in');
-    db()->prepare('UPDATE attendance SET schedule_id=?, scheduled_start=?, scheduled_end=?, is_day_off=?, is_wfh=?, status=? WHERE id=? AND clock_in IS NULL')
-        ->execute([$schedule['schedule_id'] ?? null, POLICY_START_TIME, POLICY_END_TIME, (int) $shouldOff, (int) $isWfh, $status, $att['id']]);
+    db()->prepare('UPDATE attendance SET schedule_id=?, scheduled_start=?, scheduled_end=?, is_day_off=?, was_scheduled_off_day=?, scheduled_off_weekday=?, is_wfh=?, status=? WHERE id=? AND clock_in IS NULL')
+        ->execute([$schedule['schedule_id'] ?? null, POLICY_START_TIME, POLICY_END_TIME, (int) $shouldOff, $scheduledOff ? 1 : (int)($att['was_scheduled_off_day'] ?? 0), $schedule['weekly_off_day'] ?? ($att['scheduled_off_weekday'] ?? null), (int) $isWfh, $status, $att['id']]);
     return get_attendance($userId, $date);
 }
 
@@ -683,9 +716,6 @@ function clock_in(int $userId): array
     return with_employee_lock($userId, function () use ($userId): array {
         $date = today_str();
         $att = ensure_attendance_row($userId, $date);
-        if ((int) $att['is_day_off'] === 1) {
-            return ['success' => false, 'message' => __('msg_day_off_no_clock')];
-        }
         if ($att['clock_in']) {
             return ['success' => false, 'message' => __('msg_already_clocked_in')];
         }
@@ -716,6 +746,7 @@ function clock_out(int $userId): array
         $clockOut = now()->format('Y-m-d H:i:s');
         db()->prepare('UPDATE attendance SET clock_out=? WHERE id=?')->execute([$clockOut, $att['id']]);
         recalculate_attendance((int) $att['id']);
+        ensure_offday_adjustment_review((int)$att['id']);
         write_audit((int) $att['id'], $userId, $userId, 'clock_out', 'clock_out', null, $clockOut, 'Staff clock out');
         $att = get_attendance($userId, today_str());
         return ['success' => true, 'message' => __('msg_clocked_out', [

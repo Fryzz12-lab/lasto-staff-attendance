@@ -12,6 +12,7 @@ require_once __DIR__ . '/csrf.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/i18n.php';
 require_once __DIR__ . '/attendance_service.php';
+require_once __DIR__ . '/adjustment_service.php';
 require_once __DIR__ . '/badge_service.php';
 require_once __DIR__ . '/date_filter.php';
 require_once __DIR__ . '/account_recovery.php';

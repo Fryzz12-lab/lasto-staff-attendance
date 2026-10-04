@@ -1,6 +1,11 @@
 -- Staff Attendance & Workforce Management System
 -- Database: staff_attendance
 -- Timezone: Asia/Kuala_Lumpur
+--
+-- LOCAL XAMPP ONLY. This file creates and selects `staff_attendance`.
+-- For cPanel, import database/cpanel_schema.sql into a blank database
+-- created in MySQL Databases. Never import this file into WordPress or
+-- any other existing database on the hosting account.
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
@@ -16,6 +21,9 @@ DROP TABLE IF EXISTS `account_recovery_tokens`;
 DROP TABLE IF EXISTS `auth_remember_tokens`;
 DROP TABLE IF EXISTS `user_security_questions`;
 DROP TABLE IF EXISTS `attendance_correction_requests`;
+DROP TABLE IF EXISTS `staff_balance_ledger`;
+DROP TABLE IF EXISTS `leave_replacement_reviews`;
+DROP TABLE IF EXISTS `offday_adjustment_reviews`;
 DROP TABLE IF EXISTS `leave_requests`;
 DROP TABLE IF EXISTS `break_records`;
 DROP TABLE IF EXISTS `attendance`;
@@ -147,6 +155,8 @@ CREATE TABLE `attendance` (
   `scheduled_start` TIME DEFAULT NULL,
   `scheduled_end` TIME DEFAULT NULL,
   `is_day_off` TINYINT(1) NOT NULL DEFAULT 0,
+  `was_scheduled_off_day` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Historical schedule snapshot for this date',
+  `scheduled_off_weekday` TINYINT UNSIGNED DEFAULT NULL COMMENT '0=Sun ... 6=Sat snapshot',
   `is_wfh` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Approved work arrangement, independent of attendance status',
   `clock_in` DATETIME DEFAULT NULL,
   `clock_out` DATETIME DEFAULT NULL,
@@ -215,6 +225,66 @@ CREATE TABLE `leave_requests` (
   KEY `idx_leave_date` (`leave_date`),
   CONSTRAINT `fk_leave_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
   CONSTRAINT `fk_leave_reviewer` FOREIGN KEY (`reviewed_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `offday_adjustment_reviews` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `employee_id` INT UNSIGNED NOT NULL,
+  `attendance_id` INT UNSIGNED NOT NULL,
+  `status` ENUM('pending','decided','reversed','cancelled') NOT NULL DEFAULT 'pending',
+  `decision` ENUM('replacement_off','settle_cuti_ganti','no_adjustment') DEFAULT NULL,
+  `amount` DECIMAL(5,2) DEFAULT NULL,
+  `admin_id` INT UNSIGNED DEFAULT NULL,
+  `admin_note` VARCHAR(500) DEFAULT NULL,
+  `decided_at` DATETIME DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`), UNIQUE KEY `uk_offday_review_attendance` (`attendance_id`),
+  KEY `idx_offday_review_status` (`status`), KEY `idx_offday_review_employee` (`employee_id`),
+  CONSTRAINT `fk_offday_review_employee` FOREIGN KEY (`employee_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `fk_offday_review_attendance` FOREIGN KEY (`attendance_id`) REFERENCES `attendance` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_offday_review_admin` FOREIGN KEY (`admin_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `leave_replacement_reviews` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `leave_request_id` INT UNSIGNED NOT NULL,
+  `employee_id` INT UNSIGNED NOT NULL,
+  `status` ENUM('active','reversed') NOT NULL DEFAULT 'active',
+  `requires_replacement` TINYINT(1) NOT NULL,
+  `amount` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+  `admin_id` INT UNSIGNED NOT NULL,
+  `admin_note` VARCHAR(500) DEFAULT NULL,
+  `reversal_of_id` INT UNSIGNED DEFAULT NULL,
+  `decided_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`), KEY `idx_leave_repl_request` (`leave_request_id`),
+  KEY `idx_leave_repl_employee` (`employee_id`), KEY `idx_leave_repl_status` (`status`),
+  CONSTRAINT `fk_leave_repl_request` FOREIGN KEY (`leave_request_id`) REFERENCES `leave_requests` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_leave_repl_employee` FOREIGN KEY (`employee_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `fk_leave_repl_admin` FOREIGN KEY (`admin_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `fk_leave_repl_reversal` FOREIGN KEY (`reversal_of_id`) REFERENCES `leave_replacement_reviews` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `staff_balance_ledger` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `employee_id` INT UNSIGNED NOT NULL,
+  `balance_type` ENUM('replacement_off','cuti_perlu_ganti') NOT NULL,
+  `amount` DECIMAL(5,2) NOT NULL,
+  `source_type` ENUM('offday_attendance','leave','manual','reversal') NOT NULL,
+  `source_id` INT UNSIGNED DEFAULT NULL,
+  `review_id` INT UNSIGNED DEFAULT NULL,
+  `decision` VARCHAR(50) DEFAULT NULL,
+  `reversal_of_id` INT UNSIGNED DEFAULT NULL,
+  `admin_id` INT UNSIGNED NOT NULL,
+  `admin_note` VARCHAR(500) DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`), KEY `idx_balance_employee_type` (`employee_id`,`balance_type`),
+  KEY `idx_balance_source` (`source_type`,`source_id`),
+  CONSTRAINT `fk_balance_employee` FOREIGN KEY (`employee_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `fk_balance_admin` FOREIGN KEY (`admin_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `fk_balance_review` FOREIGN KEY (`review_id`) REFERENCES `offday_adjustment_reviews` (`id`),
+  CONSTRAINT `fk_balance_reversal` FOREIGN KEY (`reversal_of_id`) REFERENCES `staff_balance_ledger` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =========================

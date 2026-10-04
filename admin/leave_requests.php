@@ -18,9 +18,11 @@ if (is_post()) {
     $id = (int) post('id');
     $decision = (string) post('decision');
     $note = trim((string) post('admin_note'));
+    $requiresReplacement = post('requires_replacement') === '1';
+    $replacementAmount = (float) post('replacement_amount', 0);
 
     try {
-        review_leave_request($id, $decision, (int) current_user()['id'], $note ?: null);
+        review_leave_request($id, $decision, (int) current_user()['id'], $note ?: null, $requiresReplacement, $replacementAmount);
         flash_set('success', __('msg_request_reviewed', ['status' => __('st_' . $decision)]));
     } catch (InvalidArgumentException $error) {
         flash_set('danger', $error->getMessage());
@@ -216,6 +218,13 @@ require __DIR__ . '/../includes/layout_header.php';
                     </div>
 
                     <div class="mb-0">
+                        <label class="form-label small fw-semibold" for="requiresReplacement">Does this leave require replacement?</label>
+                        <select id="requiresReplacement" name="requires_replacement" class="form-select mb-2">
+                            <option value="0">No replacement required</option>
+                            <option value="1">Yes, add Cuti Perlu Ganti</option>
+                        </select>
+                        <label class="form-label small fw-semibold" for="replacementAmount">Replacement days</label>
+                        <input id="replacementAmount" type="number" name="replacement_amount" class="form-control mb-2" min="0" max="99.99" step="0.01" value="1.00">
                         <label for="approveAdminNote" class="form-label small fw-semibold">Admin Note (optional)</label>
                         <input type="text" id="approveAdminNote" name="admin_note" class="form-control" placeholder="e.g. Approved as discussed / Cover duty arranged">
                         <div class="form-hint mt-1 small text-muted">Will be recorded in request history and audit logs.</div>
@@ -281,51 +290,6 @@ require __DIR__ . '/../includes/layout_header.php';
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const approveModalEl = document.getElementById('approveLeaveModal');
-    const rejectModalEl = document.getElementById('rejectLeaveModal');
-    const approveModal = approveModalEl ? new bootstrap.Modal(approveModalEl) : null;
-    const rejectModal = rejectModalEl ? new bootstrap.Modal(rejectModalEl) : null;
 
-    [approveModalEl, rejectModalEl].forEach(modalEl => {
-        if (!modalEl) return;
-        modalEl.addEventListener('hidden.bs.modal', () => {
-            if (typeof window.stopLoading === 'function') window.stopLoading();
-            const overlay = document.querySelector('[data-loading-overlay]');
-            if (overlay) overlay.hidden = true;
-        });
-    });
-
-    document.querySelectorAll('[data-leave-modal]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const action = btn.dataset.leaveModal;
-            const id = btn.dataset.id;
-            const name = btn.dataset.name;
-            const date = btn.dataset.date;
-            const type = btn.dataset.type;
-            const reason = btn.dataset.reason;
-
-            if (action === 'approve' && approveModal) {
-                document.getElementById('approveLeaveId').value = id;
-                document.getElementById('approveStaffName').textContent = name;
-                document.getElementById('approveLeaveDate').textContent = date;
-                document.getElementById('approveLeaveType').textContent = type;
-                document.getElementById('approveLeaveReason').textContent = reason || '—';
-                document.getElementById('approveAdminNote').value = '';
-                approveModal.show();
-            } else if (action === 'reject' && rejectModal) {
-                document.getElementById('rejectLeaveId').value = id;
-                document.getElementById('rejectStaffName').textContent = name;
-                document.getElementById('rejectLeaveDate').textContent = date;
-                document.getElementById('rejectLeaveType').textContent = type;
-                document.getElementById('rejectLeaveReason').textContent = reason || '—';
-                document.getElementById('rejectAdminNote').value = '';
-                rejectModal.show();
-            }
-        });
-    });
-});
-</script>
 
 <?php require __DIR__ . '/../includes/layout_footer.php'; ?>
