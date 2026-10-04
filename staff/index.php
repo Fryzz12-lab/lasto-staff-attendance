@@ -206,13 +206,13 @@ require __DIR__ . '/../includes/layout_header.php';
         <p class="text-muted mb-0"><?= e(__('employment_date_unavailable')) ?></p>
     </div>
 <?php elseif ($approvedLeaveDay): ?>
-    <!-- State: Scheduled Day Off -->
+    <!-- State: Approved Leave -->
     <div class="dash-hero-panel dash-hero-off mb-4">
         <div class="d-flex align-items-center gap-3 mb-2">
-            <span class="status-badge badge-off fs-6 px-3 py-1"><?= e(__('st_day_off')) ?></span>
+            <span class="status-badge badge-off fs-6 px-3 py-1"><?= e(__('approved_leave')) ?></span>
             <h3 class="h5 mb-0 text-white-emphasis"><?= e(__('day_off_message')) ?></h3>
         </div>
-        <p class="text-muted mb-0 small"><?= e(__('policy_changes_hint')) ?></p>
+        <p class="text-muted mb-0 small"><?= e(__('approved_leave_message')) ?></p>
     </div>
 
 <?php elseif (!$att['clock_in']): ?>
@@ -229,13 +229,16 @@ require __DIR__ . '/../includes/layout_header.php';
         </div>
         <p class="text-muted mb-4 fs-6">
             <?php if ($scheduledOffDay): ?>
-                This is your scheduled day off. If you are working today, clock in normally; an administrator will review the day later.
+                <?= e(__('offday_work_hint')) ?>
             <?php else: ?>
                 <?= e(__('scheduled_start_hint', [
                     'time' => $schedule ? format_time($data['date'] . ' ' . $schedule['start_time']) : '10:00 AM',
                 ])) ?>
             <?php endif; ?>
         </p>
+        <?php if ($scheduledOffDay): ?>
+            <div class="alert alert-info py-2 mb-3"><strong><?= e(__('offday_work_title')) ?></strong><br><span class="small"><?= e(__('offday_review_hint')) ?></span></div>
+        <?php endif; ?>
         <button type="button" class="btn btn-accent btn-action-lg px-5 py-3 fw-bold fs-5 shadow-sm"
                 data-action="clock_in"
                 data-confirm="<?= e(__('confirm_clock_in')) ?>"
