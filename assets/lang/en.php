@@ -312,6 +312,7 @@ return array (
   'offday_review_decided' => 'Decision Recorded',
   'offday_review_reversed' => 'Decision Reversed',
   'offday_review_cancelled' => 'Review Cancelled',
+  'offday_adjustments' => 'Off-day Adjustments', 'offday_adjustments_hint' => 'Review completed work on scheduled off days.', 'attendance_details' => 'Attendance details', 'balances' => 'Balances', 'replacement_off_available' => 'Replacement Off available', 'cuti_perlu_ganti' => 'Cuti Perlu Ganti', 'day' => 'day', 'days' => 'days', 'decision' => 'Decision', 'decision_replacement_off' => 'Earn Replacement Off', 'decision_settle_cuti' => 'Settle Cuti Perlu Ganti', 'decision_no_adjustment' => 'No Adjustment', 'save_decision' => 'Save decision', 'offday_decision_saved' => 'Off-day decision saved.', 'no_adjustment_reviews' => 'No adjustment reviews found.', 'admin_note' => 'Admin note', 'negative_balance_override' => 'Explicit negative-balance override', 'reversal_note' => 'Reversal note', 'reverse_decision' => 'Reverse decision',
   'approved_leave_message' => 'Today is an approved leave day. Attendance clock-in is unavailable.',
   'st_not_clocked_in' => 'Not Clocked In',
   'st_incomplete' => 'Incomplete',

@@ -312,6 +312,7 @@ return array (
   'offday_review_decided' => 'Keputusan Direkodkan',
   'offday_review_reversed' => 'Keputusan Dibalikkan',
   'offday_review_cancelled' => 'Semakan Dibatalkan',
+  'offday_adjustments' => 'Pelarasan Hari Off', 'offday_adjustments_hint' => 'Semak kerja yang selesai pada hari off berjadual.', 'attendance_details' => 'Butiran kehadiran', 'balances' => 'Baki', 'replacement_off_available' => 'Replacement Off tersedia', 'cuti_perlu_ganti' => 'Cuti Perlu Ganti', 'day' => 'hari', 'days' => 'hari', 'decision' => 'Keputusan', 'decision_replacement_off' => 'Dapatkan Replacement Off', 'decision_settle_cuti' => 'Selesaikan Cuti Perlu Ganti', 'decision_no_adjustment' => 'Tiada Pelarasan', 'save_decision' => 'Simpan keputusan', 'offday_decision_saved' => 'Keputusan hari off disimpan.', 'no_adjustment_reviews' => 'Tiada semakan pelarasan.', 'admin_note' => 'Nota pentadbir', 'negative_balance_override' => 'Benarkan baki negatif secara jelas', 'reversal_note' => 'Nota pembalikan', 'reverse_decision' => 'Balikkan keputusan',
   'approved_leave_message' => 'Hari ini ialah cuti yang telah diluluskan. Daftar masuk kehadiran tidak tersedia.',
   'st_not_clocked_in' => 'Belum Daftar Masuk',
   'st_incomplete' => 'Tidak Lengkap',

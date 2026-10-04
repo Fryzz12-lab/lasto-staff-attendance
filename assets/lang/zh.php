@@ -312,6 +312,7 @@ return array (
   'offday_review_decided' => '已记录决定',
   'offday_review_reversed' => '决定已撤销',
   'offday_review_cancelled' => '审核已取消',
+  'offday_adjustments' => '休息日调整', 'offday_adjustments_hint' => '审核在排定休息日完成的工作。', 'attendance_details' => '考勤详情', 'balances' => '余额', 'replacement_off_available' => '可用补休日', 'cuti_perlu_ganti' => '需补回的休假', 'day' => '天', 'days' => '天', 'decision' => '决定', 'decision_replacement_off' => '获得补休日', 'decision_settle_cuti' => '结算需补回的休假', 'decision_no_adjustment' => '不调整', 'save_decision' => '保存决定', 'offday_decision_saved' => '休息日决定已保存。', 'no_adjustment_reviews' => '没有调整审核。', 'admin_note' => '管理员备注', 'negative_balance_override' => '明确允许负余额', 'reversal_note' => '撤销备注', 'reverse_decision' => '撤销决定',
   'approved_leave_message' => '今天是已批准的休假日，无法进行考勤打卡。',
   'st_not_clocked_in' => '未打卡',
   'st_incomplete' => '不完整',
