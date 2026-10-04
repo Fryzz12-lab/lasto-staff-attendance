@@ -4487,6 +4487,43 @@ html[data-theme='day'] .admin-dashboard .stat-card {
     justify-content: center;
   }
 
+  .auth-page .auth-top > .globe-toggle,
+  .auth-page .auth-top > .theme-toggle {
+    gap: .25rem;
+  }
+
+  .auth-page .auth-top .globe-toggle__text,
+  .auth-page .auth-top .theme-toggle__text {
+    font-size: 0;
+    letter-spacing: 0;
+  }
+
+  .auth-page .auth-top > .lang-switcher > .lang-switcher__btn {
+    font-size: 0;
+  }
+
+  .auth-page .auth-top > .lang-switcher > .lang-switcher__btn i {
+    font-size: .95rem;
+    margin-right: .15rem !important;
+  }
+
+  .auth-page .auth-top .globe-toggle__text::after,
+  .auth-page .auth-top .theme-toggle__text::after {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+  }
+
+  .auth-page .auth-top .globe-toggle.is-on .globe-toggle__text::after,
+  .auth-page .auth-top .theme-toggle:not(.is-day) .theme-toggle__text::after {
+    content: 'ON';
+  }
+
+  .auth-page .auth-top .globe-toggle.is-off .globe-toggle__text::after,
+  .auth-page .auth-top .theme-toggle.is-day .theme-toggle__text::after {
+    content: 'OFF';
+  }
+
   .auth-page .auth-top > .globe-toggle i,
   .auth-page .auth-top > .theme-toggle i {
     flex: 0 0 auto;
