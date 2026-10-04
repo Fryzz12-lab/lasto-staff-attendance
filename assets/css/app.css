@@ -8374,3 +8374,22 @@ html[data-theme='day'] .staff-reset-handoff__message {
   .page-schedule .schedule-calendar-grid { grid-template-columns: 1fr; gap: .7rem; }
   .page-schedule .schedule-day-card { min-height: 132px; }
 }
+
+/* Leave requests: compact mobile card hierarchy and readable feedback. */
+@media (max-width: 767.98px) {
+  .staff-area .leave-mobile-list { gap: .7rem !important; }
+  .staff-area .leave-mobile-card { min-width: 0; padding: .75rem !important; }
+  .staff-area .leave-mobile-card > :first-child { display: grid !important; grid-template-columns: minmax(0, 1fr) auto; align-items: start !important; gap: .5rem; margin-bottom: .65rem !important; }
+  .staff-area .leave-mobile-card > :first-child > :first-child { min-width: 0; align-items: flex-start !important; }
+  .staff-area .leave-mobile-card > :first-child > :first-child > :last-child { min-width: 0; overflow-wrap: anywhere; line-height: 1.35; }
+  .staff-area .leave-mobile-card > :first-child > :last-child { text-align: right; }
+  .staff-area .leave-mobile-card .status-badge { display: inline-flex; align-items: center; justify-content: center; min-height: 1.6rem; padding: .25rem .5rem; border-radius: .3rem; font-size: .68rem; line-height: 1.15; white-space: nowrap; }
+  .staff-area .leave-mobile-reason,
+  .staff-area .leave-mobile-admin-note { margin-bottom: .65rem !important; padding: .55rem .65rem !important; line-height: 1.45; overflow-wrap: anywhere; }
+  .staff-area .leave-mobile-admin-note > :first-child { margin-bottom: .25rem !important; }
+  .staff-area .leave-mobile-card > :last-child { min-width: 0; overflow-wrap: anywhere; line-height: 1.35; }
+  .staff-area .leave-mobile-stat-card { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0; }
+  .staff-area .leave-mobile-stat-card > span:last-child { line-height: 1.2; }
+  .staff-area .leave-mobile-stat-card__pending-count { font-size: 1.25rem !important; }
+  .staff-area .d-md-none > .btn[data-bs-target="#newRequestCard"] { min-height: 44px; }
+}
