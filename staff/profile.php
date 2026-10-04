@@ -87,8 +87,8 @@ require __DIR__ . '/../includes/layout_header.php';
 <h2 class="h4 mb-3 d-none d-lg-block"><?= e(__('my_profile')) ?></h2>
 
 <div class="row g-3 mb-3">
-    <div class="col-md-6"><div class="card-soft p-3"><div class="form-hint">Replacement Off available</div><div class="h3 mb-0"><?= e(number_format($balances['replacement_off'], 2)) ?> days</div></div></div>
-    <div class="col-md-6"><div class="card-soft p-3"><div class="form-hint">Cuti Perlu Ganti</div><div class="h3 mb-0"><?= e(number_format($balances['cuti_perlu_ganti'], 2)) ?> days</div></div></div>
+    <div class="col-md-6"><div class="card-soft p-3"><div class="form-hint">Replacement Off available</div><div class="h3 mb-0"><?= e((string)$balances['replacement_off']) ?> <?= e($balances['replacement_off'] === 1 ? 'day' : 'days') ?></div></div></div>
+    <div class="col-md-6"><div class="card-soft p-3"><div class="form-hint">Cuti Perlu Ganti</div><div class="h3 mb-0"><?= e((string)$balances['cuti_perlu_ganti']) ?> <?= e($balances['cuti_perlu_ganti'] === 1 ? 'day' : 'days') ?></div></div></div>
 </div>
 
 <div class="row g-3 staff-profile-row">

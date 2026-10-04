@@ -259,7 +259,7 @@ function submit_leave_request(int $userId, string $date, string $type, string $r
     });
 }
 
-function review_leave_request(int $requestId, string $decision, int $reviewerId, ?string $note, bool $requiresReplacement = false, float $replacementAmount = 0.0): void
+function review_leave_request(int $requestId, string $decision, int $reviewerId, ?string $note, bool $requiresReplacement = false): void
 {
     $stmt = db()->prepare("SELECT id FROM users WHERE id=? AND role='admin' AND is_active=1");
     $stmt->execute([$reviewerId]);
@@ -299,7 +299,7 @@ function review_leave_request(int $requestId, string $decision, int $reviewerId,
         db()->prepare('UPDATE leave_requests SET status=?,admin_note=?,reviewed_by=?,reviewed_at=NOW() WHERE id=?')
             ->execute([$decision, $note, $reviewerId, $requestId]);
         if ($decision === 'approved') {
-            record_leave_replacement($requestId, $userId, $requiresReplacement, $replacementAmount, $reviewerId, $note);
+            record_leave_replacement($requestId, $userId, $requiresReplacement, $reviewerId, $note);
         }
         if ($decision === 'approved' && $request['leave_date'] <= today_str()) {
             $att = ensure_attendance_row($userId, $request['leave_date']);

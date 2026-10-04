@@ -19,10 +19,9 @@ if (is_post()) {
     $decision = (string) post('decision');
     $note = trim((string) post('admin_note'));
     $requiresReplacement = post('requires_replacement') === '1';
-    $replacementAmount = (float) post('replacement_amount', 0);
 
     try {
-        review_leave_request($id, $decision, (int) current_user()['id'], $note ?: null, $requiresReplacement, $replacementAmount);
+        review_leave_request($id, $decision, (int) current_user()['id'], $note ?: null, $requiresReplacement);
         flash_set('success', __('msg_request_reviewed', ['status' => __('st_' . $decision)]));
     } catch (InvalidArgumentException $error) {
         flash_set('danger', $error->getMessage());
@@ -223,8 +222,6 @@ require __DIR__ . '/../includes/layout_header.php';
                             <option value="0">No replacement required</option>
                             <option value="1">Yes, add Cuti Perlu Ganti</option>
                         </select>
-                        <label class="form-label small fw-semibold" for="replacementAmount">Replacement days</label>
-                        <input id="replacementAmount" type="number" name="replacement_amount" class="form-control mb-2" min="0" max="99.99" step="0.01" value="1.00">
                         <label for="approveAdminNote" class="form-label small fw-semibold">Admin Note (optional)</label>
                         <input type="text" id="approveAdminNote" name="admin_note" class="form-control" placeholder="e.g. Approved as discussed / Cover duty arranged">
                         <div class="form-hint mt-1 small text-muted">Will be recorded in request history and audit logs.</div>

@@ -189,7 +189,7 @@ CREATE TABLE `offday_adjustment_reviews` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT, `employee_id` INT UNSIGNED NOT NULL,
   `attendance_id` INT UNSIGNED NOT NULL, `status` ENUM('pending','decided','reversed','cancelled') NOT NULL DEFAULT 'pending',
   `decision` ENUM('replacement_off','settle_cuti_ganti','no_adjustment') DEFAULT NULL,
-  `amount` DECIMAL(5,2) DEFAULT NULL, `admin_id` INT UNSIGNED DEFAULT NULL,
+  `amount` TINYINT UNSIGNED NOT NULL DEFAULT 0, `admin_id` INT UNSIGNED DEFAULT NULL,
   `admin_note` VARCHAR(500) DEFAULT NULL, `decided_at` DATETIME DEFAULT NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`), UNIQUE KEY `uk_offday_review_attendance` (`attendance_id`), KEY `idx_offday_review_status` (`status`),
@@ -201,7 +201,7 @@ CREATE TABLE `offday_adjustment_reviews` (
 CREATE TABLE `leave_replacement_reviews` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT, `leave_request_id` INT UNSIGNED NOT NULL,
   `employee_id` INT UNSIGNED NOT NULL, `status` ENUM('active','reversed') NOT NULL DEFAULT 'active',
-  `requires_replacement` TINYINT(1) NOT NULL, `amount` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+  `requires_replacement` TINYINT(1) NOT NULL, `amount` TINYINT UNSIGNED NOT NULL DEFAULT 0,
   `admin_id` INT UNSIGNED NOT NULL, `admin_note` VARCHAR(500) DEFAULT NULL,
   `reversal_of_id` INT UNSIGNED DEFAULT NULL, `decided_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`),
@@ -214,7 +214,7 @@ CREATE TABLE `leave_replacement_reviews` (
 
 CREATE TABLE `staff_balance_ledger` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT, `employee_id` INT UNSIGNED NOT NULL,
-  `balance_type` ENUM('replacement_off','cuti_perlu_ganti') NOT NULL, `amount` DECIMAL(5,2) NOT NULL,
+  `balance_type` ENUM('replacement_off','cuti_perlu_ganti') NOT NULL, `amount` SMALLINT NOT NULL,
   `source_type` ENUM('offday_attendance','leave','manual','reversal') NOT NULL, `source_id` INT UNSIGNED DEFAULT NULL,
   `review_id` INT UNSIGNED DEFAULT NULL, `decision` VARCHAR(50) DEFAULT NULL, `reversal_of_id` INT UNSIGNED DEFAULT NULL,
   `admin_id` INT UNSIGNED NOT NULL, `admin_note` VARCHAR(500) DEFAULT NULL,
