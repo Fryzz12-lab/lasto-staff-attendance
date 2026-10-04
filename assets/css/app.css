@@ -8419,3 +8419,35 @@ html[data-theme='day'] .staff-reset-handoff__message {
     background: radial-gradient(ellipse 78% 72% at 50% 30%, rgba(241, 245, 249, .92) 0%, rgba(241, 245, 249, .72) 54%, rgba(241, 245, 249, .18) 100%);
   }
 }
+
+/* Profile mobile polish: compact cards and a calmer central content zone. */
+@media (max-width: 767.98px) {
+  .staff-profile-page .app-content { position: relative; isolation: isolate; }
+  .staff-profile-page .app-content::before { content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(ellipse 78% 72% at 50% 28%, rgba(8,18,34,.9) 0%, rgba(8,18,34,.72) 54%, rgba(8,18,34,.16) 100%); }
+  .staff-profile-page .app-content > * { position: relative; z-index: 1; }
+  html[data-theme='day'] .staff-profile-page .app-content::before { background: radial-gradient(ellipse 78% 72% at 50% 28%, rgba(241,245,249,.92) 0%, rgba(241,245,249,.72) 54%, rgba(241,245,249,.16) 100%); }
+  .staff-profile-page .app-content > .row:first-of-type { gap: .7rem !important; margin-bottom: .75rem !important; }
+  .staff-profile-page .row:first-of-type .card-soft { padding: .75rem !important; }
+  .staff-profile-page .balance-card-title { font-size: .72rem; line-height: 1.25; }
+  .staff-profile-page .row:first-of-type .h3 { font-size: 1.35rem; margin-top: .3rem !important; }
+  .staff-profile-page .staff-profile-card .card-body { padding: .8rem !important; }
+  .staff-profile-page .staff-profile-card .card-header { padding: .7rem .8rem; }
+  .staff-profile-page .staff-profile-row { gap: .75rem !important; }
+  .staff-profile-page .staff-profile-row .row.g-2 > [class*='col-'] { width: 100%; }
+  .staff-profile-page .staff-profile-row .row.g-2 > .col-6:nth-child(1),
+  .staff-profile-page .staff-profile-row .row.g-2 > .col-6:nth-child(2),
+  .staff-profile-page .staff-profile-row .row.g-2 > .col-6:nth-last-child(2),
+  .staff-profile-page .staff-profile-row .row.g-2 > .col-6:last-child { width: 50%; }
+  .staff-profile-page .staff-profile-row label { margin-bottom: .25rem; font-size: .78rem; }
+  .staff-profile-page .staff-profile-row .form-control { min-width: 0; }
+  .staff-profile-page .staff-profile-row .form-hint { line-height: 1.35; }
+  .staff-profile-page .staff-profile-row .btn-outline-info { margin-top: .15rem; }
+  .staff-profile-page .staff-profile-actions { padding-top: .85rem !important; }
+  .staff-profile-page .staff-profile-actions .btn { min-height: 44px; width: 100%; }
+  .staff-profile-page .staff-profile-row .mb-3 { margin-bottom: .7rem !important; }
+  .staff-profile-page .notification-settings-card, .staff-profile-page .notification-settings-card + .staff-profile-card { margin-top: .75rem !important; }
+}
+
+@media (max-width: 379.98px) {
+  .staff-profile-page .staff-profile-row .row.g-2 > .col-6 { width: 100%; }
+}

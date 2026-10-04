@@ -81,6 +81,7 @@ $user = current_user();
 $pageTitle = __('my_profile');
 $activeMenu = 'profile';
 $isAdminArea = false;
+$bodyClass = 'staff-profile-page';
 require __DIR__ . '/../includes/layout_header.php';
 ?>
 
