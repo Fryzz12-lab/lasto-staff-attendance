@@ -72,6 +72,21 @@ function decide_offday_adjustment(int $reviewId, string $decision, float $amount
     });
 }
 
+function reverse_offday_adjustment(int $reviewId, int $adminId, string $note): void
+{
+    if ($note === '') throw new InvalidArgumentException('A reversal note is required.');
+    adjustment_transaction(function () use ($reviewId,$adminId,$note): void {
+        $stmt = db()->prepare('SELECT * FROM offday_adjustment_reviews WHERE id=? FOR UPDATE'); $stmt->execute([$reviewId]); $review = $stmt->fetch();
+        if (!$review || $review['status'] !== 'decided' || !$review['decision'] || $review['decision'] === 'no_adjustment') throw new InvalidArgumentException('Only a balance-affecting decision can be reversed.');
+        $stmt = db()->prepare("SELECT * FROM staff_balance_ledger WHERE review_id=? AND source_type='offday_attendance' ORDER BY id DESC LIMIT 1 FOR UPDATE"); $stmt->execute([$reviewId]); $entry = $stmt->fetch();
+        if (!$entry) throw new InvalidArgumentException('The ledger entry for this decision was not found.');
+        $stmt = db()->prepare("SELECT id FROM users WHERE id=? AND role='admin' AND is_active=1"); $stmt->execute([$adminId]); if (!$stmt->fetchColumn()) throw new InvalidArgumentException(__('msg_no_permission'));
+        db()->prepare('INSERT INTO staff_balance_ledger (employee_id,balance_type,amount,source_type,source_id,review_id,decision,reversal_of_id,admin_id,admin_note) VALUES (?,?,?,?,?,?,?,?,?,?)')
+            ->execute([(int)$entry['employee_id'],$entry['balance_type'],-(float)$entry['amount'],'reversal',(int)$entry['source_id'],$reviewId,'reversal',(int)$entry['id'],$adminId,$note]);
+        db()->prepare("UPDATE offday_adjustment_reviews SET status='reversed',admin_note=CONCAT(COALESCE(admin_note,''),' [Reversed: ', ?, ']'),updated_at=NOW() WHERE id=?")->execute([$note,$reviewId]);
+    });
+}
+
 function record_leave_replacement(int $leaveRequestId, int $employeeId, bool $required, float $amount, int $adminId, ?string $note): void
 {
     if ($required && ($amount <= 0 || $amount > 99.99)) throw new InvalidArgumentException('Enter a valid replacement amount.');

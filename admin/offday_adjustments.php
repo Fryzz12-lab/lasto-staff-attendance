@@ -6,7 +6,11 @@ require_admin();
 if (is_post()) {
     require_csrf();
     try {
-        decide_offday_adjustment((int)post('review_id'), (string)post('decision'), (float)post('amount'), (int)current_user()['id'], trim((string)post('admin_note')), post('override_negative') === '1');
+        if (post('action') === 'reverse') {
+            reverse_offday_adjustment((int)post('review_id'), (int)current_user()['id'], trim((string)post('admin_note')));
+        } else {
+            decide_offday_adjustment((int)post('review_id'), (string)post('decision'), (float)post('amount'), (int)current_user()['id'], trim((string)post('admin_note')), post('override_negative') === '1');
+        }
         flash_set('success', 'Off-day adjustment decision saved.');
     } catch (Throwable $e) { flash_set('danger', $e instanceof InvalidArgumentException ? $e->getMessage() : __('msg_process_fail')); error_log((string)$e); }
     redirect('/admin/offday_adjustments.php');
