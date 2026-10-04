@@ -25,7 +25,16 @@ function ensure_offday_adjustment_review(int $attendanceId): ?int
     $stmt = db()->prepare('SELECT * FROM attendance WHERE id=? LIMIT 1');
     $stmt->execute([$attendanceId]);
     $att = $stmt->fetch();
-    if (!$att || !(int)($att['was_scheduled_off_day'] ?? $att['is_day_off']) || !attendance_is_completed($att)) return null;
+    if (!$att || !attendance_is_completed($att)) return null;
+    $historicalOff = (int)($att['was_scheduled_off_day'] ?? 0) === 1;
+    if (!$historicalOff) {
+        $schedule = get_schedule_for_date((int)$att['user_id'], (string)$att['work_date']);
+        $historicalOff = $schedule && is_scheduled_off($schedule, (string)$att['work_date']) && !has_approved_leave((int)$att['user_id'], (string)$att['work_date']);
+        if ($historicalOff) {
+            db()->prepare('UPDATE attendance SET was_scheduled_off_day=1, scheduled_off_weekday=? WHERE id=?')->execute([(int)$schedule['weekly_off_day'], $attendanceId]);
+        }
+    }
+    if (!$historicalOff) return null;
     $stmt = db()->prepare('SELECT id FROM offday_adjustment_reviews WHERE attendance_id=? LIMIT 1');
     $stmt->execute([$attendanceId]);
     $existing = $stmt->fetchColumn();

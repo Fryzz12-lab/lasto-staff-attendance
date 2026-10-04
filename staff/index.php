@@ -20,8 +20,8 @@ $schedule = $data['schedule'];
 $activeBreak = $data['active_break'];
 $usage = $data['break_usage'];
 $breaks = $data['breaks'];
-$scheduledOffDay = !empty($att['was_scheduled_off_day']);
-$approvedLeaveDay = !empty($att['is_day_off']) && !$scheduledOffDay;
+$approvedLeaveDay = has_approved_leave((int) $user['id'], $data['date']);
+$scheduledOffDay = !$approvedLeaveDay && (!empty($att['was_scheduled_off_day']) || ($schedule && is_scheduled_off($schedule, $data['date'])));
 
 $pageTitle = __('dashboard');
 $activeMenu = 'dashboard';
