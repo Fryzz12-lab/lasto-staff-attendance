@@ -44,6 +44,7 @@ $baseWhere = "a.work_date BETWEEN ? AND ? AND u.role='staff'
     AND (u.joining_date IS NULL OR u.joining_date <= a.work_date)
     AND (u.is_active = 1 OR a.work_date < CURDATE()) {$userFilter}{$reportCondition}";
 
+$summaryStarted = microtime(true);
 if ($report === 'late') {
     $lateStmt = db()->prepare("SELECT
         COUNT(*) AS total_late,
@@ -131,9 +132,11 @@ if ($report === 'late') {
 
 $totalPages = max(1, (int) ceil($totalRows / $pageSize));
 $page = min($page, $totalPages);
+$summaryMs = (microtime(true) - $summaryStarted) * 1000;
 
 $rows = [];
 $filtered = [];
+$rowsStarted = microtime(true);
 if ($export !== '') {
     $rowsStmt = db()->prepare("SELECT a.*, u.full_name, u.employee_id FROM attendance a JOIN users u ON u.id=a.user_id WHERE {$baseWhere} ORDER BY a.work_date, u.full_name");
     $rowsStmt->execute($baseParams);
@@ -141,14 +144,35 @@ if ($export !== '') {
     $filtered = $rows;
 } else {
     $offset = ($page - 1) * $pageSize;
-    $rowsStmt = db()->prepare("SELECT a.*, u.full_name, u.employee_id FROM attendance a JOIN users u ON u.id=a.user_id WHERE {$baseWhere} ORDER BY a.work_date, u.full_name LIMIT {$pageSize} OFFSET {$offset}");
-    $rowsStmt->execute($baseParams);
-    $rows = $rowsStmt->fetchAll();
+    $dateCountStmt = db()->prepare("SELECT a.work_date, COUNT(*) AS row_count FROM attendance a JOIN users u ON u.id=a.user_id WHERE {$baseWhere} GROUP BY a.work_date ORDER BY a.work_date");
+    $dateCountStmt->execute($baseParams);
+    $pageStartDate = null;
+    $pageEndDate = null;
+    $pageOffset = 0;
+    $rowsBefore = 0;
+    foreach ($dateCountStmt->fetchAll() as $dailyCount) {
+        $nextTotal = $rowsBefore + (int) $dailyCount['row_count'];
+        if ($offset < $nextTotal && $offset + $pageSize > $rowsBefore) {
+            if ($pageStartDate === null) {
+                $pageStartDate = $dailyCount['work_date'];
+                $pageOffset = $offset - $rowsBefore;
+            }
+            $pageEndDate = $dailyCount['work_date'];
+        }
+        $rowsBefore = $nextTotal;
+    }
+    if ($pageStartDate !== null && $pageEndDate !== null) {
+        $rowsStmt = db()->prepare("SELECT a.*, u.full_name, u.employee_id FROM attendance a JOIN users u ON u.id=a.user_id WHERE {$baseWhere} AND a.work_date BETWEEN ? AND ? ORDER BY a.work_date, u.full_name, a.id LIMIT {$pageSize} OFFSET {$pageOffset}");
+        $rowsStmt->execute([...$baseParams, $pageStartDate, $pageEndDate]);
+        $rows = $rowsStmt->fetchAll();
+    }
     $filtered = $rows;
 }
+$rowsMs = (microtime(true) - $rowsStarted) * 1000;
 
 // Break usage summary (only needed when viewing break report)
 $breakSummary = [];
+$breakSummaryStarted = microtime(true);
 if ($report === 'breaks') {
     $breakSql = "SELECT b.break_type, COUNT(*) AS cnt, SUM(b.duration_minutes) AS mins, SUM(b.exceeded) AS exceeded
                  FROM break_records b
@@ -160,6 +184,7 @@ if ($report === 'breaks') {
     $breakStmt->execute($baseParams);
     $breakSummary = $breakStmt->fetchAll();
 }
+$breakSummaryMs = (microtime(true) - $breakSummaryStarted) * 1000;
 
 $reportTitles = [
     'late' => __('report_late_summary'),
@@ -334,8 +359,9 @@ $activeMenu = 'reports';
 $isAdminArea = true;
 $bodyClass = 'reports-page';
 if (!headers_sent()) {
-    header(sprintf('Server-Timing: attendance-fill;dur=%.1f, page-data;dur=%.1f',
-        $attendanceFillMs, (microtime(true) - (float) ($_SERVER['REQUEST_TIME_FLOAT'] ?? $attendanceFillStarted)) * 1000));
+    header(sprintf('Server-Timing: attendance-fill;dur=%.1f, summary;dur=%.1f, rows;dur=%.1f, break-summary;dur=%.1f, page-data;dur=%.1f',
+        $attendanceFillMs, $summaryMs, $rowsMs, $breakSummaryMs,
+        (microtime(true) - (float) ($_SERVER['REQUEST_TIME_FLOAT'] ?? $attendanceFillStarted)) * 1000));
 }
 require __DIR__ . '/../includes/layout_header.php';
 

@@ -24,31 +24,53 @@ $params = [$from, $to];
 if ($userId > 0) { $where .= ' AND a.user_id = ?'; $params[] = $userId; }
 if ($status !== '') { $where .= ' AND a.status = ?'; $params[] = $status; }
 
-// Total count (for pagination)
-$countStmt = db()->prepare("SELECT COUNT(*)" . $where);
+// Count by day so the page query only sorts dates that can appear on this page.
+$countStarted = microtime(true);
+$countStmt = db()->prepare("SELECT a.work_date, COUNT(*) AS row_count" . $where . " GROUP BY a.work_date ORDER BY a.work_date DESC");
 $countStmt->execute($params);
-$total = (int) $countStmt->fetchColumn();
+$dailyCounts = $countStmt->fetchAll();
+$total = 0;
+$pageStartDate = null;
+$pageEndDate = null;
+$pageOffset = 0;
+foreach ($dailyCounts as $dailyCount) {
+    $nextTotal = $total + (int) $dailyCount['row_count'];
+    if ($offset < $nextTotal && $offset + $perPage > $total) {
+        if ($pageStartDate === null) {
+            $pageStartDate = $dailyCount['work_date'];
+            $pageOffset = $offset - $total;
+        }
+        $pageEndDate = $dailyCount['work_date'];
+    }
+    $total = $nextTotal;
+}
+$countMs = (microtime(true) - $countStarted) * 1000;
 
 // Paginated rows
-$sql  = "SELECT page.*,
+$rows = [];
+$rowsStarted = microtime(true);
+if ($pageStartDate !== null && $pageEndDate !== null) {
+    $sql  = "SELECT page.*,
     li.location_status AS in_location_status, li.accuracy_metres AS in_location_accuracy,
     lo.location_status AS out_location_status, lo.accuracy_metres AS out_location_accuracy
-    FROM (SELECT a.*, u.full_name, u.employee_id" . $where . "
-        ORDER BY a.work_date DESC, u.full_name, a.id LIMIT {$perPage} OFFSET {$offset}) page
+    FROM (SELECT a.*, u.full_name, u.employee_id" . $where . " AND a.work_date BETWEEN ? AND ?
+        ORDER BY a.work_date DESC, u.full_name, a.id LIMIT {$perPage} OFFSET {$pageOffset}) page
     LEFT JOIN attendance_location_events li ON li.attendance_id=page.id AND li.event_type='clock_in'
     LEFT JOIN attendance_location_events lo ON lo.attendance_id=page.id AND lo.event_type='clock_out'
     ORDER BY page.work_date DESC, page.full_name, page.id";
-$stmt = db()->prepare($sql);
-$stmt->execute($params);
-$rows = $stmt->fetchAll();
+    $stmt = db()->prepare($sql);
+    $stmt->execute([...$params, $pageEndDate, $pageStartDate]);
+    $rows = $stmt->fetchAll();
+}
+$rowsMs = (microtime(true) - $rowsStarted) * 1000;
 
 $pageTitle  = __('attendance_records');
 $activeMenu = 'attendance';
 $isAdminArea = true;
 $bodyClass = 'admin-attendance-records';
 if (!headers_sent()) {
-    header(sprintf('Server-Timing: page-data;dur=%.1f',
-        (microtime(true) - (float) ($_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true))) * 1000));
+    header(sprintf('Server-Timing: day-counts;dur=%.1f, rows;dur=%.1f, page-data;dur=%.1f',
+        $countMs, $rowsMs, (microtime(true) - (float) ($_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true))) * 1000));
 }
 require __DIR__ . '/../includes/layout_header.php';
 ?>
