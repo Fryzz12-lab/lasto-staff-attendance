@@ -157,7 +157,7 @@ require __DIR__ . '/../includes/layout_header.php';
 ?>
 
 <?php if (!empty($att['clock_in'])): ?>
-<div class="small text-muted mb-2">Attendance Location:
+<div class="small text-muted mb-2 d-none d-md-block">Attendance Location:
     Clock In: <?= e(attendance_location_label($locationEvents['clock_in'] ?? null)) ?>
     <?php if (!empty($att['clock_out'])): ?> · Clock Out: <?= e(attendance_location_label($locationEvents['clock_out'] ?? null)) ?><?php endif; ?>
 </div>
@@ -201,28 +201,6 @@ require __DIR__ . '/../includes/layout_header.php';
                 <span class="meta-pill-val font-monospace"><?= e(format_minutes((int) ($schedule['target_work_minutes'] ?? 450))) ?> total</span>
             </div>
         <?php endif; ?>
-    </div>
-    <!-- Mobile Integrated Context Strip (Item 1: Schedule, Target & Current Status grouped together) -->
-    <div class="dash-mobile-context-strip d-md-none mt-2 p-2 px-3 rounded">
-        <div class="d-flex align-items-center justify-content-between">
-            <div class="mobile-context-info">
-                <?php if ($data['is_day_off']): ?>
-                    <span class="text-muted small"><i class="bi bi-calendar-x me-1"></i><?= e(__('st_day_off')) ?></span>
-                <?php elseif ($schedule): ?>
-                    <div class="context-sched font-monospace fw-semibold text-white-emphasis small">
-                        <?= e(format_time($data['date'] . ' ' . $schedule['start_time'])) ?> – <?= e(format_time($data['date'] . ' ' . $schedule['end_time'])) ?>
-                    </div>
-                    <div class="context-target text-muted small">
-                        <?= e(format_minutes((int) ($schedule['target_work_minutes'] ?? 450))) ?> target
-                    </div>
-                <?php else: ?>
-                    <span class="text-muted small"><?= e(__('not_assigned')) ?></span>
-                <?php endif; ?>
-            </div>
-            <div class="mobile-context-status">
-                <?= attendance_status_badge($att) ?>
-            </div>
-        </div>
     </div>
 </div>
 
