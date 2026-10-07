@@ -651,7 +651,7 @@
           }
           result = await apiPost('/api/clock.php', { action });
           if (result?.success && result.location_event_id && btn.dataset.locationPreference === 'enabled') {
-            showLoading(true, 'Clock recorded. Getting your location…');
+            showLoading(true, (action === 'clock_in' ? 'Clock-in time' : 'Clock-out time') + ' recorded. Getting your location…');
             let location;
             try {
               location = await new Promise((resolve) => {
