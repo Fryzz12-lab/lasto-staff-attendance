@@ -68,6 +68,8 @@ try {
 
 Copy-Item -LiteralPath (Join-Path $projectRoot 'database/cpanel_schema.sql') -Destination (Join-Path $artifactDir 'cpanel_schema.sql') -Force
 Copy-Item -LiteralPath (Join-Path $projectRoot 'database/cpanel_seed.sql') -Destination (Join-Path $artifactDir 'cpanel_seed.sql') -Force
+Copy-Item -LiteralPath (Join-Path $projectRoot 'database/migration_attendance_location.sql') -Destination (Join-Path $artifactDir 'migration_attendance_location.sql') -Force
+Copy-Item -LiteralPath (Join-Path $projectRoot 'database/migration_attendance_location_preference.sql') -Destination (Join-Path $artifactDir 'migration_attendance_location_preference.sql') -Force
 
 Move-Item -LiteralPath $temporaryPath -Destination $artifactPath -Force
 Write-Output "Built $artifactPath with $($files.Count) files; local config included: $IncludeLocalConfig"

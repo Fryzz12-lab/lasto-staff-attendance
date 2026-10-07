@@ -13,6 +13,10 @@ Select the newly created, empty attendance database in phpMyAdmin before either 
 
 Apply only the migration files required by the current database version, one at a time, after taking a backup. Review each migration before running it. The migration files are in `database/`.
 
+For an existing installation that has not received attendance location, import `migration_attendance_location.sql` first, then `migration_attendance_location_preference.sql`. If the location table and preference column already exist, import only the preference migration if its `attendance_location_preference_migrated` setting is absent. Do not import either migration into a fresh installation using `cpanel_schema.sql`; that schema already contains both changes. The deployment artifact builder copies both migration files beside the ZIP for phpMyAdmin import; they are not included in the public upload ZIP.
+
+The preference migration keeps existing `1` values enabled. Earlier `0` values cannot reliably distinguish an explicit choice from the old default, so it changes them to NULL (undecided) once. Staff then choose at their next Clock In or Clock Out. Later explicit Off choices remain `0`.
+
 ## Before go-live
 
 - Create a database backup with `php cli/maintenance.php backup`.
