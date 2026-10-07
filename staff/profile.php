@@ -102,8 +102,7 @@ require __DIR__ . '/../includes/layout_header.php';
 <div class="card-soft staff-profile-card attendance-location-card mb-3" data-attendance-location-card data-preference="<?= $user['attendance_location_enabled'] === null ? 'undecided' : ((int)$user['attendance_location_enabled'] === 1 ? 'enabled' : 'disabled') ?>">
     <div class="card-header"><i class="bi bi-geo-alt me-1"></i> Attendance Location</div>
     <div class="card-body">
-        <p class="form-hint mb-2">Choose whether this attendance system may request your location during attendance events.</p>
-        <p class="form-hint mb-3">Location is requested only when you Clock In, Clock Out, or start/end approved work-from-home time. Your location is not continuously tracked.</p>
+        <p class="form-hint mb-3">Choose whether to share your location at Clock In and Clock Out; you are not continuously tracked.</p>
         <label class="notification-preference attendance-location-toggle">
             <span>Location sharing</span>
             <span class="attendance-location-toggle-control">Allow
@@ -111,8 +110,8 @@ require __DIR__ . '/../includes/layout_header.php';
                 <span class="notification-switch" aria-hidden="true"></span>
             </span>
         </label>
-        <p class="form-hint attendance-location-state mt-2 mb-2" data-attendance-location-state role="status"><?= $user['attendance_location_enabled'] === null ? 'Not decided yet — choose during your next Clock In or Clock Out, or enable it here.' : ((int)$user['attendance_location_enabled'] === 1 ? 'Enabled' : 'Disabled') ?></p>
-        <div class="attendance-browser-status">Browser permission: <strong data-attendance-browser-permission>Checking...</strong></div>
+        <p class="form-hint attendance-location-state mt-2 mb-2" data-attendance-location-state role="status"><?= $user['attendance_location_enabled'] === null ? 'Not decided yet — choose during your next Clock In or Clock Out, or enable it here.' : ((int)$user['attendance_location_enabled'] === 1 ? 'Location will be requested during attendance events.' : 'Location will not be requested during attendance events.') ?></p>
+        <div class="attendance-browser-status">Browser permission: <span class="attendance-permission-badge is-unknown" data-attendance-browser-permission aria-live="polite">Checking...</span></div>
         <details class="policy-disclosure attendance-location-help mt-2" data-attendance-location-help>
             <summary><span class="fw-semibold">How to enable location</span></summary>
             <div class="policy-disclosure-body">

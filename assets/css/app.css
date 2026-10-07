@@ -6186,13 +6186,15 @@ html[data-theme='day'] .schedule-moon-icon {
 .staff-profile-page .attendance-location-card[data-preference="undecided"] .notification-switch { background: color-mix(in srgb, var(--accent) 35%, #94a3b8); }
 .staff-profile-page .attendance-location-card[data-preference="undecided"] .notification-switch::after { transform: translateX(.475rem); }
 .staff-profile-page .attendance-browser-status { color: var(--muted); font-size: .85rem; }
-.staff-profile-page .attendance-browser-status strong { color: var(--text); font-weight: 600; }
-.staff-profile-page .attendance-location-help summary { padding: .65rem 0; font-size: .85rem; }
+.staff-profile-page .attendance-permission-badge { display: inline-flex; align-items: center; padding: .14rem .5rem; margin-left: .25rem; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); background: color-mix(in srgb, var(--muted) 8%, transparent); font-size: .78rem; font-weight: 600; line-height: 1.25; }
+.staff-profile-page .attendance-permission-badge.is-allowed { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 28%, var(--border)); background: color-mix(in srgb, var(--accent) 9%, transparent); }
+.staff-profile-page .attendance-permission-badge.is-blocked { color: #b7791f; border-color: color-mix(in srgb, #b7791f 28%, var(--border)); background: color-mix(in srgb, #b7791f 8%, transparent); }
+.staff-profile-page .attendance-location-help summary { padding: .65rem 0; font-size: .85rem; color: var(--accent); opacity: .75; font-weight: 700; }
 .staff-profile-page .attendance-location-help[open] summary::after { content: '\2303'; }
 .staff-profile-page .attendance-location-help .policy-disclosure-body { padding-bottom: .2rem; color: var(--muted); font-size: .85rem; }
 .staff-profile-page .attendance-location-help ol { padding-left: 1.3rem; }
 .staff-profile-page .attendance-location-help li + li { margin-top: .3rem; }
-.staff-profile-page .attendance-location-help.is-blocked summary { color: var(--accent); }
+.staff-profile-page .attendance-location-help.is-blocked summary { opacity: 1; }
 
 .notification-checkbox {
   width: 1.25rem;

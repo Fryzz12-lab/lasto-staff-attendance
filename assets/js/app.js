@@ -143,7 +143,7 @@
     overlay.classList.toggle('d-none', !show);
   }
 
-  function showToast(message, type) {
+  function showToast(message, type, key) {
     type = type || 'success';
     if (!toastContainer) {
       const fallback = document.createElement('div');
@@ -151,7 +151,14 @@
       fallback.className = 'toast-container position-fixed top-0 end-0 p-3';
       document.body.appendChild(fallback);
       toastContainer = fallback;
-      return showToast(message, type);
+      return showToast(message, type, key);
+    }
+    if (key) {
+      toastContainer.querySelectorAll('[data-toast-key]').forEach((existing) => {
+        if (existing.dataset.toastKey !== key) return;
+        bootstrap.Toast.getInstance(existing)?.dispose();
+        existing.remove();
+      });
     }
     const id = 't' + Date.now();
     const el = document.createElement('div');
@@ -160,6 +167,7 @@
       (type === 'danger' ? 'danger' : type === 'warning' ? 'warning' : 'success') +
       ' border-0';
     el.id = id;
+    if (key) el.dataset.toastKey = key;
     el.setAttribute('role', 'alert');
     el.innerHTML =
       '<div class="d-flex"><div class="toast-body"></div>' +
@@ -561,10 +569,12 @@
       toggle.indeterminate = preference === 'undecided';
       state.textContent = preference === 'undecided'
         ? 'Not decided yet — choose during your next Clock In or Clock Out, or enable it here.'
-        : preference === 'disabled' ? 'Disabled'
-          : browserPermission === 'denied' ? 'Enabled — browser permission blocked. Use the help below to enable it.'
-            : browserPermission === 'prompt' ? 'Enabled — permission not yet requested.' : 'Enabled';
-      browser.textContent = ({ granted: 'Allowed', prompt: 'Not decided', denied: 'Blocked', checking: 'Checking...', unknown: 'Unknown' })[browserPermission] || 'Unknown';
+        : preference === 'disabled' ? 'Location will not be requested during attendance events.'
+          : browserPermission === 'denied' ? 'Location sharing is on, but your browser is blocking access.'
+            : 'Location will be requested during attendance events.';
+      browser.textContent = ({ granted: 'Allowed', prompt: 'Not requested', denied: 'Blocked', checking: 'Checking...', unknown: 'Unknown' })[browserPermission] || 'Unknown';
+      const badgeState = ({ granted: 'allowed', prompt: 'pending', denied: 'blocked' })[browserPermission] || 'unknown';
+      browser.className = 'attendance-permission-badge is-' + badgeState;
       help.classList.toggle('is-blocked', browserPermission === 'denied');
     };
 
@@ -582,7 +592,7 @@
       card.dataset.preference = next;
       document.querySelectorAll('[data-location-preference]').forEach((button) => { button.dataset.locationPreference = next; });
       render();
-      showToast('Attendance Location ' + (next === 'enabled' ? 'enabled.' : 'disabled.'), 'success');
+      showToast('Attendance Location ' + (next === 'enabled' ? 'enabled.' : 'disabled.'), 'success', 'attendance-location');
     });
 
     if (!navigator.geolocation || !window.isSecureContext || !navigator.permissions?.query) {
