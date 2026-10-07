@@ -7953,6 +7953,14 @@ button, .btn, [role="button"] {
   html[data-theme='night'] .staff-area .leave-mobile-card[data-status='rejected'] { border-left-color: #fb7185; }
   html[data-theme='night'] .staff-area:not(.staff-history-page) :is(.text-muted, .schedule-top-pill__sub) { color: #afbed1 !important; }
   html[data-theme='night'] .staff-area:not(.staff-history-page) .text-success { color: #6ee7b7 !important; }
+  html[data-theme='night'] .app-content form[method='get'] [data-auto-filter-hint] + a {
+    color: #5eead4;
+    text-decoration-color: currentColor;
+    font-weight: 600;
+  }
+  html[data-theme='night'] .app-content form[method='get'] [data-auto-filter-hint] + a:is(:hover, :focus-visible) {
+    color: #99f6e4;
+  }
   html[data-theme='night'] .staff-profile-page .profile-balance-card {
     background: #111f33;
     border-color: rgba(148, 173, 204, .25);
