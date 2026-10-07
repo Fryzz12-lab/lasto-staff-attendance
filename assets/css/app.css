@@ -8177,14 +8177,14 @@ button, .btn, [role="button"] {
 }
 
 .staff-policy-page .policy-disclosure .policy-legal-details > summary::after {
-  content: '\2192';
+  content: '\25B8';
   margin-left: 0;
   color: inherit;
   font-size: 1rem;
 }
 
 .staff-policy-page .policy-disclosure .policy-legal-details[open] > summary::after {
-  content: '\2304';
+  content: '\25BE';
 }
 
 .staff-policy-page .policy-legal-details .policy-legal-hide,
