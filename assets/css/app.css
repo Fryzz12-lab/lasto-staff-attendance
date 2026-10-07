@@ -7953,6 +7953,22 @@ button, .btn, [role="button"] {
   html[data-theme='night'] .staff-area .leave-mobile-card[data-status='rejected'] { border-left-color: #fb7185; }
   html[data-theme='night'] .staff-area:not(.staff-history-page) :is(.text-muted, .schedule-top-pill__sub) { color: #afbed1 !important; }
   html[data-theme='night'] .staff-area:not(.staff-history-page) .text-success { color: #6ee7b7 !important; }
+  html[data-theme='night'] .staff-profile-page .profile-balance-card {
+    background: #111f33;
+    border-color: rgba(148, 173, 204, .25);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+  }
+  html[data-theme='night'] .staff-profile-page .profile-balance-card__header { color: #cbd5e1; }
+  html[data-theme='night'] .staff-profile-page .profile-balance-card__number { color: #f8fafc; }
+  html[data-theme='night'] .staff-profile-page :is(.profile-balance-card__unit, .profile-balance-card__description) { color: #afbed1; }
+  html[data-theme='night'] .staff-profile-page .profile-balance-card:first-child .profile-balance-card__icon {
+    background: rgba(16, 185, 129, .15) !important;
+    color: #6ee7b7 !important;
+  }
+  html[data-theme='night'] .staff-profile-page .profile-balance-card:nth-child(2) .profile-balance-card__icon {
+    background: rgba(245, 158, 11, .15) !important;
+    color: #fbbf24 !important;
+  }
 }
 
 @media (min-width: 992px) {
