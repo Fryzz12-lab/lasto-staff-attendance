@@ -8778,6 +8778,22 @@ html[data-theme='day'] .staff-reset-handoff__message {
   .staff-profile-page .notification-settings-card + .staff-profile-card .notification-preference { min-height: 2.75rem; }
 }
 
+/* Keep attendance location controls compact on narrow screens. */
+@media (max-width: 575.98px) {
+  .staff-profile-page .attendance-location-card { margin-bottom: .55rem !important; }
+  .staff-profile-page .attendance-location-card .card-header { padding: .55rem .7rem !important; }
+  .staff-profile-page .attendance-location-card .card-body { padding: .55rem .7rem .45rem !important; }
+  .staff-profile-page .attendance-location-description { margin-bottom: .55rem !important; line-height: 1.35; }
+  .staff-profile-page .attendance-location-state { display: none; }
+  .staff-profile-page .attendance-location-toggle { min-height: 2.75rem; padding: .35rem .55rem; gap: .4rem; }
+  .staff-profile-page .attendance-location-toggle > span:first-child { min-width: 0; }
+  .staff-profile-page .attendance-location-toggle-control { margin-left: auto; flex-shrink: 0; }
+  .staff-profile-page .attendance-browser-status { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: .5rem; }
+  .staff-profile-page .attendance-permission-badge { margin-left: 0; flex-shrink: 0; }
+  .staff-profile-page .attendance-location-help { margin-top: .4rem !important; }
+  .staff-profile-page .attendance-location-help summary { min-height: 2.5rem; padding: .4rem 0; }
+}
+
 /* Restore balanced breathing room in the two mobile profile summary cards. */
 @media (max-width: 767.98px) {
   .staff-profile-page .app-content > .row:first-of-type .card-soft {

@@ -102,7 +102,7 @@ require __DIR__ . '/../includes/layout_header.php';
 <div class="card-soft staff-profile-card attendance-location-card mb-3" data-attendance-location-card data-preference="<?= $user['attendance_location_enabled'] === null ? 'undecided' : ((int)$user['attendance_location_enabled'] === 1 ? 'enabled' : 'disabled') ?>">
     <div class="card-header"><i class="bi bi-geo-alt me-1"></i> Attendance Location</div>
     <div class="card-body">
-        <p class="form-hint mb-3">Choose whether to share your location at Clock In and Clock Out; you are not continuously tracked.</p>
+        <p class="form-hint attendance-location-description mb-3"><span class="d-none d-sm-inline">Choose whether to share your location at Clock In and Clock Out; you are not continuously tracked.</span><span class="d-inline d-sm-none">Share your location for Clock In and Clock Out only. Not continuously tracked.</span></p>
         <label class="notification-preference attendance-location-toggle">
             <span>Location sharing</span>
             <span class="attendance-location-toggle-control">Allow
