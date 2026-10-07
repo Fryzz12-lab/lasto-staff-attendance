@@ -30,12 +30,14 @@ $countStmt->execute($params);
 $total = (int) $countStmt->fetchColumn();
 
 // Paginated rows
-$sql  = "SELECT a.*, u.full_name, u.employee_id,
+$sql  = "SELECT page.*,
     li.location_status AS in_location_status, li.accuracy_metres AS in_location_accuracy,
-    lo.location_status AS out_location_status, lo.accuracy_metres AS out_location_accuracy" .
-    str_replace(' WHERE ', " LEFT JOIN attendance_location_events li ON li.attendance_id=a.id AND li.event_type='clock_in'
-    LEFT JOIN attendance_location_events lo ON lo.attendance_id=a.id AND lo.event_type='clock_out' WHERE ", $where);
-$sql .= " ORDER BY a.work_date DESC, u.full_name LIMIT {$perPage} OFFSET {$offset}";
+    lo.location_status AS out_location_status, lo.accuracy_metres AS out_location_accuracy
+    FROM (SELECT a.*, u.full_name, u.employee_id" . $where . "
+        ORDER BY a.work_date DESC, u.full_name, a.id LIMIT {$perPage} OFFSET {$offset}) page
+    LEFT JOIN attendance_location_events li ON li.attendance_id=page.id AND li.event_type='clock_in'
+    LEFT JOIN attendance_location_events lo ON lo.attendance_id=page.id AND lo.event_type='clock_out'
+    ORDER BY page.work_date DESC, page.full_name, page.id";
 $stmt = db()->prepare($sql);
 $stmt->execute($params);
 $rows = $stmt->fetchAll();

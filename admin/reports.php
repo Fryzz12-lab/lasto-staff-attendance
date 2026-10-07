@@ -42,12 +42,6 @@ $baseWhere = "a.work_date BETWEEN ? AND ? AND u.role='staff'
     AND (u.joining_date IS NULL OR u.joining_date <= a.work_date)
     AND (u.is_active = 1 OR a.work_date < CURDATE()) {$userFilter}{$reportCondition}";
 
-$countStmt = db()->prepare("SELECT COUNT(*) FROM attendance a JOIN users u ON u.id=a.user_id WHERE {$baseWhere}");
-$countStmt->execute($baseParams);
-$totalRows = (int) $countStmt->fetchColumn();
-$totalPages = max(1, (int) ceil($totalRows / $pageSize));
-$page = min($page, $totalPages);
-
 if ($report === 'late') {
     $lateStmt = db()->prepare("SELECT
         COUNT(*) AS total_late,
@@ -57,6 +51,7 @@ if ($report === 'late') {
         FROM attendance a JOIN users u ON u.id=a.user_id WHERE {$baseWhere}");
     $lateStmt->execute($baseParams);
     $lateData = $lateStmt->fetch() ?: [];
+    $totalRows = (int) ($lateData['total_late'] ?? 0);
     $summaryCardsList = [
         ['label' => __('late_incidents'), 'value' => number_format((int)($lateData['total_late'] ?? 0)), 'mod' => 'report-summary-card--late'],
         ['label' => __('total_late_time'), 'value' => format_minutes((int)($lateData['total_late_minutes'] ?? 0)), 'mod' => 'report-summary-card--hours'],
@@ -72,6 +67,7 @@ if ($report === 'late') {
         FROM attendance a JOIN users u ON u.id=a.user_id WHERE {$baseWhere}");
     $incompStmt->execute($baseParams);
     $incompData = $incompStmt->fetch() ?: [];
+    $totalRows = (int) ($incompData['total_incomp'] ?? 0);
     $summaryCardsList = [
         ['label' => __('incomplete_records'), 'value' => number_format((int)($incompData['total_incomp'] ?? 0)), 'mod' => 'report-summary-card--records'],
         ['label' => __('missing_clockout_count'), 'value' => number_format((int)($incompData['missing_out'] ?? 0)), 'mod' => 'report-summary-card--late'],
@@ -89,6 +85,7 @@ if ($report === 'late') {
         FROM attendance a JOIN users u ON u.id=a.user_id WHERE {$baseWhere}");
     $leaveStmt->execute($baseParams);
     $leaveData = $leaveStmt->fetch() ?: [];
+    $totalRows = (int) ($leaveData['total_leave'] ?? 0);
     $summaryCardsList = [
         ['label' => __('total_leave_days'), 'value' => number_format((int)($leaveData['total_leave'] ?? 0)), 'mod' => 'report-summary-card--records'],
         ['label' => __('scheduled_days_off'), 'value' => number_format((int)($leaveData['days_off'] ?? 0)), 'mod' => 'report-summary-card--present'],
@@ -104,6 +101,7 @@ if ($report === 'late') {
         FROM attendance a JOIN users u ON u.id=a.user_id WHERE {$baseWhere}");
     $wfhStmt->execute($baseParams);
     $wfhData = $wfhStmt->fetch() ?: [];
+    $totalRows = (int) ($wfhData['total_wfh'] ?? 0);
     $summaryCardsList = [
         ['label' => __('wfh_days'), 'value' => number_format((int)($wfhData['total_wfh'] ?? 0)), 'mod' => 'report-summary-card--records'],
         ['label' => __('wfh_worked_days'), 'value' => number_format((int)($wfhData['worked'] ?? 0)), 'mod' => 'report-summary-card--present'],
@@ -120,6 +118,7 @@ if ($report === 'late') {
         FROM attendance a JOIN users u ON u.id=a.user_id WHERE {$baseWhere}");
     $summaryStmt->execute($baseParams);
     $summaryRow = $summaryStmt->fetch() ?: [];
+    $totalRows = (int) ($summaryRow['scheduled_days'] ?? 0);
     $summaryCardsList = [
         ['label' => __('total_attendance_records'), 'value' => number_format((int)($summaryRow['scheduled_days'] ?? 0)), 'mod' => 'report-summary-card--records'],
         ['label' => __('report_clocked_records'), 'value' => number_format((int)($summaryRow['present_days'] ?? 0)), 'mod' => 'report-summary-card--present'],
@@ -127,6 +126,9 @@ if ($report === 'late') {
         ['label' => __('total_working_time'), 'value' => format_minutes((int)($summaryRow['total_work_minutes'] ?? 0)), 'mod' => 'report-summary-card--hours'],
     ];
 }
+
+$totalPages = max(1, (int) ceil($totalRows / $pageSize));
+$page = min($page, $totalPages);
 
 $rows = [];
 $filtered = [];

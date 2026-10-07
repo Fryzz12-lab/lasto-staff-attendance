@@ -367,6 +367,18 @@ function ensure_attendance_rows_for_date(string $date): int
     if (!$parsed || $parsed->format('Y-m-d') !== $date || $date > today_str()) {
         return 0;
     }
+    // Most report views revisit dates whose staff rows already exist. Avoid the
+    // schedule and leave lookups in the INSERT when there is nothing to add.
+    $missingStmt = db()->prepare("SELECT 1 FROM users u
+        LEFT JOIN attendance a ON a.user_id = u.id AND a.work_date = ?
+        WHERE u.role = 'staff' AND u.is_active = 1
+          AND (u.joining_date IS NULL OR u.joining_date <= ?)
+          AND (u.employment_end_date IS NULL OR u.employment_end_date >= ?)
+          AND a.id IS NULL LIMIT 1");
+    $missingStmt->execute([$date, $date, $date]);
+    if (!$missingStmt->fetchColumn()) {
+        return 0;
+    }
     // A report may need thousands of missing staff-days. Insert them in one
     // statement so the first page load does not perform several queries and
     // a row lock for every employee. The unique user/date key handles races.

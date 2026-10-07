@@ -42,35 +42,35 @@ $sql = "SELECT
                        ORDER BY b2.start_time DESC, b2.id DESC
                        LIMIT 1
                    ) AS last_break_id
-            FROM break_records b1
+            FROM attendance scoped
+            JOIN break_records b1 ON b1.attendance_id = scoped.id
+            WHERE scoped.work_date BETWEEN ? AND ?
             GROUP BY b1.attendance_id
         ) agg ON agg.attendance_id = a.id
         JOIN break_records lb ON lb.id = agg.last_break_id
         WHERE a.work_date BETWEEN ? AND ?";
 $params = [$from, $to];
+$rowParams = [$from, $to, $from, $to];
 if ($exceededOnly) {
     $sql .= ' AND agg.has_exceeded = 1';
 }
-$sql .= " ORDER BY a.work_date DESC, lb.start_time DESC LIMIT {$perPage} OFFSET {$offset}";
+$sql .= " ORDER BY a.work_date DESC, lb.start_time DESC, a.id DESC LIMIT {$perPage} OFFSET {$offset}";
 
 $countSql = "SELECT COUNT(*)
         FROM attendance a
         JOIN users u ON u.id = a.user_id
-        JOIN (
-            SELECT b1.attendance_id, MAX(b1.exceeded) AS has_exceeded
-            FROM break_records b1
-            GROUP BY b1.attendance_id
-        ) agg ON agg.attendance_id = a.id
         WHERE a.work_date BETWEEN ? AND ?";
 if ($exceededOnly) {
-    $countSql .= ' AND agg.has_exceeded = 1';
+    $countSql .= ' AND EXISTS (SELECT 1 FROM break_records b WHERE b.attendance_id = a.id AND b.exceeded = 1)';
+} else {
+    $countSql .= ' AND EXISTS (SELECT 1 FROM break_records b WHERE b.attendance_id = a.id)';
 }
 $cStmt = db()->prepare($countSql);
 $cStmt->execute($params);
 $total = (int) $cStmt->fetchColumn();
 
 $stmt = db()->prepare($sql);
-$stmt->execute($params);
+$stmt->execute($rowParams);
 $rows = $stmt->fetchAll();
 
 $viewQs = http_build_query(array_filter([
