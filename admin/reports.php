@@ -29,7 +29,9 @@ if ($userId > 0) {
     $userParams[] = $userId;
 }
 
+$attendanceFillStarted = microtime(true);
 ensure_attendance_rows_for_range($from, $to);
+$attendanceFillMs = (microtime(true) - $attendanceFillStarted) * 1000;
 $reportCondition = match ($report) {
     'late' => " AND (a.late_minutes > 0 OR a.status = 'late')",
     'incomplete' => " AND (a.status = 'incomplete' OR (a.clock_in IS NOT NULL AND a.clock_out IS NULL AND a.work_date < CURDATE()))",
@@ -331,6 +333,10 @@ $pageTitle = __('reports');
 $activeMenu = 'reports';
 $isAdminArea = true;
 $bodyClass = 'reports-page';
+if (!headers_sent()) {
+    header(sprintf('Server-Timing: attendance-fill;dur=%.1f, page-data;dur=%.1f',
+        $attendanceFillMs, (microtime(true) - (float) ($_SERVER['REQUEST_TIME_FLOAT'] ?? $attendanceFillStarted)) * 1000));
+}
 require __DIR__ . '/../includes/layout_header.php';
 
 $qs = http_build_query(['report' => $report, 'from' => $from, 'to' => $to, 'user_id' => $userId]);

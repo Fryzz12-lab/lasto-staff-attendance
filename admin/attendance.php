@@ -46,6 +46,10 @@ $pageTitle  = __('attendance_records');
 $activeMenu = 'attendance';
 $isAdminArea = true;
 $bodyClass = 'admin-attendance-records';
+if (!headers_sent()) {
+    header(sprintf('Server-Timing: page-data;dur=%.1f',
+        (microtime(true) - (float) ($_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true))) * 1000));
+}
 require __DIR__ . '/../includes/layout_header.php';
 ?>
 

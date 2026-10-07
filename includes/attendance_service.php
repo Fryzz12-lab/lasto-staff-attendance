@@ -442,9 +442,33 @@ function ensure_attendance_rows_for_range(string $from, string $to): int
     if ($start > $effectiveEnd) {
         return 0;
     }
-    $created = 0;
+    $dates = [];
     for ($date = $start; $date <= $effectiveEnd; $date = $date->modify('+1 day')) {
-        $created += ensure_attendance_rows_for_date($date->format('Y-m-d'));
+        $dates[] = $date->format('Y-m-d');
+    }
+    // One check per small date batch avoids a database round trip for every
+    // day when an admin revisits a report whose attendance rows already exist.
+    $hasMissingRows = false;
+    foreach (array_chunk($dates, 30) as $batch) {
+        $dateSelects = implode(' UNION ALL ', array_fill(0, count($batch), 'SELECT ? AS work_date'));
+        $missingStmt = db()->prepare("SELECT 1 FROM ({$dateSelects}) dates
+            JOIN users u ON u.role = 'staff' AND u.is_active = 1
+              AND (u.joining_date IS NULL OR u.joining_date <= dates.work_date)
+              AND (u.employment_end_date IS NULL OR u.employment_end_date >= dates.work_date)
+            LEFT JOIN attendance a ON a.user_id = u.id AND a.work_date = dates.work_date
+            WHERE a.id IS NULL LIMIT 1");
+        $missingStmt->execute($batch);
+        if ($missingStmt->fetchColumn()) {
+            $hasMissingRows = true;
+            break;
+        }
+    }
+    if (!$hasMissingRows) {
+        return 0;
+    }
+    $created = 0;
+    foreach ($dates as $date) {
+        $created += ensure_attendance_rows_for_date($date);
     }
     return $created;
 }
