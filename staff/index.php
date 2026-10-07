@@ -267,7 +267,7 @@ require __DIR__ . '/../includes/layout_header.php';
         <?php endif; ?>
         <button type="button" class="btn btn-accent btn-action-lg px-5 py-3 fw-bold fs-5 shadow-sm"
                 data-action="clock_in"
-                data-location-enabled="<?= !empty($user['attendance_location_enabled']) ? '1' : '0' ?>"
+                data-location-preference="<?= $user['attendance_location_enabled'] === null ? 'undecided' : ((int)$user['attendance_location_enabled'] === 1 ? 'enabled' : 'disabled') ?>"
                 data-confirm="<?= e(__('confirm_clock_in')) ?>"
                 data-confirm-title="<?= e(__('clock_in')) ?>"
                 data-confirm-label="<?= e(__('clock_in')) ?>">
@@ -536,7 +536,7 @@ require __DIR__ . '/../includes/layout_header.php';
                 </div>
                 <button type="button" class="btn btn-clock-out"
                         data-action="clock_out"
-                        data-location-enabled="<?= !empty($user['attendance_location_enabled']) ? '1' : '0' ?>"
+                        data-location-preference="<?= $user['attendance_location_enabled'] === null ? 'undecided' : ((int)$user['attendance_location_enabled'] === 1 ? 'enabled' : 'disabled') ?>"
                         data-confirm="<?= e(__('confirm_clock_out')) ?>"
                         data-confirm-title="<?= e(__('clock_out')) ?>"
                         data-confirm-label="<?= e(__('clock_out')) ?>">

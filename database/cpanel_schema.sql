@@ -24,7 +24,7 @@ CREATE TABLE `users` (
   `employment_end_date` DATE DEFAULT NULL COMMENT 'Last working day (inclusive). NULL = still employed.',
   `profile_photo` VARCHAR(255) DEFAULT NULL,
   `is_active` TINYINT(1) NOT NULL DEFAULT 1,
-  `attendance_location_enabled` TINYINT(1) NOT NULL DEFAULT 0,
+  `attendance_location_enabled` TINYINT(1) DEFAULT NULL COMMENT 'NULL=undecided, 1=enabled, 0=disabled',
   `must_change_password` TINYINT(1) NOT NULL DEFAULT 0,
   `weekly_off_day` TINYINT UNSIGNED DEFAULT 0 COMMENT '0=Sun ... 6=Sat',
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

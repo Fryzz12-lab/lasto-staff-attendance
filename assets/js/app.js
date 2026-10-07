@@ -311,6 +311,31 @@
     });
   }
 
+  function askAttendanceLocation() {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.tabIndex = -1;
+    modal.setAttribute('aria-labelledby', 'attendanceLocationChoiceTitle');
+    modal.innerHTML = '<div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="attendanceLocationChoiceTitle">Share your location for attendance?</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body">Your location is requested only when you Clock In, Clock Out, or start/end approved work-from-home time. Your location is not continuously tracked.</div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-location-choice="disabled">Continue Without Location</button><button type="button" class="btn btn-accent" data-location-choice="enabled">Enable Location</button></div></div></div>';
+    document.body.appendChild(modal);
+    return new Promise((resolve) => {
+      const instance = bootstrap.Modal.getOrCreateInstance(modal);
+      let choice = null;
+      modal.querySelectorAll('[data-location-choice]').forEach((button) => {
+        button.addEventListener('click', () => {
+          choice = button.dataset.locationChoice;
+          instance.hide();
+        });
+      });
+      modal.addEventListener('hidden.bs.modal', () => {
+        instance.dispose();
+        modal.remove();
+        resolve(choice);
+      }, { once: true });
+      instance.show();
+    });
+  }
+
   function reviewCorrectionTime(value) {
     if (!value) return '—';
     const match = /^(\d{1,2}):(\d{2})/.exec(value);
@@ -546,8 +571,21 @@
         btn.disabled = true;
         let result;
         if (action === 'clock_in' || action === 'clock_out') {
+          if (btn.dataset.locationPreference === 'undecided') {
+            const choice = await askAttendanceLocation();
+            if (!choice) { btn.disabled = false; return; }
+            const savedChoice = await apiPost('/api/clock.php', { action: 'location_preference', preference: choice });
+            if (!savedChoice.success) {
+              showToast(savedChoice.message || 'Could not save your location choice. Please try again.', 'danger');
+              btn.disabled = false;
+              return;
+            }
+            document.querySelectorAll('[data-location-preference]').forEach((button) => {
+              button.dataset.locationPreference = choice;
+            });
+          }
           result = await apiPost('/api/clock.php', { action });
-          if (result?.success && result.location_event_id && btn.dataset.locationEnabled === '1') {
+          if (result?.success && result.location_event_id && btn.dataset.locationPreference === 'enabled') {
             const location = await new Promise((resolve) => {
               if (!navigator.geolocation || !window.isSecureContext) {
                 resolve({ location_status: 'unsupported' }); return;

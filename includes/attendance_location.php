@@ -8,16 +8,23 @@ function attendance_request_ip(): ?string
     return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : null;
 }
 
-function attendance_location_enabled(int $userId): bool
+/** NULL means the employee has not yet made an application-level choice. */
+function attendance_location_preference(int $userId): ?bool
 {
     $stmt = db()->prepare('SELECT attendance_location_enabled FROM users WHERE id=?');
     $stmt->execute([$userId]);
-    return (bool) $stmt->fetchColumn();
+    $value = $stmt->fetchColumn();
+    return $value === null ? null : (bool) $value;
+}
+
+function attendance_location_enabled(int $userId): bool
+{
+    return attendance_location_preference($userId) === true;
 }
 
 function attendance_location_start(int $attendanceId, int $userId, string $type, string $eventTime): int
 {
-    $enabled = attendance_location_enabled($userId);
+    $preference = attendance_location_preference($userId);
     $ip = attendance_request_ip();
     $officeIp = trim((string) get_setting('office_public_ip', ''));
     $network = $officeIp === '' || $ip === null ? 'unknown' : ($ip === $officeIp ? 'office' : 'other');
@@ -25,8 +32,8 @@ function attendance_location_start(int $attendanceId, int $userId, string $type,
         (attendance_id,user_id,event_type,event_time,location_status,client_ip,office_network,location_finalized_at)
         VALUES (?,?,?,?,?,?,?,?)');
     $stmt->execute([$attendanceId, $userId, $type, $eventTime,
-        $enabled ? 'unavailable' : 'sharing_disabled', $ip, $network,
-        $enabled ? null : $eventTime]);
+        $preference === false ? 'sharing_disabled' : 'unavailable', $ip, $network,
+        $preference === true ? null : $eventTime]);
     return (int) db()->lastInsertId();
 }
 

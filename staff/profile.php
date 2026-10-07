@@ -17,7 +17,12 @@ if (is_post()) {
     $action = (string) post('action', 'profile');
 
     if ($action === 'attendance_location') {
-        $enabled = (string) post('attendance_location_enabled', '0') === '1' ? 1 : 0;
+        $choice = (string) post('attendance_location_enabled', '');
+        if (!in_array($choice, ['1', '0'], true)) {
+            flash_set('danger', 'Choose On or Off before saving.');
+            redirect('/staff/profile.php');
+        }
+        $enabled = $choice === '1' ? 1 : 0;
         db()->prepare('UPDATE users SET attendance_location_enabled=? WHERE id=?')->execute([$enabled, $userId]);
         flash_set('success', 'Attendance Location setting saved.');
         redirect('/staff/profile.php');
@@ -101,10 +106,13 @@ require __DIR__ . '/../includes/layout_header.php';
         <form method="post" class="d-flex align-items-center gap-3 flex-wrap">
             <?= csrf_field() ?>
             <input type="hidden" name="action" value="attendance_location">
-            <input type="hidden" name="attendance_location_enabled" value="0">
-            <label class="form-check-label" for="attendanceLocationEnabled">Attendance Location</label>
-            <input id="attendanceLocationEnabled" type="checkbox" name="attendance_location_enabled" value="1" <?= !empty($user['attendance_location_enabled']) ? 'checked' : '' ?>>
-            <span><?= !empty($user['attendance_location_enabled']) ? 'On' : 'Off' ?></span>
+            <span>Current choice: <strong><?= $user['attendance_location_enabled'] === null ? 'Not decided yet' : ((int)$user['attendance_location_enabled'] === 1 ? 'On' : 'Off') ?></strong></span>
+            <label for="attendanceLocationEnabled" class="visually-hidden">Attendance Location preference</label>
+            <select id="attendanceLocationEnabled" name="attendance_location_enabled" class="form-select w-auto" required>
+                <option value="" <?= $user['attendance_location_enabled'] === null ? 'selected' : '' ?> disabled>Choose On or Off</option>
+                <option value="1" <?= $user['attendance_location_enabled'] !== null && (int)$user['attendance_location_enabled'] === 1 ? 'selected' : '' ?>>On</option>
+                <option value="0" <?= $user['attendance_location_enabled'] !== null && (int)$user['attendance_location_enabled'] === 0 ? 'selected' : '' ?>>Off</option>
+            </select>
             <button class="btn btn-sm btn-accent" type="submit">Save</button>
         </form>
         <div class="mt-3">Browser Permission: <strong id="attendanceBrowserPermission">Checking…</strong></div>

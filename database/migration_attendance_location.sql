@@ -1,5 +1,5 @@
 -- Apply once to an existing database before deploying this feature.
-ALTER TABLE users ADD COLUMN attendance_location_enabled TINYINT(1) NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN attendance_location_enabled TINYINT(1) DEFAULT NULL COMMENT 'NULL=undecided, 1=enabled, 0=disabled';
 
 CREATE TABLE attendance_location_events (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,

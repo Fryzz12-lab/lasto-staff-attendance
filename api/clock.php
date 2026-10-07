@@ -32,6 +32,15 @@ $user = current_user();
 $userId = (int) $user['id'];
 
 try {
+    if ($action === 'location_preference') {
+        $preference = $input['preference'] ?? null;
+        if (!in_array($preference, ['enabled', 'disabled'], true)) {
+            json_response(['success' => false, 'message' => 'Invalid location preference.'], 400);
+        }
+        db()->prepare('UPDATE users SET attendance_location_enabled=? WHERE id=?')
+            ->execute([$preference === 'enabled' ? 1 : 0, $userId]);
+        json_response(['success' => true]);
+    }
     if ($action === 'location_result') {
         $eventId = filter_var($input['event_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
         if (!$eventId || !attendance_location_finalize((int) $eventId, $userId, $input)) {
