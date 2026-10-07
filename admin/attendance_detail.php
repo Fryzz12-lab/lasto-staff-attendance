@@ -9,6 +9,12 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 require_admin();
 
 $id = (int) get('id', 0);
+$returnTo = (string) get('return_to', '');
+$returnSource = (string) get('return_source', '');
+$returnPath = (string) (parse_url($returnTo, PHP_URL_PATH) ?: '');
+if (!(str_ends_with($returnPath, '/admin/index.php') || str_ends_with($returnPath, '/admin/attendance.php'))) {
+    $returnTo = $returnSource === 'dashboard' ? url('/admin/index.php') : url('/admin/attendance.php');
+}
 $stmt = db()->prepare(
     "SELECT a.*, u.full_name, u.employee_id, u.id AS uid
      FROM attendance a JOIN users u ON u.id = a.user_id WHERE a.id = ?"
@@ -56,7 +62,7 @@ if (is_post()) {
                 $clockOut = correction_datetime_for_time($att['work_date'], $clockOutTime, $att['clock_out']);
                 correct_attendance($id, $clockIn, $clockOut, (int) current_user()['id'], $reason);
                 flash_set('success', __('msg_attendance_corrected'));
-                redirect('/admin/attendance_detail.php?id=' . $id);
+                redirect('/admin/attendance_detail.php?' . http_build_query(['id' => $id, 'return_to' => $returnTo, 'return_source' => $returnSource]));
             } catch (InvalidArgumentException $error) {
                 flash_set('danger', $error->getMessage());
             } catch (Throwable $error) {
@@ -82,6 +88,7 @@ $audit->execute([$id]);
 $auditRows = $audit->fetchAll();
 
 $pageTitle = __('attendance_detail');
+$bodyClass = 'admin-attendance-detail';
 $activeMenu = 'attendance';
 $isAdminArea = true;
 require __DIR__ . '/../includes/layout_header.php';
@@ -112,7 +119,7 @@ $formReason = is_post() ? $reason : '';
 ?>
 
 <div class="mb-3">
-    <a href="<?= e(url('/admin/attendance.php')) ?>" class="btn btn-sm btn-outline-secondary">&larr; <?= e(__('back')) ?></a>
+    <a href="<?= e($returnTo) ?>" class="btn btn-sm btn-outline-secondary">&larr; <?= e(__('back')) ?></a>
 </div>
 
 <div class="row g-3 align-items-stretch">
@@ -146,6 +153,11 @@ $formReason = is_post() ? $reason : '';
                             <?php endforeach; ?>
                             </tbody>
                         </table>
+                    </div>
+                    <div class="attendance-detail-breaks-mobile">
+                        <?php foreach ($breakRows as $b): ?>
+                            <div class="attendance-detail-break-mobile"><strong><?= e(break_label($b['break_type'], (int)$b['sequence_no'])) ?></strong><span><?= e(format_time($b['start_time'])) ?>–<?= $b['end_time'] ? e(format_time($b['end_time'])) : e(__('open')) ?></span><span><?= break_duration_html($b['start_time'], $b['end_time'], (int)$b['duration_minutes']) ?></span></div>
+                        <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
             </div>
@@ -233,6 +245,11 @@ $formReason = is_post() ? $reason : '';
                     <?php endforeach; ?>
                     </tbody>
                 </table>
+            </div>
+            <div class="attendance-detail-audit-mobile">
+                <?php foreach ($auditRows as $a): ?>
+                    <article class="attendance-detail-audit-entry"><div><strong><?= e(format_date($a['created_at'])) ?></strong> <span><?= e(format_time($a['created_at'])) ?></span></div><div><?= e($a['changer']) ?> · <?= e(audit_display_label($a['action'])) ?></div><div><span><?= e(__('before_value')) ?>:</span> <?= $a['old_value'] === null || $a['old_value'] === '' ? '—' : e(audit_display_value($a['old_value'])) ?></div><div><span><?= e(__('after_value')) ?>:</span> <?= $a['new_value'] === null || $a['new_value'] === '' ? '—' : e(audit_display_value($a['new_value'])) ?></div><div><span><?= e(__('reason')) ?>:</span> <?= $a['reason'] === null || $a['reason'] === '' ? '—' : e((string)$a['reason']) ?></div></article>
+                <?php endforeach; ?>
             </div>
         <?php endif; ?>
     </div>

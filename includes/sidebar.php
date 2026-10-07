@@ -76,7 +76,6 @@ if ($user && $user['role'] === 'admin' && ($isAdminArea ?? true)):
     echo nav_item('reports', '/admin/reports.php', 'bi-file-earmark-bar-graph', __('reports'), $activeMenu);
     echo nav_item('settings', '/admin/settings.php', 'bi-gear', __('settings'), $activeMenu);
     echo nav_item('profile', '/admin/profile.php', 'bi-person', __('my_profile'), $activeMenu);
-    echo '<div class="d-lg-none">' . nav_item('my_punch_in', '/staff/', 'bi-fingerprint', __('my_punch_in'), $activeMenu) . '</div>';
 else:
     echo nav_item('dashboard', '/staff/', 'bi-house', __('dashboard'), $activeMenu);
     echo nav_item('attendance', '/staff/attendance.php', 'bi-calendar-check', __('my_attendance'), $activeMenu);

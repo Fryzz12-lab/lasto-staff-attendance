@@ -9,6 +9,11 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 require_admin();
 
 $id    = (int) get('id', 0);
+$returnTo = (string) get('return_to', '');
+$returnPath = (string) (parse_url($returnTo, PHP_URL_PATH) ?: '');
+if (!str_ends_with($returnPath, '/admin/staff.php')) {
+    $returnTo = url('/admin/staff.php');
+}
 $staff = null;
 
 if ($id > 0) {
@@ -191,7 +196,7 @@ if (is_post()) {
                 db()->commit();
 
                 if ($staff) flash_set('success', __('msg_staff_updated'));
-                redirect('/admin/staff_form.php?id=' . $userId);
+                redirect('/admin/staff_form.php?' . http_build_query(['id' => $userId, 'return_to' => $returnTo]));
             } catch (Throwable $ex) {
                 if (db()->inTransaction()) db()->rollBack();
                 if ($ex instanceof InvalidArgumentException) {
@@ -230,7 +235,7 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
 ?>
 
 <div class="mb-3">
-    <a href="<?= e(url('/admin/staff.php')) ?>" class="btn btn-sm btn-outline-secondary">&larr; <?= e(__('back')) ?></a>
+    <a href="<?= e($returnTo) ?>" class="btn btn-sm btn-outline-secondary">&larr; <?= e(__('back')) ?></a>
 </div>
 
 <?php if (!empty($_SESSION['new_staff_credentials'])): ?>
@@ -382,28 +387,28 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
                     <span class="small text-muted">This staff member has not logged in to set their permanent password and security questions yet.</span>
                 </div>
             </div>
-            <a href="#sidebar_temp_pw" class="btn btn-sm btn-outline-info" onclick="document.getElementById('staff-account-recovery').open = true; document.getElementById('sidebar_temp_pw')?.focus(); document.getElementById('sidebar_temp_pw')?.scrollIntoView({behavior:'smooth', block:'center'}); return false;">
+            <a href="#sidebar_temp_pw" class="btn btn-sm btn-outline-info" onclick="document.getElementById('sidebar_temp_pw')?.focus(); document.getElementById('sidebar_temp_pw')?.scrollIntoView({behavior:'smooth', block:'center'}); return false;">
                 <i class="bi bi-key me-1"></i> Reset temporary password
             </a>
         </div>
     </div>
 <?php endif; ?>
 
-<div class="row g-3">
-    <div class="col-lg-<?= $staff ? '8' : '12' ?>">
-        <div class="card-soft">
+<div class="row g-3 align-items-stretch">
+    <div class="col-lg-<?= $staff ? '8' : '12' ?> d-flex">
+        <div class="card-soft w-100 d-flex flex-column mb-0">
             <div class="card-header"><?= e($pageTitle) ?></div>
-            <div class="card-body">
+            <div class="card-body d-flex flex-column justify-content-between flex-grow-1">
                 <?php if (!$staff): ?>
                     <p class="form-hint mb-3">Create the staff account with a temporary password. The employee will be prompted to set their permanent password and security questions on first login.</p>
                 <?php endif; ?>
-                <form method="post" id="staff-form">
+                <form method="post" id="staff-form" class="d-flex flex-column flex-grow-1 justify-content-between">
                     <?= csrf_field() ?>
                     <input type="hidden" name="form_action" value="save">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label" for="input_full_name"><?= e(__('full_name')) ?> *</label>
-                            <input id="input_full_name" name="full_name" class="form-control" value="<?= e((string)$v('full_name')) ?>" required autofocus autocomplete="name">
+                            <input id="input_full_name" name="full_name" class="form-control" value="<?= e((string)$v('full_name')) ?>" required autocomplete="name">
                         </div>
 
                         <div class="col-md-6">
@@ -428,15 +433,14 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
                         <?php endif; ?>
 
                         <div class="col-md-6">
-                            <label class="form-label"><?= e(__('email')) ?> *</label>
-                            <input type="email" name="email" class="form-control" value="<?= e((string) $v('email')) ?>" autocomplete="email" required>
-                            <?php if ($staff): ?>
-                                <div class="d-flex align-items-center gap-2 mt-1">
-                                    <span class="form-hint">Managed by Admin</span>
+                            <div class="admin-email-label-row">
+                                <label class="form-label mb-0" for="staff-email"><?= e(__('email')) ?> *</label>
+                                <?php if ($staff): ?>
                                     <?php if (!empty($staff['email_verified_at'])): ?><span class="email-status email-status--verified">Verified</span>
                                     <?php else: ?><span class="email-status email-status--pending">Not verified</span><?php endif; ?>
-                                </div>
-                            <?php endif; ?>
+                                <?php endif; ?>
+                            </div>
+                            <input id="staff-email" type="email" name="email" class="form-control" value="<?= e((string) $v('email')) ?>" autocomplete="email" required>
                         </div>
 
                         <div class="col-md-6">
@@ -447,9 +451,8 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
                             <label class="form-label"><?= e(__('phone')) ?></label>
                             <div class="input-group">
                                 <span class="input-group-text" id="edit-phone-prefix">+60</span>
-                                <input type="tel" name="phone" inputmode="numeric" maxlength="10" pattern="[1-9][0-9]{8,9}" aria-label="<?= e(__('phone')) ?>" aria-describedby="edit-phone-prefix edit-phone-hint" class="form-control" value="<?= e((string)$v('phone')) ?>" placeholder="123456789">
+                                <input type="tel" name="phone" inputmode="numeric" maxlength="10" pattern="[1-9][0-9]{8,9}" aria-label="<?= e(__('phone')) ?>" aria-describedby="edit-phone-prefix" class="form-control" value="<?= e((string)$v('phone')) ?>" placeholder="123456789">
                             </div>
-                            <div id="edit-phone-hint" class="form-hint">9 or 10 digits. Omit the leading 0.</div>
                         </div>
                         <?php if ($staff): ?>
                         <div class="col-md-6">
@@ -481,11 +484,9 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
                                 <?php endfor; ?>
                             </select>
                         </div>
-
-
                     </div>
 
-                    <div class="d-flex flex-wrap gap-2 mt-4">
+                    <div class="d-flex flex-wrap gap-2 mt-4 pt-1">
                         <button class="btn btn-accent"><?= e(__('save')) ?></button>
                         <?php if ($staff): ?>
                             <button type="submit" form="delete-staff-form" class="btn btn-outline-danger" data-confirm="<?= e(__('confirm_delete_staff')) ?>"><?= e(__('delete')) ?></button>
@@ -503,89 +504,106 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
     </div>
 
     <?php if ($staff): ?>
-    <div class="col-lg-4">
-        <details id="staff-account-recovery" class="staff-account-recovery">
-        <summary class="card-soft p-3 mb-3">Account recovery <i class="bi bi-chevron-down ms-2" aria-hidden="true"></i></summary>
-        <!-- Direct Temporary Password Override Card -->
-        <div class="card-soft mb-3">
-            <div class="card-header"><i class="bi bi-key-fill text-warning me-1"></i> <?= e(__('direct_password_override')) ?></div>
-            <div class="card-body">
-                <p class="form-hint mb-3"><?= e(__('direct_override_hint')) ?></p>
-                <form method="post" id="override-password-form" data-confirm="Override password with this temporary password?">
-                    <?= csrf_field() ?>
-                    <input type="hidden" name="form_action" value="override_password">
-                    <div class="mb-3">
-                        <label class="form-label" for="sidebar_temp_pw"><?= e(__('temporary_password')) ?></label>
-                        <div class="input-group">
-                            <input type="text" name="new_temp_password" id="sidebar_temp_pw" class="form-control font-monospace" value="<?= e($suggestedTempPassword) ?>" required autocomplete="off">
-                            <button type="button" class="btn btn-outline-secondary" id="btn_regen_sidebar_pw" title="Generate another password">
-                                <i class="bi bi-arrow-clockwise"></i>
-                            </button>
+    <div class="col-lg-4 d-flex">
+        <details open class="card-soft staff-advanced-recovery w-100 d-flex flex-column mb-0">
+            <summary class="card-header"><i class="bi bi-key-fill text-warning me-1"></i> Temporary Password Override <i class="bi bi-chevron-down staff-recovery-chevron ms-auto"></i></summary>
+            <div class="card-body d-flex flex-column justify-content-between flex-grow-1">
+                <div>
+                    <p class="form-hint mb-3"><?= e(__('direct_override_hint')) ?></p>
+                    <form method="post" id="override-password-form" data-confirm="Override password with this temporary password?">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="form_action" value="override_password">
+                        <div class="mb-3">
+                            <label class="form-label" for="sidebar_temp_pw"><?= e(__('temporary_password')) ?></label>
+                            <div class="input-group">
+                                <input type="text" name="new_temp_password" id="sidebar_temp_pw" class="form-control font-monospace" value="<?= e($suggestedTempPassword) ?>" required autocomplete="off">
+                                <button type="button" class="btn btn-outline-secondary" id="btn_regen_sidebar_pw" title="Generate another password">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Template to Send Box -->
-                    <?php
-                    $sidebarInitText = __('staff_password_reset_message', [
-                        'name' => (string) ($staff['full_name'] ?? ''),
-                        'company' => company_name(),
-                        'url' => $loginUrl,
-                        'username' => (string) ($staff['username'] ?? ''),
-                        'password' => $suggestedTempPassword,
-                    ]);
-                    ?>
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <label class="form-label mb-0 small text-warning fw-semibold"><i class="bi bi-card-text me-1"></i> Template to Send:</label>
-                            <button type="button" class="btn btn-xs btn-outline-warning py-0 px-2" style="font-size: 0.75rem;" onclick="copySidebarTemplate(this)">
-                                <i class="bi bi-clipboard"></i> <span>Copy Template</span>
-                            </button>
+                        <!-- Template to Send Box -->
+                        <?php
+                        $sidebarInitText = __('staff_password_reset_message', [
+                            'name' => (string) ($staff['full_name'] ?? ''),
+                            'company' => company_name(),
+                            'url' => $loginUrl,
+                            'username' => (string) ($staff['username'] ?? ''),
+                            'password' => $suggestedTempPassword,
+                        ]);
+                        ?>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label mb-0 small text-warning fw-semibold"><i class="bi bi-card-text me-1"></i> Template to Send:</label>
+                                <button type="button" class="btn btn-xs btn-outline-warning py-0 px-2" style="font-size: 0.75rem;" onclick="copySidebarTemplate(this)">
+                                    <i class="bi bi-clipboard"></i> <span>Copy Template</span>
+                                </button>
+                            </div>
+                            <span id="sidebar_welcome_template" hidden><?= e(__('staff_password_reset_message')) ?></span>
+                            <span id="sidebar_login_url" hidden><?= e($loginUrl) ?></span>
+                            <span id="sidebar_company_name" hidden><?= e(company_name()) ?></span>
+                            <div id="sidebar_template_preview" class="p-2 rounded border bg-dark bg-opacity-50 small font-monospace text-light user-select-all" style="white-space: pre-line; line-height: 1.45; font-size: 0.82rem;"><?= e($sidebarInitText) ?></div>
+                            <div class="form-hint mt-1">Preview only. Set the temporary password before sharing this message.</div>
                         </div>
-                        <span id="sidebar_welcome_template" hidden><?= e(__('staff_password_reset_message')) ?></span>
-                        <span id="sidebar_login_url" hidden><?= e($loginUrl) ?></span>
-                        <span id="sidebar_company_name" hidden><?= e(company_name()) ?></span>
-                        <div id="sidebar_template_preview" class="p-2 rounded border bg-dark bg-opacity-50 small font-monospace text-light user-select-all" style="white-space: pre-line; line-height: 1.45; font-size: 0.82rem;"><?= e($sidebarInitText) ?></div>
-                        <div class="form-hint mt-1">Preview only. Set the temporary password before sharing this message.</div>
-                    </div>
+                    </form>
+                </div>
 
-                    <button class="btn btn-warning w-100" id="btn_submit_temp_pw"><?= e(__('set_temp_password_btn')) ?></button>
-                </form>
+                <div class="mt-4 pt-1">
+                    <button form="override-password-form" class="btn btn-warning w-100" id="btn_submit_temp_pw"><?= e(__('set_temp_password_btn')) ?></button>
+                </div>
             </div>
-        </div>
-
-        <div class="card-soft mb-3">
-            <div class="card-header">Issue one-time reset link</div>
-            <div class="card-body">
-                <p class="form-hint">Confirm staff identity. The link is single-use and expires in 1 hour.</p>
-                <form method="post" data-confirm="Issue a one-time reset link for this staff member?">
-                    <?= csrf_field() ?>
-                    <input type="hidden" name="form_action" value="reset_password">
-                    <button class="btn btn-outline-secondary w-100">Issue reset link</button>
-                </form>
-            </div>
-        </div>
-        <div class="card-soft mb-3">
-            <div class="card-header">Verify staff email</div>
-            <div class="card-body">
-                <p class="form-hint mb-2">Current status:
-                    <?php if (!empty($staff['email_verified_at'])): ?><span class="text-success fw-semibold">Verified</span>
-                    <?php else: ?><span class="text-warning fw-semibold">Not verified</span><?php endif; ?>
-                </p>
-                <form method="post" data-confirm="Send an email verification link to this staff member?">
-                    <?= csrf_field() ?>
-                    <input type="hidden" name="form_action" value="verify_email">
-                    <button class="btn btn-outline-info w-100" <?= empty($staff['email']) ? 'disabled' : '' ?>>Send verification email</button>
-                </form>
-            </div>
-        </div>
         </details>
     </div>
     <?php endif; ?>
 </div>
 
+<?php if ($staff): ?>
+<div class="staff-account-access-section mt-4">
+    <div class="account-access-heading mb-2">ACCOUNT ACCESS</div>
+    <div class="row g-3 align-items-stretch">
+        <div class="col-md-6 d-flex">
+            <div class="card-soft staff-reset-recovery w-100 d-flex flex-column">
+                <div class="card-header">Issue One-Time Reset Link</div>
+                <div class="card-body d-flex flex-column justify-content-between flex-grow-1">
+                    <p class="form-hint mb-3">Confirm staff identity. The link is single-use and expires in 1 hour.</p>
+                    <form method="post" data-confirm="Issue a one-time reset link for this staff member?" class="mt-auto">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="form_action" value="reset_password">
+                        <button class="btn btn-outline-secondary w-100">Issue reset link</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 d-flex">
+            <div class="card-soft staff-verify-recovery w-100 d-flex flex-column">
+                <div class="card-header">Verify Staff Email</div>
+                <div class="card-body d-flex flex-column justify-content-between flex-grow-1">
+                    <div class="form-hint mb-3 d-flex align-items-center gap-2">
+                        <span class="staff-status-label">Current status:</span>
+                        <?php if (!empty($staff['email_verified_at'])): ?>
+                            <span class="email-status email-status--verified">Verified</span>
+                        <?php else: ?>
+                            <span class="email-status email-status--pending">Not verified</span>
+                        <?php endif; ?>
+                    </div>
+                    <form method="post" data-confirm="Send an email verification link to this staff member?" class="mt-auto">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="form_action" value="verify_email">
+                        <button class="btn btn-outline-info w-100" <?= empty($staff['email']) ? 'disabled' : '' ?>>Send verification email</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <script>
 (function() {
     function initStaffFormScript() {
+        const recoveryPanel = document.querySelector('.staff-advanced-recovery');
+        if (recoveryPanel && window.matchMedia('(max-width: 767.98px)').matches) recoveryPanel.removeAttribute('open');
         const fullNameInput = document.getElementById('input_full_name');
         const usernameInput = document.getElementById('input_username');
         const isEditMode = <?= $staff ? 'true' : 'false' ?>;

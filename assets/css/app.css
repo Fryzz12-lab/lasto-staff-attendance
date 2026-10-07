@@ -48,6 +48,19 @@
   /* Bright Red */
 }
 
+@media (max-width: 767.98px) {
+  .admin-offday-adjustments .offday-adjustment-mobile { padding: .7rem .75rem; }
+  .admin-offday-adjustments .offday-mobile__top { align-items: center; }
+  .admin-offday-adjustments .offday-mobile__top strong { font-size: .94rem; }
+  .admin-offday-adjustments .offday-mobile__top span:not(.offday-mobile__status) { font-size: .74rem; }
+  .admin-offday-adjustments .offday-mobile__summary { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: .2rem .5rem; margin-top: .45rem; color: var(--muted); font-size: .76rem; line-height: 1.3; }
+  .admin-offday-adjustments .offday-mobile__summary span:nth-child(3) { grid-column: 1 / -1; color: var(--text); font-weight: 600; }
+  .admin-offday-adjustments .offday-mobile__review { grid-column: 2; grid-row: 1 / span 2; align-self: center; min-width: 82px; min-height: 34px; }
+  .admin-offday-adjustments .offday-mobile__review i { margin-left: .2rem; }
+  .admin-offday-adjustments .offday-adjustment-mobile section { display: none; }
+  .admin-offday-adjustments .offday-adjustment-mobile.is-expanded section { display: block; }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -113,9 +126,82 @@ html[data-theme='night'][data-globe='off'] #chronoAmbient canvas {
 }
 
 @media (max-width: 767.98px) {
+  .admin-offday-adjustments .table-responsive-card { display: none; }
+  .admin-offday-adjustments .offday-adjustments-mobile { display: grid; gap: .7rem; }
+  .admin-offday-adjustments .offday-adjustment-mobile { padding: .85rem; border: 1px solid var(--border); border-radius: var(--radius, 12px); background: var(--surface); }
+  .admin-offday-adjustments .offday-mobile__top { display: flex; align-items: flex-start; justify-content: space-between; gap: .65rem; }
+  .admin-offday-adjustments .offday-mobile__top strong { display: block; font-size: 1rem; line-height: 1.3; overflow-wrap: anywhere; }
+  .admin-offday-adjustments .offday-mobile__top span:not(.offday-mobile__status) { display: block; color: var(--muted); font-size: .78rem; margin-top: .15rem; }
+  .admin-offday-adjustments .offday-mobile__status { flex: 0 0 auto; padding: .2rem .45rem; border-radius: 999px; font-size: .68rem; font-weight: 700; }
+  .admin-offday-adjustments .status-pending { color: #b45309; background: rgba(245,158,11,.16); }
+  .admin-offday-adjustments .status-decided { color: #047857; background: rgba(16,185,129,.14); }
+  .admin-offday-adjustments section { margin-top: .8rem; padding-top: .7rem; border-top: 1px solid var(--border); }
+  .admin-offday-adjustments section h6 { margin: 0 0 .5rem; color: var(--muted); font-size: .7rem; letter-spacing: .1em; }
+  .admin-offday-adjustments .offday-mobile__grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .6rem .8rem; }
+  .admin-offday-adjustments .offday-mobile__grid div, .admin-offday-adjustments .offday-mobile__balance { display: grid; gap: .12rem; }
+  .admin-offday-adjustments .offday-mobile__grid span, .admin-offday-adjustments .offday-mobile__balance span { color: var(--muted); font-size: .72rem; }
+  .admin-offday-adjustments .offday-mobile__grid strong, .admin-offday-adjustments .offday-mobile__balance strong { font-size: .86rem; }
+  .admin-offday-adjustments .offday-mobile__balance { grid-template-columns: 1fr auto; gap: .35rem .7rem; }
+  .admin-offday-adjustments .offday-mobile__decision { display: grid; gap: .55rem; }
+  .admin-offday-adjustments .offday-mobile__decision label { font-size: .8rem; line-height: 1.35; }
+  .admin-offday-adjustments .offday-mobile__decision button { min-height: 40px; }
+}
+  .admin-break-records .table-responsive-card { display: none; }
+  .admin-break-records .break-records-mobile { display: grid; gap: .65rem; padding: .75rem; }
+  .admin-break-records .break-record-mobile { padding: .8rem .85rem; border: 1px solid var(--border); border-left: 3px solid var(--border); border-radius: var(--radius, 12px); background: var(--surface); }
+  .admin-break-records .break-record-mobile.is-exceeded { border-left-color: #f59e0b; }
+  .admin-break-records .break-record-mobile__top { display: flex; align-items: flex-start; justify-content: space-between; gap: .65rem; }
+  .admin-break-records .break-record-mobile__identity { min-width: 0; display: grid; gap: .15rem; }
+  .admin-break-records .break-record-mobile__identity strong { font-size: .98rem; line-height: 1.3; overflow-wrap: anywhere; }
+  .admin-break-records .break-record-mobile__identity span { color: var(--muted); font-size: .8rem; overflow-wrap: anywhere; }
+  .admin-break-records .break-record-mobile__status { flex: 0 1 auto; max-width: 45%; padding: .2rem .4rem; border-radius: 999px; color: #047857; background: rgba(16,185,129,.13); font-size: .65rem; font-weight: 700; line-height: 1.2; text-align: center; }
+  .admin-break-records .break-record-mobile.is-exceeded .break-record-mobile__status { color: #b45309; background: rgba(245,158,11,.16); }
+  .admin-break-records .break-record-mobile__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem .8rem; margin: .8rem 0; }
+  .admin-break-records .break-record-mobile__grid div { min-width: 0; display: grid; gap: .12rem; }
+  .admin-break-records .break-record-mobile__grid span, .admin-break-records .break-record-mobile__total span { color: var(--muted); font-size: .72rem; }
+  .admin-break-records .break-record-mobile__grid strong, .admin-break-records .break-record-mobile__total strong { font-size: .86rem; overflow-wrap: anywhere; }
+  .admin-break-records .break-record-mobile__total { display: flex; justify-content: space-between; align-items: baseline; gap: .6rem; padding-top: .6rem; border-top: 1px solid var(--border); }
+  .admin-break-records .break-record-mobile__action { width: 100%; min-height: 38px; margin-top: .75rem; display: inline-flex; align-items: center; justify-content: center; }
+}
   #chronoAmbient {
     opacity: .85;
   }
+}
+
+/* Staff management: mobile cards retain the desktop table for larger screens. */
+.admin-staff-management .staff-management-mobile { display: none !important; }
+@media (max-width: 767.98px) {
+  .admin-staff-management .app-content { min-width: 0; padding: .75rem; }
+  .admin-staff-management .app-content > .d-flex:first-child { margin-bottom: .7rem !important; }
+  .admin-staff-management .app-content > .d-flex:first-child .btn { min-height: 42px; }
+  .admin-staff-management .card-soft { min-width: 0; background: color-mix(in srgb, var(--surface) 96%, #08111d); }
+  .admin-staff-management .card-body { min-width: 0; }
+  .admin-staff-management .card-soft.mb-3 .card-body { padding: .8rem; }
+  .admin-staff-management form.row { --bs-gutter-y: .6rem; }
+  .admin-staff-management form.row > .col-md-8,
+  .admin-staff-management form.row > .col-md-4 { width: 100%; }
+  .admin-staff-management .search-bar-combo { display: flex; min-width: 0; }
+  .admin-staff-management .search-bar-combo__input { min-width: 0; }
+  .admin-staff-management .search-bar-combo__btn { flex: 0 0 auto; min-width: 76px; min-height: 40px; padding-inline: .65rem; }
+  .admin-staff-management form.row > .col-12 { gap: .5rem !important; }
+  .admin-staff-management .staff-management-desktop { display: none; }
+  .admin-staff-management .staff-management-mobile { display: grid !important; gap: .7rem; padding: .7rem; }
+  .admin-staff-management .staff-management-card { min-width: 0; padding: .8rem; border: 1px solid var(--border); border-radius: var(--radius); background: color-mix(in srgb, var(--surface) 97%, #08111d); }
+  .admin-staff-management .staff-management-card__head { display: flex; align-items: center; justify-content: space-between; gap: .55rem; min-width: 0; }
+  .admin-staff-management .staff-management-card__name { min-width: 0; flex: 1 1 auto; overflow-wrap: anywhere; line-height: 1.3; }
+  .admin-staff-management .staff-management-card__head .status-badge { flex: 0 0 auto; white-space: nowrap; }
+  .admin-staff-management .staff-management-card__email { margin-top: .28rem; color: var(--muted); font-size: .78rem; overflow-wrap: anywhere; }
+  .admin-staff-management .staff-management-card__details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem .8rem; margin: .6rem 0; }
+  .admin-staff-management .staff-management-card__details > div { min-width: 0; }
+  .admin-staff-management .staff-management-card__details > div:nth-child(2) { grid-column: 1 / -1; }
+  .admin-staff-management .staff-management-card__details span { display: block; margin-bottom: .15rem; color: var(--muted); font-size: .7rem; }
+  .admin-staff-management .staff-management-card__details strong { display: block; font-size: .86rem; line-height: 1.35; overflow-wrap: anywhere; }
+  .admin-staff-management .staff-management-card__details .username-badge { display: inline-block; max-width: 100%; overflow-wrap: anywhere; }
+  .admin-staff-management .staff-management-card__actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .admin-staff-management .staff-management-card__actions .btn { display: flex; align-items: center; justify-content: center; width: 100%; height: 42px; min-height: 42px; padding: 0 .7rem; line-height: 1.2; white-space: nowrap; }
+  .admin-staff-management .report-pagination { margin-top: -.1rem; }
+  .admin-staff-management .report-pagination .pagination-summary { margin-bottom: .15rem; }
+  .admin-staff-management .report-pagination-mobile .pagination-mobile-btn { min-height: 38px; }
 }
 
 a {
@@ -736,6 +822,8 @@ html[data-theme='day'] .dash-btn-break:not(:disabled)::after {
 }
 
 @media (min-width: 992px) {
+  .admin-staff-form-page .admin-email-label-row { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: .6rem; min-height: 1.5rem; margin-bottom: .375rem; }
+  .admin-staff-form-page .admin-email-label-row .email-status { flex: 0 0 auto; }
   .staff-profile-row {
     --bs-gutter-x: 1rem;
     --bs-gutter-y: 1rem;
@@ -744,6 +832,73 @@ html[data-theme='day'] .dash-btn-break:not(:disabled)::after {
   .staff-profile-row .staff-profile-card .card-body {
     padding: 1rem 1.1rem;
   }
+}
+
+@media (max-width: 767.98px) {
+  .admin-staff-form-page .row.g-3 { --bs-gutter-y: .7rem; }
+  .admin-staff-form-page .card-soft { min-width: 0; }
+  .admin-staff-form-page .col-lg-8 > .card-soft > .card-body { padding: .8rem .85rem .85rem; }
+  .admin-staff-form-page #staff-form > .d-flex:last-child { margin-top: .75rem !important; padding-top: 0 !important; }
+  .admin-staff-form-page #staff-form > .d-flex:last-child .btn { min-height: 40px; padding: .4rem .9rem; }
+  .admin-staff-form-page .staff-advanced-recovery { margin-top: .7rem; }
+  .admin-staff-form-page .staff-advanced-recovery > summary { list-style: none; cursor: pointer; padding: .75rem .85rem; font-size: .86rem; }
+  .admin-staff-form-page .staff-advanced-recovery > summary::-webkit-details-marker { display: none; }
+  .admin-staff-form-page .staff-recovery-chevron { transition: transform .2s ease; }
+  .admin-staff-form-page .staff-advanced-recovery[open] .staff-recovery-chevron { transform: rotate(180deg); }
+  .admin-staff-form-page .staff-advanced-recovery .card-body { padding: .8rem .85rem; }
+  .admin-staff-form-page .staff-advanced-recovery .card-body > div:first-child > .form-hint { margin-bottom: .8rem !important; }
+  .admin-staff-form-page .staff-advanced-recovery .card-body .mb-3 { margin-bottom: .7rem !important; }
+  .admin-staff-form-page #sidebar_template_preview { max-height: 4.6rem; overflow-y: auto; font-size: .72rem; }
+  .admin-staff-form-page .staff-advanced-recovery .card-body > .mt-4 { margin-top: .8rem !important; padding-top: 0 !important; }
+  .admin-staff-form-page .staff-account-access-section { margin-top: .7rem !important; }
+  .admin-staff-form-page .account-access-heading { display: none; }
+  .admin-staff-form-page .staff-account-access-section .row { --bs-gutter-y: .7rem; }
+  .admin-staff-form-page .staff-account-access-section .card-body { padding: .8rem .85rem; }
+  .admin-staff-form-page .staff-account-access-section .card-header { padding: .7rem .85rem; font-size: .88rem; }
+  .admin-staff-form-page .staff-reset-recovery .card-header { font-size: 0; }
+  .admin-staff-form-page .staff-reset-recovery .card-header::after { content: 'Reset Staff Access'; font-size: .88rem; }
+  .admin-staff-form-page .staff-verify-recovery .card-header { font-size: 0; }
+  .admin-staff-form-page .staff-verify-recovery .card-header::after { content: 'Verify Staff Email'; font-size: .88rem; }
+  .admin-staff-form-page .staff-account-access-section .form-hint { min-height: 0; margin-bottom: .7rem !important; font-size: .8rem; }
+  .admin-staff-form-page .staff-account-access-section .btn { min-height: 38px; font-size: .84rem; }
+  .admin-staff-form-page .staff-advanced-recovery > summary {
+    font-size: .92rem;
+    font-weight: 700;
+  }
+  .admin-staff-form-page .staff-reset-recovery .card-header::after,
+  .admin-staff-form-page .staff-verify-recovery .card-header::after {
+    font-size: .94rem;
+    font-weight: 650;
+  }
+  .admin-staff-form-page .staff-account-access-section .form-hint {
+    font-size: .86rem;
+    line-height: 1.45;
+  }
+  .admin-staff-form-page .staff-verify-recovery .form-hint {
+    align-items: center;
+    min-height: 38px;
+  }
+  .admin-staff-form-page .staff-verify-recovery .staff-status-label,
+  .admin-staff-form-page .staff-verify-recovery .email-status {
+    line-height: 1.2;
+  }
+  .admin-staff-form-page .staff-reset-recovery .btn-outline-secondary {
+    color: var(--text);
+    border-color: color-mix(in srgb, var(--text) 42%, var(--border));
+    background: color-mix(in srgb, var(--surface) 82%, #94a3b8);
+    font-weight: 600;
+  }
+}
+@media (max-width: 991.98px) {
+  .admin-staff-form-page .admin-email-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-bottom: .375rem;
+  }
+  .admin-staff-form-page .admin-email-label-row .form-label { display: block; margin-bottom: 0; }
+  .admin-staff-form-page .admin-email-label-row .email-status { display: inline-flex; margin-top: 0; }
 }
 
 .staff-profile-card .form-control:disabled,
@@ -1267,6 +1422,7 @@ html[data-theme='day'] .username-badge {
   table-layout: fixed;
   width: 100%;
 }
+.attendance-records-mobile { display: none; }
 
 .attendance-records-table th,
 .attendance-records-table td {
@@ -6167,6 +6323,21 @@ html[data-theme='day'] .schedule-moon-icon {
 }
 
 @media (max-width: 767.98px) {
+  .admin-attendance-records .table-responsive-card { display: none; }
+  .admin-attendance-records .attendance-records-mobile { display: grid; gap: .65rem; padding: .75rem; }
+  .admin-attendance-records .attendance-record-mobile { padding: .8rem .85rem; border: 1px solid var(--border); border-radius: var(--radius, 12px); background: var(--surface); }
+  .admin-attendance-records .attendance-record-mobile__top { display: flex; align-items: flex-start; justify-content: space-between; gap: .65rem; }
+  .admin-attendance-records .attendance-record-mobile__identity { min-width: 0; display: grid; gap: .15rem; }
+  .admin-attendance-records .attendance-record-mobile__identity strong { font-size: .98rem; line-height: 1.3; overflow-wrap: anywhere; }
+  .admin-attendance-records .attendance-record-mobile__identity span { color: var(--muted); font-size: .8rem; }
+  .admin-attendance-records .attendance-record-mobile__status { flex: 0 1 auto; max-width: 48%; text-align: right; }
+  .admin-attendance-records .attendance-record-mobile__status .badge { white-space: normal; line-height: 1.2; text-align: center; }
+  .admin-attendance-records .attendance-record-mobile__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem .8rem; margin: .8rem 0; }
+  .admin-attendance-records .attendance-record-mobile__grid div { min-width: 0; display: grid; gap: .12rem; }
+  .admin-attendance-records .attendance-record-mobile__grid span { color: var(--muted); font-size: .72rem; }
+  .admin-attendance-records .attendance-record-mobile__grid strong { font-size: .86rem; overflow-wrap: anywhere; }
+  .admin-attendance-records .attendance-record-mobile__action { width: 100%; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; }
+}
   .staff-history-page .attendance-mobile-record-card.record-today {
     border-color: #10b981 !important;
     box-shadow: 0 0 0 1px rgba(16, 185, 129, .2), 0 4px 12px rgba(16, 185, 129, .08);
@@ -8025,9 +8196,136 @@ button, .btn, [role="button"] {
 .staff-credentials-handoff { border-left: 3px solid #34d399; }
 .staff-credentials-handoff .bg-dark { background: var(--surface-2) !important; border-color: var(--border-strong) !important; }
 .staff-credentials-handoff code { background: transparent !important; border: 0 !important; box-shadow: none !important; text-shadow: none !important; padding: 0 !important; }
-.email-status { display: inline-flex; align-items: center; padding: .12rem .45rem; border-radius: 999px; font-size: .72rem; font-weight: 700; letter-spacing: .02em; }
-.email-status--verified { color: #047857; background: rgba(16, 185, 129, .16); border: 1px solid rgba(5, 150, 105, .4); }
-.email-status--pending { color: #a16207; background: rgba(245, 158, 11, .18); border: 1px solid rgba(180, 83, 9, .42); }
+.email-status {
+  display: inline-flex;
+  align-items: center;
+  padding: .15rem .55rem;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  line-height: 1.2;
+}
+.email-status--verified {
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.14);
+  border: 1px solid rgba(52, 211, 153, 0.45);
+}
+.email-status--pending {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(251, 191, 36, 0.45);
+}
+html[data-theme='day'] .email-status--verified {
+  color: #047857;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(5, 150, 105, 0.4);
+}
+html[data-theme='day'] .email-status--pending {
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(217, 119, 6, 0.4);
+}
+.account-access-heading {
+  font-family: var(--font-display, inherit);
+  font-size: .82rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: .35rem !important;
+}
+.staff-status-label {
+  color: rgba(226, 232, 240, 0.85);
+  font-weight: 500;
+}
+html[data-theme='day'] .staff-status-label {
+  color: var(--muted);
+}
+.staff-reset-recovery,
+.staff-verify-recovery {
+  border-radius: var(--radius, 12px);
+  min-height: 100%;
+}
+.staff-reset-recovery .card-header,
+.staff-verify-recovery .card-header {
+  padding: .75rem 1rem;
+  font-size: .92rem;
+  font-weight: 600;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.staff-reset-recovery .card-body,
+.staff-verify-recovery .card-body {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.staff-reset-recovery .form-hint,
+.staff-verify-recovery .form-hint {
+  font-size: .82rem;
+  line-height: 1.45;
+  color: var(--muted);
+  min-height: 2.3rem;
+  display: flex;
+  align-items: center;
+}
+.staff-reset-recovery .btn,
+.staff-verify-recovery .btn {
+  height: 40px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+}
+.staff-reset-recovery .btn-outline-secondary {
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.03);
+}
+.staff-reset-recovery .btn-outline-secondary:hover {
+  border-color: rgba(255, 255, 255, 0.45);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+html[data-theme='day'] .staff-reset-recovery .btn-outline-secondary {
+  border-color: var(--border);
+  color: var(--text);
+  background: transparent;
+}
+.staff-advanced-recovery {
+  border-radius: var(--radius, 12px);
+  border-color: rgba(245, 158, 11, .42);
+}
+.staff-advanced-recovery .card-header {
+  padding: .75rem 1rem;
+  font-size: .92rem;
+  font-weight: 600;
+}
+.staff-advanced-recovery .card-body {
+  padding: 1rem;
+}
+.staff-advanced-recovery .form-hint {
+  font-size: .8rem;
+  line-height: 1.4;
+}
+#sidebar_template_preview {
+  max-height: 8.5rem;
+  overflow: auto;
+  font-size: .8rem;
+  line-height: 1.45;
+  background: rgba(15, 23, 42, 0.42) !important;
+  border-color: rgba(255, 255, 255, 0.09) !important;
+  color: rgba(226, 232, 240, 0.75) !important;
+}
+html[data-theme='day'] #sidebar_template_preview {
+  background: rgba(241, 245, 249, 0.7) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  color: #334155 !important;
+}
 .staff-reset-handoff {
   padding: 1.25rem;
   border: 1px solid rgba(251, 191, 36, .35);
@@ -8053,10 +8351,6 @@ html[data-theme='day'] .staff-reset-handoff {
 html[data-theme='day'] .staff-reset-handoff__message {
   background: rgba(255, 255, 255, .48);
 }
-.staff-account-recovery > summary { cursor: pointer; list-style: none; font-weight: 600; color: var(--muted); }
-.staff-account-recovery > summary::-webkit-details-marker { display: none; }
-.staff-account-recovery[open] > summary .bi-chevron-down { display: inline-block; transform: rotate(180deg); }
-.staff-account-recovery > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 @media (max-width: 767.98px) {
   .staff-breaks-mobile-feed .staff-break-record__heading,
@@ -8476,4 +8770,292 @@ html[data-theme='day'] .staff-reset-handoff__message {
   .staff-profile-page .app-content > .row:first-of-type .card-soft .h3 {
     margin-top: .42rem !important;
   }
+}
+
+/* Admin dashboard: compact mobile overview and record cards. */
+.admin-dashboard .dashboard-attendance-mobile { display: none; }
+@media (max-width: 767.98px) {
+  .admin-dashboard .app-content { min-width: 0; padding: .75rem; }
+  .admin-dashboard .chrono-command { position: relative; z-index: 1; margin-bottom: .75rem !important; }
+  .admin-dashboard .dash-admin-header { display: grid !important; gap: .75rem !important; margin-bottom: .8rem !important; }
+  .admin-dashboard .dash-admin-heading .chrono-command__sub { font-size: .8rem; }
+  .admin-dashboard .dash-admin-heading .chrono-command__title { font-size: 1.45rem; line-height: 1.15; }
+  .admin-dashboard .dash-admin-heading > .text-muted { line-height: 1.35; }
+  .admin-dashboard .dash-admin-filter { display: grid !important; gap: .55rem !important; min-width: 0; }
+  .admin-dashboard .dash-admin-filter .date-presets--compact,
+  .admin-dashboard .dash-admin-date-field { min-width: 0; width: 100%; }
+  .admin-dashboard .dash-admin-filter .date-presets__chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .4rem; }
+  .admin-dashboard .dash-admin-filter .date-preset { min-width: 0; width: 100%; padding-inline: .25rem; text-align: center; white-space: nowrap; font-size: .78rem; }
+  .admin-dashboard .dash-admin-date-field .form-control { width: 100%; min-width: 0; }
+  .admin-dashboard .dash-admin-filter-footer { display: flex; align-items: center; justify-content: space-between; gap: .5rem; min-width: 0; }
+  .admin-dashboard .dash-admin-filter-footer .form-hint { font-size: .75rem; }
+  .admin-dashboard .dash-admin-filter-footer a { flex: 0 0 auto; font-size: .75rem; white-space: nowrap; }
+  .admin-dashboard .chrono-rings { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; margin-bottom: .75rem; }
+  .admin-dashboard .chrono-ring { min-width: 0; min-height: 124px; padding: 12px 14px; background: color-mix(in srgb, var(--surface) 92%, #08111d); }
+  .admin-dashboard .chrono-ring__svg { width: 38px; height: 38px; margin: 0 auto .2rem; }
+  .admin-dashboard .chrono-ring__value { font-size: 1.6rem; line-height: 1.1; }
+  .admin-dashboard .chrono-ring__label { min-height: 0; margin-top: .18rem; font-size: .78rem; line-height: 1.2; }
+  .admin-dashboard .hud-frame { position: relative; z-index: 1; min-width: 0; background: color-mix(in srgb, var(--surface) 94%, #08111d); }
+  .admin-dashboard .daily-attendance-card-header { flex-wrap: nowrap; gap: .5rem; padding: .7rem .85rem !important; }
+  .admin-dashboard .daily-attendance-header-title { min-width: 0; font-size: .83rem; line-height: 1.25; }
+  .admin-dashboard .daily-attendance-header-action { flex: 0 0 auto; }
+  .admin-dashboard .daily-attendance-header-action .btn { font-size: .7rem; padding: .25rem .45rem; white-space: nowrap; }
+  .admin-dashboard .dashboard-attendance-desktop { display: none; }
+  .admin-dashboard .dashboard-attendance-mobile { display: grid; gap: .65rem; padding: .7rem; }
+  .admin-dashboard .dashboard-staff-card { min-width: 0; padding: .7rem .8rem; border: 1px solid color-mix(in srgb, var(--border) 82%, #64748b); border-radius: var(--radius); background: color-mix(in srgb, var(--surface) 97%, #08111d); }
+  .admin-dashboard .dashboard-staff-card__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .35rem .7rem; min-width: 0; }
+  .admin-dashboard .dashboard-staff-card__name { flex: 1 1 9rem; min-width: 0; overflow-wrap: anywhere; line-height: 1.35; }
+  .admin-dashboard .dashboard-staff-card__status { flex: 0 1 auto; max-width: 100%; }
+  .admin-dashboard .dashboard-staff-card__status { align-self: center; }
+  .admin-dashboard .dashboard-staff-card__status .badge { max-width: 100%; white-space: normal; line-height: 1.25; text-align: center; }
+  .admin-dashboard .dashboard-staff-card__metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem .85rem; margin: .65rem 0; }
+  .admin-dashboard .dashboard-staff-card__metrics > div { min-width: 0; }
+  .admin-dashboard .dashboard-staff-card__metrics span { display: block; color: color-mix(in srgb, var(--muted) 72%, #e2e8f0); font-size: .72rem; line-height: 1.25; }
+  .admin-dashboard .dashboard-staff-card__metrics strong { display: block; margin-top: .18rem; font-size: .88rem; font-weight: 600; overflow-wrap: anywhere; }
+  .admin-dashboard .dashboard-staff-card__action { display: block; width: 100%; min-height: 38px; padding: .35rem .7rem; white-space: nowrap; }
+  .admin-dashboard .report-pagination { text-align: center; }
+  .admin-dashboard .dashboard-attendance-mobile + .report-pagination { margin-top: -.15rem; margin-bottom: .7rem; }
+  .admin-dashboard .report-pagination .pagination-summary { display: block; margin-bottom: .2rem; }
+  .admin-dashboard .report-pagination-mobile { gap: .4rem !important; }
+  .admin-dashboard .report-pagination-mobile .pagination-mobile-btn { min-width: 0; min-height: 38px; padding: .45rem .55rem; white-space: nowrap; }
+  .admin-dashboard .pagination-mobile-indicator { flex: 0 0 auto; white-space: nowrap; font-size: .8rem; }
+}
+@media (max-width: 767.98px) {
+  html[data-theme='day'] .admin-dashboard .dashboard-staff-card__metrics span { color: #475569; }
+}
+@media (min-width: 576px) and (max-width: 767.98px) {
+  .admin-dashboard .report-pagination-links { display: none !important; }
+  .admin-dashboard .report-pagination-mobile { display: flex !important; }
+  .admin-dashboard .pagination-summary .d-sm-inline { display: none !important; }
+  .admin-dashboard .pagination-summary .d-sm-none { display: inline !important; }
+}
+
+/* Admin attendance detail: mobile-only scan and correction layout. */
+.admin-attendance-detail .attendance-detail-breaks-mobile,
+.admin-attendance-detail .attendance-detail-audit-mobile { display: none; }
+@media (max-width: 767.98px) {
+  .admin-attendance-detail .app-content { min-width: 0; padding: .75rem; }
+  .admin-attendance-detail .app-content > .mb-3:first-child { margin-bottom: .7rem !important; }
+  .admin-attendance-detail .app-content > .mb-3:first-child .btn { min-height: 40px; padding: .45rem .7rem; }
+  .admin-attendance-detail .row.g-3 { --bs-gutter-y: .7rem; }
+  .admin-attendance-detail .card-soft { min-width: 0; background: color-mix(in srgb, var(--surface) 96%, #08111d); }
+  .admin-attendance-detail .card-header { padding: .75rem .85rem; }
+  .admin-attendance-detail .card-body { padding: .8rem .85rem; }
+  .admin-attendance-detail .meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; margin-bottom: .8rem !important; }
+  .admin-attendance-detail .meta-item { min-width: 0; padding: .55rem .6rem; }
+  .admin-attendance-detail .meta-item .label { font-size: .7rem; }
+  .admin-attendance-detail .meta-item .value { font-size: .9rem; overflow-wrap: anywhere; }
+  .admin-attendance-detail .meta-item .status-badge { max-width: 100%; white-space: normal; line-height: 1.2; text-align: center; }
+  .admin-attendance-detail .card-body > h3 { margin-bottom: .4rem; }
+  .admin-attendance-detail .card-body > .text-muted { margin-bottom: 0; font-size: .82rem; }
+  .admin-attendance-detail .card-body > .table-responsive-card { display: none; }
+  .admin-attendance-detail .attendance-detail-breaks-mobile { display: grid; gap: .35rem; margin-bottom: .15rem; }
+  .admin-attendance-detail .attendance-detail-break-mobile { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .15rem .6rem; padding: .45rem .55rem; border: 1px solid var(--border); border-radius: .4rem; font-size: .78rem; }
+  .admin-attendance-detail .attendance-detail-break-mobile span:last-child { grid-column: 1 / -1; color: var(--muted); }
+  .admin-attendance-detail .form-hint { font-size: .78rem; line-height: 1.35; }
+  .admin-attendance-detail .row.g-3 > .col-lg-6:nth-child(2) .card-body > .mb-3 > .form-hint { line-height: 1.5; }
+  .admin-attendance-detail form .mb-3 { margin-bottom: .9rem !important; }
+  .admin-attendance-detail .form-control { width: 100%; min-width: 0; }
+  .admin-attendance-detail form .btn-accent { width: 100%; min-height: 46px; padding: .6rem .8rem; }
+  .admin-attendance-detail .card-soft.mt-3 { margin-top: .7rem !important; }
+  .admin-attendance-detail .attendance-detail-audit-mobile { display: grid; gap: .55rem; padding: .65rem .75rem; }
+  .admin-attendance-detail .attendance-detail-audit-entry { padding: .65rem .7rem; border: 1px solid var(--border); border-radius: .45rem; font-size: .78rem; line-height: 1.4; overflow-wrap: anywhere; }
+  .admin-attendance-detail .attendance-detail-audit-entry > div + div { margin-top: .2rem; }
+  .admin-attendance-detail .attendance-detail-audit-entry span { color: var(--muted); }
+  .admin-attendance-detail .empty-state { padding: .8rem; font-size: .82rem; }
+  .admin-attendance-detail .card-soft.mt-3 .empty-state { padding-block: .55rem; }
+}
+
+/* Desktop Edit Staff: keep actions close to the fields and lift account access type. */
+@media (min-width: 992px) {
+  .admin-staff-form-page .col-lg-8 > .card-soft > .card-body {
+    padding-bottom: .9rem;
+  }
+  .admin-staff-form-page .staff-advanced-recovery .card-body > .mt-4 {
+    margin-top: .5rem !important;
+    padding-top: 0 !important;
+  }
+  .admin-staff-form-page .staff-advanced-recovery .card-body {
+    padding-bottom: .9rem;
+  }
+  .admin-staff-form-page .staff-advanced-recovery .card-body > div:first-child > .form-hint {
+    margin-bottom: 1.75rem !important;
+  }
+  .admin-staff-form-page .staff-advanced-recovery .card-body .mb-3 {
+    margin-bottom: .75rem !important;
+  }
+  .admin-staff-form-page #staff-form {
+    justify-content: flex-start !important;
+  }
+  .admin-staff-form-page #staff-form > .d-flex:last-child {
+    margin-top: 1rem !important;
+    padding-top: 0 !important;
+  }
+  .admin-staff-form-page #staff-form > .d-flex:last-child .btn {
+    min-height: 40px;
+    padding: .4rem 1.05rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.2;
+  }
+  .admin-staff-form-page .account-access-heading {
+    font-size: .9rem;
+    font-weight: 750;
+    margin-bottom: .25rem !important;
+  }
+  .admin-staff-form-page .staff-account-access-section .card-header {
+    font-size: .98rem;
+  }
+  .admin-staff-form-page .staff-account-access-section .form-hint {
+    font-size: .88rem;
+  }
+  .admin-staff-form-page .staff-account-access-section .email-status {
+    font-size: .76rem;
+  }
+  .admin-staff-form-page .staff-account-access-section .btn {
+    font-size: .9rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .admin-offday-adjustments .offday-adjustment-mobile section { display: none; }
+  .admin-offday-adjustments .offday-adjustment-mobile.is-expanded section { display: block; }
+}
+
+.admin-leave-requests .leave-requests-mobile { display: none; }
+@media (max-width: 767.98px) {
+  .admin-leave-requests .table-responsive-card { display: none; }
+  .admin-leave-requests .leave-requests-mobile { display: grid; gap: .65rem; padding: .7rem; }
+  .admin-leave-requests .leave-request-mobile { padding: .7rem .75rem; border: 1px solid var(--border); border-radius: var(--radius, 12px); background: var(--surface); }
+  .admin-leave-requests .leave-request-mobile__top { display: flex; align-items: flex-start; justify-content: space-between; gap: .6rem; }
+  .admin-leave-requests .leave-request-mobile__top strong { min-width: 0; font-size: .95rem; line-height: 1.3; overflow-wrap: anywhere; }
+  .admin-leave-requests .leave-request-mobile__top .badge { flex: 0 0 auto; }
+  .admin-leave-requests .leave-request-mobile__meta { margin-top: .18rem; color: var(--muted); font-size: .78rem; overflow-wrap: anywhere; }
+  .admin-leave-requests .leave-request-mobile__reason { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin-top: .35rem; font-size: .82rem; line-height: 1.35; }
+  .admin-leave-requests .leave-request-mobile__actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; margin-top: .6rem; }
+  .admin-leave-requests .leave-request-mobile__actions .btn { min-height: 38px; padding-inline: .5rem; }
+}
+
+.report-results-mobile { display: none; }
+@media (max-width: 767.98px) {
+  .reports-page .report-actions { display: grid !important; grid-template-columns: 1fr 1fr; gap: .5rem !important; }
+  .reports-page .report-actions > .btn-accent { grid-column: 1 / -1; }
+  .reports-page .report-actions .report-export-dropdown, .reports-page .report-actions > a { min-width: 0; width: 100%; }
+  .reports-page .report-actions .report-export-dropdown > .btn, .reports-page .report-actions > a { width: 100%; min-height: 38px; }
+  .reports-page .report-period { display: inline-block; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+  .reports-page .report-results-card .table-responsive-card { display: none; }
+  .reports-page .report-results-mobile { display: grid; gap: .55rem; padding: .65rem .7rem; }
+  .reports-page .report-result-mobile { padding: .55rem .65rem; border: 1px solid var(--border); border-radius: .55rem; background: var(--surface); }
+  .reports-page .report-result-mobile__top { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; color: var(--muted); font-size: .76rem; }
+  .reports-page .report-result-mobile__top > div { flex: 0 1 auto; max-width: 48%; }
+  .reports-page .report-result-mobile__top .badge { white-space: normal; line-height: 1.1; text-align: center; }
+  .reports-page .report-result-mobile__name { display: block; margin-top: .18rem; font-size: .88rem; line-height: 1.25; overflow-wrap: anywhere; }
+  .reports-page .report-result-mobile__times { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .4rem; margin-top: .35rem; color: var(--muted); font-size: .7rem; }
+  .reports-page .report-result-mobile__times b { display: block; color: var(--text); font-size: .78rem; font-weight: 600; }
+  .reports-page .report-result-mobile__metrics { display: flex; flex-wrap: wrap; gap: .25rem .75rem; margin-top: .3rem; color: var(--muted); font-size: .72rem; }
+  .reports-page .report-summary .col-6 { min-width: 0; }
+  .reports-page .report-summary-card { min-height: 96px; padding: .7rem; }
+}
+
+@media (max-width: 768px) {
+  .admin-dashboard .dash-admin-header { gap: .6rem !important; margin-bottom: .55rem !important; }
+  .admin-dashboard .dash-admin-heading .chrono-command__sub { margin-bottom: .1rem; }
+  .admin-dashboard .dash-admin-heading .chrono-command__title { line-height: 1.1; }
+  .admin-dashboard .dash-admin-heading > .text-muted { margin-top: .2rem !important; }
+  .admin-dashboard .dash-admin-filter { gap: .45rem !important; }
+  .admin-dashboard .dash-admin-filter .date-presets__chips { gap: .3rem; }
+  .admin-dashboard .dash-admin-filter .date-preset { min-height: 34px; }
+  .admin-dashboard .dash-admin-date-field .form-label { margin-bottom: .2rem; }
+  .admin-dashboard .dash-admin-filter-footer { gap: .4rem; line-height: 1.25; }
+  .admin-dashboard .chrono-rings { gap: .5rem; margin-top: .1rem; margin-bottom: .55rem; }
+  .admin-dashboard .chrono-ring { min-height: 112px; padding: 9px 10px; }
+  .admin-dashboard .chrono-ring__svg { width: 32px; height: 32px; margin-bottom: .1rem; }
+  .admin-dashboard .chrono-ring__value { font-size: 1.4rem; }
+  .admin-dashboard .chrono-ring__label { font-size: .72rem; line-height: 1.15; }
+  .admin-dashboard .chrono-ring--notclocked { grid-column: 1 / -1; min-height: 58px; display: flex; align-items: center; justify-content: center; gap: .65rem; padding: .55rem .8rem; }
+  .admin-dashboard .chrono-ring--notclocked .chrono-ring__gauge { display: flex; align-items: center; gap: .35rem; }
+  .admin-dashboard .chrono-ring--notclocked .chrono-ring__svg { width: 30px; height: 30px; margin: 0; }
+  .admin-dashboard .chrono-ring--notclocked .chrono-ring__label { font-size: .78rem; }
+  .admin-dashboard .hud-frame { margin-top: 0 !important; }
+}
+
+@media (max-width: 768px) {
+  .admin-dashboard .dash-admin-header {
+    padding: 1rem;
+    border: 1px solid rgba(148, 163, 184, .28);
+    border-radius: 16px;
+    background: rgba(226, 232, 240, .84);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, .08);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  html[data-theme='night'] .admin-dashboard .dash-admin-header {
+    background: rgba(15, 23, 42, .82);
+    border-color: rgba(148, 163, 184, .24);
+    box-shadow: 0 8px 24px rgba(2, 6, 23, .2);
+  }
+  .admin-dashboard .dash-admin-heading .chrono-command__sub { color: #0f766e; font-weight: 700; opacity: 1; }
+  html[data-theme='night'] .admin-dashboard .dash-admin-heading .chrono-command__sub { color: #5eead4; }
+  .admin-dashboard .dash-admin-heading .chrono-command__title { color: #172033; }
+  html[data-theme='night'] .admin-dashboard .dash-admin-heading .chrono-command__title { color: #f8fafc; }
+  .admin-dashboard .dash-admin-heading > .text-muted { color: #475569 !important; opacity: .95; }
+  html[data-theme='night'] .admin-dashboard .dash-admin-heading > .text-muted { color: #cbd5e1 !important; }
+  .admin-dashboard .dash-admin-date-field .form-label { color: #334155; font-weight: 650; }
+  html[data-theme='night'] .admin-dashboard .dash-admin-date-field .form-label { color: #e2e8f0; }
+  .admin-dashboard .dash-admin-filter-footer .form-hint { color: #475569; opacity: .95; }
+  html[data-theme='night'] .admin-dashboard .dash-admin-filter-footer .form-hint { color: #cbd5e1; }
+  .admin-dashboard .dash-admin-filter-footer a { color: #0f766e; font-weight: 600; }
+  html[data-theme='night'] .admin-dashboard .dash-admin-filter-footer a { color: #5eead4; }
+}
+
+@media (max-width: 768px) {
+  .admin-dashboard .dash-admin-filter-footer a {
+    color: #0d6efd;
+    text-decoration: underline;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: right;
+  }
+  .admin-dashboard .dash-admin-filter-footer a:hover,
+  .admin-dashboard .dash-admin-filter-footer a:focus-visible {
+    color: #0a58ca;
+  }
+}
+
+/* Break Records keeps its table presentation on desktop. */
+@media (min-width: 768px) {
+  .admin-staff-management .staff-management-mobile,
+  .admin-leave-requests .leave-requests-mobile,
+  .admin-offday-adjustments .offday-adjustments-mobile,
+  .admin-attendance-records .attendance-records-mobile,
+  .admin-dashboard .dashboard-attendance-mobile { display: none !important; }
+  .admin-break-records .break-records-table-desktop { display: block !important; }
+  .admin-break-records .break-records-cards-mobile { display: none !important; }
+}
+@media (max-width: 767.98px) {
+  .admin-break-records .break-records-table-desktop { display: none !important; }
+  .admin-break-records .break-records-cards-mobile { display: grid !important; }
+}
+
+.staff-profile-email-label-row,
+.staff-email-verification-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+}
+.staff-profile-email-label-row { margin-bottom: .375rem; }
+.staff-profile-email-label-row .email-status { flex: 0 0 auto; }
+.staff-email-verification-info { min-width: 0; }
+.staff-email-verification-info > div { margin-top: .3rem; color: var(--muted); overflow-wrap: anywhere; }
+
+@media (max-width: 767.98px) {
+  .staff-profile-page .staff-profile-email-label-row { gap: .4rem; }
+  .staff-profile-page .staff-profile-email-label-row .form-label { min-width: 0; }
+  .staff-profile-page .staff-email-verification-card .card-body { padding: .8rem .85rem; }
+  .staff-profile-page .staff-email-verification-row { align-items: flex-start; flex-direction: column; gap: .65rem; }
+  .staff-profile-page .staff-email-verification-row form,
+  .staff-profile-page .staff-email-verification-row .btn { width: 100%; }
+  .staff-profile-page .staff-email-verification-row .btn { min-height: 40px; }
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * Staff — My Profile
+ * Staff ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â My Profile
  */
 
 declare(strict_types=1);
@@ -87,10 +87,29 @@ require __DIR__ . '/../includes/layout_header.php';
 
 <h2 class="h4 mb-3 d-none d-lg-block"><?= e(__('my_profile')) ?></h2>
 
-<div class="row g-3 mb-3">
-    <div class="col-md-6"><div class="card-soft p-3"><div class="form-hint balance-card-title"><?= e(__('days_off_earned')) ?></div><div class="small text-muted"><?= e(__('days_off_earned_hint')) ?></div><div class="h3 mb-0"><?= e((string)$balances['replacement_off']) ?> <?= e($balances['replacement_off'] === 1 ? __('day') : __('days')) ?></div></div></div>
-    <div class="col-md-6"><div class="card-soft p-3"><div class="form-hint balance-card-title"><?= e(__('days_to_replace')) ?></div><div class="small text-muted"><?= e(__('days_to_replace_hint')) ?></div><div class="h3 mb-0"><?= e((string)$balances['cuti_perlu_ganti']) ?> <?= e($balances['cuti_perlu_ganti'] === 1 ? __('day') : __('days')) ?></div></div></div>
-</div>
+<style>
+.profile-balance-grid{display:grid;grid-template-columns:1fr;gap:1rem}
+.profile-balance-card{background:#fff;border:1px solid rgba(226,232,240,.8);border-radius:1rem;box-shadow:0 1px 3px rgba(15,23,42,.06);padding:1.25rem}
+.profile-balance-card__header{display:flex;align-items:center;gap:.65rem;color:#475569;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.profile-balance-card__icon{display:inline-flex;width:2rem;height:2rem;align-items:center;justify-content:center;border-radius:.65rem;font-size:1rem}
+.profile-balance-card__value{display:flex;align-items:baseline;gap:.55rem;margin-top:1rem}.profile-balance-card__number{font-size:2.25rem;font-weight:700;line-height:1;color:#0f172a}.profile-balance-card__unit{font-size:.875rem;font-weight:600;color:#64748b}.profile-balance-card__description{margin:.65rem 0 0;color:#64748b;font-size:.875rem}
+@media(min-width:768px){.profile-balance-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.staff-profile-card,.notification-settings-card{background:#fff;border:1px solid #e2e8f0;border-radius:1rem;box-shadow:0 1px 3px rgba(15,23,42,.06)}
+.staff-email-verification-card{display:none}
+</style>
+<?php $earnedDays = (int)($balances['replacement_off'] ?? 0); $owedDays = (int)($balances['cuti_perlu_ganti'] ?? 0); ?>
+<section class="profile-balance-grid mb-3" aria-label="Leave balances">
+    <article class="profile-balance-card">
+        <div class="profile-balance-card__header"><span class="profile-balance-card__icon" style="background:#ecfdf5;color:#059669"><i class="bi bi-calendar-check" aria-hidden="true"></i></span><span><?= e(__('leave_earned_title')) ?></span></div>
+        <div class="profile-balance-card__value"><span class="profile-balance-card__number"><?= e((string)$earnedDays) ?></span><span class="profile-balance-card__unit"><?= e(__('days_available')) ?></span></div>
+        <p class="profile-balance-card__description mb-0"><?= e(__('leave_earned_desc')) ?></p>
+    </article>
+    <article class="profile-balance-card">
+        <div class="profile-balance-card__header"><span class="profile-balance-card__icon" style="background:#fffbeb;color:#d97706"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></span><span><?= e(__('leave_replace_title')) ?></span></div>
+        <div class="profile-balance-card__value"><span class="profile-balance-card__number"><?= e((string)$owedDays) ?></span><span class="profile-balance-card__unit"><?= e(__('days_unit')) ?></span></div>
+        <p class="profile-balance-card__description mb-0"><?= e($owedDays > 0 ? __('leave_replace_desc') : __('leave_replace_clear')) ?></p>
+    </article>
+</section>
 
 <div class="row g-3 staff-profile-row">
     <div class="col-lg-8 d-flex">
@@ -114,18 +133,11 @@ require __DIR__ . '/../includes/layout_header.php';
                             <div class="form-control staff-profile-name-field" role="textbox" aria-readonly="true"><?= e($user['full_name']) ?></div>
                         </div>
                         <div class="col-6">
-                            <label class="form-label"><i class="bi bi-lock-fill me-1" aria-hidden="true"></i><?= e(__('email')) ?></label>
-                            <input type="email" class="form-control" value="<?= e((string) $user['email']) ?>" disabled>
-                            <div class="form-hint mt-1">
-                                <?= !empty($user['email_verified_at']) ? '<span class="email-status email-status--verified">Verified</span>' : '<span class="email-status email-status--pending">Not verified</span>' ?>
+                            <label class="form-label" for="profile-email"><i class="bi bi-lock-fill me-1" aria-hidden="true"></i><?= e(__('email')) ?></label>
+                            <input type="email" id="profile-email" class="form-control" value="<?= e((string) $user['email']) ?>" disabled>
+                            <div class="d-flex align-items-center justify-content-between gap-2 mt-1 small">
+                                <?php if (!empty($user['email_verified_at'])): ?><span class="email-status email-status--verified">✓ <?= e(__('badge_verified')) ?></span><?php else: ?><span class="email-status email-status--pending">● <?= e(__('badge_unverified')) ?></span><button type="submit" form="verify-email-form" class="btn btn-link btn-sm p-0 text-decoration-none"><?= e(__('send_verification_link')) ?></button><?php endif; ?>
                             </div>
-                            <?php if (empty($user['email_verified_at'])): ?>
-                                <form method="post" class="mt-2">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="action" value="verify_email">
-                                    <button class="btn btn-sm btn-outline-info" <?= empty($user['email']) ? 'disabled' : '' ?>>Send verification email</button>
-                                </form>
-                            <?php endif; ?>
                         </div>
                         <div class="col-6">
                             <label class="form-label"><?= e(__('phone')) ?></label>
@@ -197,6 +209,27 @@ require __DIR__ . '/../includes/layout_header.php';
     </div>
 </div>
 
+<form method="post" id="verify-email-form" class="d-none"><?= csrf_field() ?><input type="hidden" name="action" value="verify_email"></form>
+
+<div class="card-soft staff-profile-card staff-email-verification-card mt-3">
+    <div class="card-header"><i class="bi bi-shield-check me-1"></i> Account / Security</div>
+    <div class="card-body">
+        <div class="staff-email-verification-row">
+            <div class="staff-email-verification-info">
+                <strong>Email verification</strong>
+                <div><a href="mailto:<?= e((string) $user['email']) ?>"><?= e((string) $user['email']) ?></a> <span aria-hidden="true">Ãƒâ€šÃ‚Â·</span> <?= !empty($user['email_verified_at']) ? '<span class="email-status email-status--verified">Verified</span>' : '<span class="email-status email-status--pending">' ?></div>
+            </div>
+            <?php if (empty($user['email_verified_at'])): ?>
+                <form method="post">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="action" value="verify_email">
+                    <button class="btn btn-sm btn-outline-info" <?= empty($user['email']) ? 'disabled' : '' ?>>Send verification email</button>
+                </form>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
 <div class="card-soft staff-profile-card mt-3 notification-settings-card">
     <div class="card-header" data-desktop-label="<?= e(__('notice_desktop')) ?>"><i class="bi bi-bell me-1"></i> <?= e(__('notice_phone')) ?></div>
     <div class="card-body">
@@ -212,7 +245,7 @@ require __DIR__ . '/../includes/layout_header.php';
                 'leave_decision' => 'Leave / WFH decision',
                 'missing_clock_out' => 'Missing clock-out reminder',
             ] as $key => $notice): ?>
-                <label class="notification-preference"><span><?= e(__('notice_' . $key)) ?></span><input type="checkbox" class="notification-option" data-notification-key="<?= e($key) ?>"><span class="notification-checkbox" aria-hidden="true">✓</span></label>
+                <label class="notification-preference"><span><?= e(__('notice_' . $key)) ?></span><input type="checkbox" class="notification-option" data-notification-key="<?= e($key) ?>"><span class="notification-checkbox" aria-hidden="true">ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“</span></label>
             <?php endforeach; ?>
         </div>
     </div>

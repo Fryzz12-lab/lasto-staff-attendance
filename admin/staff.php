@@ -39,13 +39,14 @@ $stmt->execute($params);
 $rows = $stmt->fetchAll();
 
 $pageTitle = __('staff_management');
+$bodyClass = 'admin-staff-management';
 $activeMenu = 'staff';
 $isAdminArea = true;
 require __DIR__ . '/../includes/layout_header.php';
 ?>
 
 <div class="d-flex flex-wrap justify-content-end align-items-center gap-2 mb-3">
-    <a href="<?= e(url('/admin/staff_form.php')) ?>" class="btn btn-accent"><i class="bi bi-plus-lg"></i> Add New Staff</a>
+    <a data-spa="0" href="<?= e(url('/admin/staff_form.php?' . http_build_query(['return_to' => $_SERVER['REQUEST_URI'] ?? '/admin/staff.php']))) ?>" class="btn btn-accent"><i class="bi bi-plus-lg"></i> Add New Staff</a>
 </div>
 
 <div class="card-soft mb-3">
@@ -82,7 +83,7 @@ require __DIR__ . '/../includes/layout_header.php';
         <?php if (!$rows): ?>
             <div class="empty-state"><?= e(__('no_staff')) ?></div>
         <?php else: ?>
-            <div class="table-responsive-card">
+            <div class="table-responsive-card staff-management-desktop">
                 <table class="table mb-0 staff-table" style="table-layout: fixed; width: 100%;">
                     <colgroup>
                         <col style="width: 24%;">
@@ -118,7 +119,7 @@ require __DIR__ . '/../includes/layout_header.php';
                             </td>
                             <td><?= e(weekday_name((int) $r['weekly_off_day'], lang_current())) ?></td>
                             <td class="text-nowrap">
-                                <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('/admin/staff_form.php?id=' . (int)$r['id'])) ?>"><?= e(__('edit')) ?></a>
+                                <a data-spa="0" class="btn btn-sm btn-outline-secondary" href="<?= e(url('/admin/staff_form.php?' . http_build_query(['id' => (int)$r['id'], 'return_to' => $_SERVER['REQUEST_URI'] ?? '/admin/staff.php']))) ?>"><?= e(__('edit')) ?></a>
                                 <button type="button" class="btn btn-sm btn-outline-danger"
                                         data-delete-staff
                                         data-staff-id="<?= (int)$r['id'] ?>"
@@ -130,6 +131,20 @@ require __DIR__ . '/../includes/layout_header.php';
                     <?php endforeach; ?>
                     </tbody>
                 </table>
+            </div>
+            <div class="staff-management-mobile">
+                <?php foreach ($rows as $r): ?>
+                    <article class="staff-management-card">
+                        <div class="staff-management-card__head"><div class="staff-management-card__name fw-semibold"><?= e($r['full_name']) ?></div><div><?= (int)$r['is_active'] ? '<span class="status-badge badge-completed">' . e(__('active')) . '</span>' : '<span class="status-badge badge-absent">' . e(__('inactive')) . '</span>' ?></div></div>
+                        <?php if (!empty($r['email'])): ?><div class="staff-management-card__email"><?= e($r['email']) ?></div><?php endif; ?>
+                        <div class="staff-management-card__details">
+                            <div><span><?= e(__('username')) ?></span><code class="username-badge"><?= e($r['username']) ?></code></div>
+                            <div><span><?= e(__('position')) ?></span><strong><?= e((string) $r['job_position']) ?></strong></div>
+                            <div><span><?= e(__('off_day')) ?></span><strong><?= e(weekday_name((int) $r['weekly_off_day'], lang_current())) ?></strong></div>
+                        </div>
+                        <div class="staff-management-card__actions"><a data-spa="0" class="btn btn-sm btn-outline-secondary" href="<?= e(url('/admin/staff_form.php?' . http_build_query(['id' => (int)$r['id'], 'return_to' => $_SERVER['REQUEST_URI'] ?? '/admin/staff.php']))) ?>"><?= e(__('edit')) ?></a><button type="button" class="btn btn-sm btn-outline-danger" data-delete-staff data-staff-id="<?= (int)$r['id'] ?>" data-staff-name="<?= e($r['full_name']) ?>" data-csrf="<?= e(csrf_token()) ?>"><?= e(__('delete')) ?></button></div>
+                    </article>
+                <?php endforeach; ?>
             </div>
             <?php
             $filterParams = array_filter([

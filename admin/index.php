@@ -145,7 +145,7 @@ $rings = [
         <?php if (!$rows): ?>
             <div class="empty-state"><?= e(__('no_attendance_data')) ?></div>
         <?php else: ?>
-            <div class="table-responsive-card">
+            <div class="table-responsive-card dashboard-attendance-desktop">
                 <table class="table mb-0 daily-attendance-table align-middle" style="table-layout: fixed; width: 100%;">
                     <colgroup>
                         <col style="width: 22%;">
@@ -187,12 +187,29 @@ $rings = [
                                 $r['open_break_start'] ?? null
                             ) ?></td>
                             <td>
-                                <a class="btn btn-sm btn-outline-secondary text-nowrap" data-spa="0" href="<?= e(url('/admin/attendance_detail.php?id=' . (int)$r['id'])) ?>"><?= e(__('view_details')) ?></a>
+                                <a class="btn btn-sm btn-outline-secondary text-nowrap" data-spa="0" href="<?= e(url('/admin/attendance_detail.php?' . http_build_query(['id' => (int)$r['id'], 'return_source' => 'dashboard', 'return_to' => $_SERVER['REQUEST_URI'] ?? '/admin/index.php']))) ?>"><?= e(__('view_details')) ?></a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                     </tbody>
                 </table>
+            </div>
+            <div class="dashboard-attendance-mobile">
+                <?php foreach ($rows as $r): ?>
+                    <article class="dashboard-staff-card">
+                        <div class="dashboard-staff-card__head">
+                            <div class="dashboard-staff-card__name fw-semibold"><?= e($r['full_name']) ?></div>
+                            <div class="dashboard-staff-card__status"><?= attendance_status_badge($r) ?></div>
+                        </div>
+                        <div class="dashboard-staff-card__metrics">
+                            <div><span><?= e(__('clock_in_col')) ?></span><strong><?= e(format_time($r['clock_in'])) ?></strong></div>
+                            <div><span><?= e(__('clock_out_col')) ?></span><strong><?= e(format_time($r['clock_out'])) ?></strong></div>
+                            <div><span><?= e(__('break_time')) ?></span><strong><?= attendance_live_breaks_html((int) $r['total_break_minutes'], $r['open_break_start'] ?? null) ?></strong></div>
+                            <div><span><?= e(__('total_working_time')) ?></span><strong><?= attendance_live_work_html($r['clock_in'], $r['clock_out'], (int) $r['work_minutes'], (int) $r['total_break_minutes'], $r['open_break_start'] ?? null) ?></strong></div>
+                        </div>
+                        <a class="btn btn-sm btn-outline-secondary dashboard-staff-card__action" data-spa="0" href="<?= e(url('/admin/attendance_detail.php?' . http_build_query(['id' => (int)$r['id'], 'return_source' => 'dashboard', 'return_to' => $_SERVER['REQUEST_URI'] ?? '/admin/index.php']))) ?>"><?= e(__('view_details')) ?></a>
+                    </article>
+                <?php endforeach; ?>
             </div>
             <?php echo pagination_links($total, $page, $perPage, ['date' => $date]); ?>
         <?php endif; ?>

@@ -1026,6 +1026,39 @@
     }
   }
 
+  // Leave approval/rejection buttons open their corresponding review modal.
+  // Delegation keeps this working after SPA page swaps and for mobile cards.
+  if (!window.__CHRONOS_LEAVE_REVIEW_BOUND__) {
+    window.__CHRONOS_LEAVE_REVIEW_BOUND__ = true;
+    document.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-leave-modal]');
+      if (!button || !window.bootstrap?.Modal) return;
+      event.preventDefault();
+      const kind = button.dataset.leaveModal === 'reject' ? 'reject' : 'approve';
+      const prefix = kind === 'reject' ? 'reject' : 'approve';
+      const set = (suffix, value) => {
+        const el = document.getElementById(prefix + suffix);
+        if (el) el.textContent = value || '';
+      };
+      const id = document.getElementById(prefix + 'LeaveId');
+      if (id) id.value = button.dataset.id || '';
+      set('StaffName', button.dataset.name);
+      set('LeaveDate', button.dataset.date);
+      set('LeaveType', button.dataset.type);
+      set('LeaveReason', button.dataset.reason);
+      const modal = document.getElementById(prefix + 'LeaveModal');
+      if (modal) {
+        const originalParent = modal.parentNode;
+        if (originalParent !== document.body) document.body.appendChild(modal);
+        const instance = bootstrap.Modal.getOrCreateInstance(modal);
+        modal.addEventListener('hidden.bs.modal', () => {
+          if (originalParent?.isConnected) originalParent.appendChild(modal);
+        }, { once: true });
+        instance.show();
+      }
+    });
+  }
+
   bindPageActions();
   initThemeToggle();
   initGlobeToggle();

@@ -69,6 +69,7 @@ $rows = $stmt->fetchAll();
 $pageTitle = __('leave_requests');
 $activeMenu = 'leave';
 $isAdminArea = true;
+$bodyClass = 'admin-leave-requests';
 require __DIR__ . '/../includes/layout_header.php';
 ?>
 
@@ -170,6 +171,16 @@ require __DIR__ . '/../includes/layout_header.php';
                     <?php endforeach; ?>
                     </tbody>
                 </table>
+            </div>
+            <div class="leave-requests-mobile">
+                <?php foreach ($rows as $r): ?>
+                    <article class="leave-request-mobile">
+                        <div class="leave-request-mobile__top"><strong><?= e($r['full_name']) ?></strong><?= status_badge($r['status']) ?></div>
+                        <div class="leave-request-mobile__meta"><?= e(format_date($r['leave_date'])) ?> · <?= e(__('leave_' . $r['leave_type'])) ?></div>
+                        <div class="leave-request-mobile__reason"><?= e($r['reason']) ?></div>
+                        <?php if ($r['status'] === 'pending'): ?><div class="leave-request-mobile__actions"><button type="button" class="btn btn-success" data-leave-modal="approve" data-id="<?= (int)$r['id'] ?>" data-name="<?= e($r['full_name']) ?>" data-date="<?= e(format_date($r['leave_date'])) ?>" data-type="<?= e(__('leave_' . $r['leave_type'])) ?>" data-reason="<?= e($r['reason']) ?>"><?= e(__('approve')) ?></button><button type="button" class="btn btn-outline-danger" data-leave-modal="reject" data-id="<?= (int)$r['id'] ?>" data-name="<?= e($r['full_name']) ?>" data-date="<?= e(format_date($r['leave_date'])) ?>" data-type="<?= e(__('leave_' . $r['leave_type'])) ?>" data-reason="<?= e($r['reason']) ?>"><?= e(__('reject')) ?></button></div><?php endif; ?>
+                    </article>
+                <?php endforeach; ?>
             </div>
             <?php echo pagination_links($total, $page, $perPage, array_filter([
                 'status' => $status !== 'pending' ? $status : null,

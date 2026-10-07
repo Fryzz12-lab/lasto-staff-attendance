@@ -518,6 +518,16 @@ if ($report === 'breaks') {
                     </tbody>
                 </table>
             </div>
+            <div class="report-results-mobile">
+                <?php foreach ($tableRows as $r): ?>
+                    <article class="report-result-mobile">
+                        <div class="report-result-mobile__top"><span><?= e(format_date($r['work_date'])) ?></span><div><?= attendance_status_badge($r) ?></div></div>
+                        <strong class="report-result-mobile__name"><?= e($r['full_name']) ?></strong>
+                        <div class="report-result-mobile__times"><span>Clock In <b><?= e(format_time($r['clock_in'])) ?></b></span><span>Clock Out <b><?= e(format_time($r['clock_out'])) ?></b></span></div>
+                        <div class="report-result-mobile__metrics"><span>Late <?= e(format_minutes((int)$r['late_minutes'])) ?></span><span>Break <?= e(format_minutes((int)$r['total_break_minutes'])) ?></span><span>Worked <?= e(format_minutes((int)$r['work_minutes'])) ?></span></div>
+                    </article>
+                <?php endforeach; ?>
+            </div>
             <?php if ($export === ''): ?>
                 <?= pagination_links($totalRows, $page, $pageSize, $pageQs, url('/admin/reports.php')) ?>
             <?php endif; ?>

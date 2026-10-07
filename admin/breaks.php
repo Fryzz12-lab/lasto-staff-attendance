@@ -82,6 +82,7 @@ $viewQs = http_build_query(array_filter([
 $pageTitle = __('break_records');
 $activeMenu = 'breaks';
 $isAdminArea = true;
+$bodyClass = 'admin-break-records';
 require __DIR__ . '/../includes/layout_header.php';
 ?>
 
@@ -113,7 +114,7 @@ require __DIR__ . '/../includes/layout_header.php';
         <?php if (!$rows): ?>
             <div class="empty-state"><?= e(__('no_break_records')) ?></div>
         <?php else: ?>
-            <div class="table-responsive-card">
+            <div class="table-responsive-card break-records-table-desktop">
                 <table class="table mb-0 break-records-table" style="table-layout: fixed; width: 100%;">
                     <colgroup>
                         <col style="width: 10%;">
@@ -169,6 +170,19 @@ require __DIR__ . '/../includes/layout_header.php';
                     <?php endforeach; ?>
                     </tbody>
                 </table>
+            </div>
+            <div class="break-records-mobile break-records-cards-mobile" aria-label="Break records">
+                <?php foreach ($rows as $r): $isExceeded = (int)$r['last_exceeded'] === 1; ?>
+                    <article class="break-record-mobile<?= $isExceeded ? ' is-exceeded' : '' ?>">
+                        <div class="break-record-mobile__top"><div class="break-record-mobile__identity"><strong><?= e($r['full_name']) ?></strong><span><?= e(format_date($r['work_date'])) ?> · <?= e(break_label((string)$r['last_break_type'], (int)$r['last_sequence_no'])) ?></span></div><span class="break-record-mobile__status"><?= $isExceeded ? 'EXCEEDED' : 'WITHIN LIMIT' ?></span></div>
+                        <div class="break-record-mobile__grid">
+                            <div><span>Start</span><strong><?= e(format_time($r['last_start_time'])) ?></strong></div><div><span>End</span><strong><?= $r['last_end_time'] ? e(format_time($r['last_end_time'])) : e(__('open')) ?></strong></div>
+                            <div><span>Duration</span><strong><?= break_duration_html($r['last_start_time'], $r['last_end_time'], (int)$r['last_duration_minutes']) ?></strong></div><div><span>Allowed</span><strong>—</strong></div>
+                        </div>
+                        <div class="break-record-mobile__total"><span>Total Break</span><strong><?= break_total_live_html((int)$r['total_break_minutes'], empty($r['last_end_time']) ? (string)$r['last_start_time'] : null) ?></strong></div>
+                        <a class="btn btn-sm btn-outline-secondary break-record-mobile__action" href="<?= e(url('/admin/break_detail.php?attendance_id=' . (int)$r['attendance_id'] . ($viewQs !== '' ? '&' . $viewQs : ''))) ?>"><?= e(__('view_details')) ?></a>
+                    </article>
+                <?php endforeach; ?>
             </div>
             <?php echo pagination_links($total, $page, $perPage, array_filter(['from' => $from, 'to' => $to, 'exceeded' => $exceededOnly ? '1' : null])); ?>
         <?php endif; ?>

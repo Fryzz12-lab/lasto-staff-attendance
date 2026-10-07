@@ -39,6 +39,7 @@ $rows = $stmt->fetchAll();
 $pageTitle  = __('attendance_records');
 $activeMenu = 'attendance';
 $isAdminArea = true;
+$bodyClass = 'admin-attendance-records';
 require __DIR__ . '/../includes/layout_header.php';
 ?>
 
@@ -118,11 +119,31 @@ require __DIR__ . '/../includes/layout_header.php';
                             <td><?= attendance_status_badge($r) ?></td>
                             <td><?= e(format_minutes((int)$r['total_break_minutes'])) ?></td>
                             <td><?= e(format_minutes((int)$r['work_minutes'])) ?></td>
-                            <td><a class="btn btn-sm btn-outline-secondary text-nowrap" data-spa="0" href="<?= e(url('/admin/attendance_detail.php?id='.(int)$r['id'])) ?>"><?= e(__('view_details')) ?></a></td>
+                            <td><a class="btn btn-sm btn-outline-secondary text-nowrap" data-spa="0" href="<?= e(url('/admin/attendance_detail.php?' . http_build_query(['id' => (int)$r['id'], 'return_source' => 'records', 'return_to' => $_SERVER['REQUEST_URI'] ?? '/admin/attendance.php']))) ?>"><?= e(__('view_details')) ?></a></td>
                         </tr>
                     <?php endforeach; ?>
                     </tbody>
                 </table>
+            </div>
+            <div class="attendance-records-mobile" aria-label="Attendance records">
+                <?php foreach ($rows as $r): ?>
+                    <article class="attendance-record-mobile">
+                        <div class="attendance-record-mobile__top">
+                            <div class="attendance-record-mobile__identity">
+                                <strong><?= e($r['full_name']) ?></strong>
+                                <span><?= e(format_date($r['work_date'])) ?></span>
+                            </div>
+                            <div class="attendance-record-mobile__status"><?= attendance_status_badge($r) ?></div>
+                        </div>
+                        <div class="attendance-record-mobile__grid">
+                            <div><span>Clock In</span><strong><?= e(format_time($r['clock_in'])) ?></strong></div>
+                            <div><span>Clock Out</span><strong><?= e(format_time($r['clock_out'])) ?></strong></div>
+                            <div><span>Break Time</span><strong><?= e(format_minutes((int)$r['total_break_minutes'])) ?></strong></div>
+                            <div><span>Working Time</span><strong><?= e(format_minutes((int)$r['work_minutes'])) ?></strong></div>
+                        </div>
+                        <a class="btn btn-sm btn-outline-secondary attendance-record-mobile__action" data-spa="0" href="<?= e(url('/admin/attendance_detail.php?' . http_build_query(['id' => (int)$r['id'], 'return_source' => 'records', 'return_to' => $_SERVER['REQUEST_URI'] ?? '/admin/attendance.php']))) ?>"><?= e(__('view_details')) ?></a>
+                    </article>
+                <?php endforeach; ?>
             </div>
             <?php
             $filterParams = array_filter([
