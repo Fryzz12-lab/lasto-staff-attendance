@@ -99,52 +99,28 @@ require __DIR__ . '/../includes/layout_header.php';
 
 <h2 class="h4 mb-3 d-none d-lg-block"><?= e(__('my_profile')) ?></h2>
 
-<div class="card-soft staff-profile-card mb-3">
+<div class="card-soft staff-profile-card attendance-location-card mb-3" data-attendance-location-card data-preference="<?= $user['attendance_location_enabled'] === null ? 'undecided' : ((int)$user['attendance_location_enabled'] === 1 ? 'enabled' : 'disabled') ?>">
     <div class="card-header"><i class="bi bi-geo-alt me-1"></i> Attendance Location</div>
     <div class="card-body">
-        <p class="form-hint">Location is requested only when you Clock In, Clock Out, or start/end approved work-from-home time. Your location is not continuously tracked.</p>
-        <form method="post" class="d-flex align-items-center gap-3 flex-wrap">
-            <?= csrf_field() ?>
-            <input type="hidden" name="action" value="attendance_location">
-            <span>Current choice: <strong><?= $user['attendance_location_enabled'] === null ? 'Not decided yet' : ((int)$user['attendance_location_enabled'] === 1 ? 'On' : 'Off') ?></strong></span>
-            <label for="attendanceLocationEnabled" class="visually-hidden">Attendance Location preference</label>
-            <select id="attendanceLocationEnabled" name="attendance_location_enabled" class="form-select w-auto" required>
-                <option value="" <?= $user['attendance_location_enabled'] === null ? 'selected' : '' ?> disabled>Choose On or Off</option>
-                <option value="1" <?= $user['attendance_location_enabled'] !== null && (int)$user['attendance_location_enabled'] === 1 ? 'selected' : '' ?>>On</option>
-                <option value="0" <?= $user['attendance_location_enabled'] !== null && (int)$user['attendance_location_enabled'] === 0 ? 'selected' : '' ?>>Off</option>
-            </select>
-            <button class="btn btn-sm btn-accent" type="submit">Save</button>
-        </form>
-        <div class="mt-3">Browser Permission: <strong id="attendanceBrowserPermission">Checking…</strong></div>
-        <p class="form-hint mb-2" id="attendanceLocationHelp">Your browser will ask for location access the next time it is needed.</p>
-        <details><summary>How to enable location</summary>
-            <ol class="mt-2 mb-0"><li>Open your browser's site information or settings for this attendance website.</li><li>Find Location permission and change it to Allow.</li><li>Return here and try again.</li></ol>
+        <p class="form-hint mb-2">Choose whether this attendance system may request your location during attendance events.</p>
+        <p class="form-hint mb-3">Location is requested only when you Clock In, Clock Out, or start/end approved work-from-home time. Your location is not continuously tracked.</p>
+        <label class="notification-preference attendance-location-toggle">
+            <span>Location sharing</span>
+            <span class="attendance-location-toggle-control">Allow
+                <input type="checkbox" class="notification-toggle" data-attendance-location-toggle aria-label="Allow attendance location sharing" <?= (int)($user['attendance_location_enabled'] ?? 0) === 1 ? 'checked' : '' ?>>
+                <span class="notification-switch" aria-hidden="true"></span>
+            </span>
+        </label>
+        <p class="form-hint attendance-location-state mt-2 mb-2" data-attendance-location-state role="status"><?= $user['attendance_location_enabled'] === null ? 'Not decided yet — choose during your next Clock In or Clock Out, or enable it here.' : ((int)$user['attendance_location_enabled'] === 1 ? 'Enabled' : 'Disabled') ?></p>
+        <div class="attendance-browser-status">Browser permission: <strong data-attendance-browser-permission>Checking...</strong></div>
+        <details class="policy-disclosure attendance-location-help mt-2" data-attendance-location-help>
+            <summary><span class="fw-semibold">How to enable location</span></summary>
+            <div class="policy-disclosure-body">
+                <ol class="mb-0"><li>Open your browser's site information or site settings for this attendance website.</li><li>Find Location permission.</li><li>Change it to Allow.</li><li>Return to this page and try again.</li></ol>
+            </div>
         </details>
     </div>
 </div>
-<script>
-(async () => {
-  const label = document.getElementById('attendanceBrowserPermission');
-  const help = document.getElementById('attendanceLocationHelp');
-  if (!label || !help) return;
-  if (!navigator.geolocation || !window.isSecureContext) {
-    label.textContent = 'Unknown / unavailable';
-    help.textContent = 'Location requires a supported browser and HTTPS.';
-    return;
-  }
-  if (!navigator.permissions?.query) { label.textContent = 'Unknown'; return; }
-  try {
-    const permission = await navigator.permissions.query({ name: 'geolocation' });
-    const update = () => {
-      label.textContent = ({ granted: 'Allowed', prompt: 'Ask / Not decided', denied: 'Blocked' })[permission.state] || 'Unknown';
-      help.textContent = permission.state === 'granted' ? 'Location access is ready for attendance.' :
-        permission.state === 'denied' ? 'Your browser is currently blocking location access for this attendance system.' :
-        'Your browser will ask for location access the next time it is needed.';
-    };
-    update(); permission.addEventListener?.('change', update);
-  } catch (_) { label.textContent = 'Unknown'; }
-})();
-</script>
 
 <style>
 .profile-balance-grid{display:grid;grid-template-columns:1fr;gap:1rem}

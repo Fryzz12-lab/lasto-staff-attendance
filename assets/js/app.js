@@ -545,7 +545,59 @@
     }, { passive: true });
   }
 
+  function initAttendanceLocationCard() {
+    const card = document.querySelector('[data-attendance-location-card]');
+    if (!card || card.dataset.locationInitialized === '1') return;
+    card.dataset.locationInitialized = '1';
+    const toggle = card.querySelector('[data-attendance-location-toggle]');
+    const state = card.querySelector('[data-attendance-location-state]');
+    const browser = card.querySelector('[data-attendance-browser-permission]');
+    const help = card.querySelector('[data-attendance-location-help]');
+    let browserPermission = 'checking';
+
+    const render = () => {
+      const preference = card.dataset.preference;
+      toggle.checked = preference === 'enabled';
+      toggle.indeterminate = preference === 'undecided';
+      state.textContent = preference === 'undecided'
+        ? 'Not decided yet — choose during your next Clock In or Clock Out, or enable it here.'
+        : preference === 'disabled' ? 'Disabled'
+          : browserPermission === 'denied' ? 'Enabled — browser permission blocked. Use the help below to enable it.'
+            : browserPermission === 'prompt' ? 'Enabled — permission not yet requested.' : 'Enabled';
+      browser.textContent = ({ granted: 'Allowed', prompt: 'Not decided', denied: 'Blocked', checking: 'Checking...', unknown: 'Unknown' })[browserPermission] || 'Unknown';
+      help.classList.toggle('is-blocked', browserPermission === 'denied');
+    };
+
+    render();
+    toggle.addEventListener('change', async () => {
+      const next = toggle.checked ? 'enabled' : 'disabled';
+      toggle.disabled = true;
+      const result = await apiPost('/api/clock.php', { action: 'location_preference', preference: next });
+      toggle.disabled = false;
+      if (!result.success) {
+        render();
+        showToast(result.message || 'Could not save Attendance Location. Please try again.', 'danger');
+        return;
+      }
+      card.dataset.preference = next;
+      document.querySelectorAll('[data-location-preference]').forEach((button) => { button.dataset.locationPreference = next; });
+      render();
+      showToast('Attendance Location ' + (next === 'enabled' ? 'enabled.' : 'disabled.'), 'success');
+    });
+
+    if (!navigator.geolocation || !window.isSecureContext || !navigator.permissions?.query) {
+      browserPermission = 'unknown'; render(); return;
+    }
+    navigator.permissions.query({ name: 'geolocation' }).then((permission) => {
+      if (!card.isConnected) return;
+      const update = () => { browserPermission = permission.state; render(); };
+      update();
+      permission.addEventListener?.('change', update);
+    }).catch(() => { browserPermission = 'unknown'; render(); });
+  }
+
   function bindPageActions() {
+    initAttendanceLocationCard();
     document.querySelectorAll('.app-content [data-action]').forEach((btn) => {
       if (btn.dataset.actionBound === '1') return;
       btn.dataset.actionBound = '1';
