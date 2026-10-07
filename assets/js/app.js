@@ -875,14 +875,6 @@
     document.querySelectorAll('.globe-profile-toggle').forEach((input) => {
       input.checked = on;
     });
-    document.querySelectorAll('.globe-profile-label').forEach((span) => {
-      const parent = span.closest('.notification-preference');
-      const onLabel = parent ? parent.getAttribute('data-label-on') : null;
-      const offLabel = parent ? parent.getAttribute('data-label-off') : null;
-      if (onLabel && offLabel) {
-        span.textContent = on ? onLabel : offLabel;
-      }
-    });
   }
 
   function initGlobeToggle() {
