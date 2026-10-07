@@ -90,6 +90,20 @@ $auditRows = $audit->fetchAll();
 $locations = db()->prepare('SELECT * FROM attendance_location_events WHERE attendance_id=? ORDER BY event_time, id');
 $locations->execute([$id]);
 $locationRows = $locations->fetchAll();
+$locationStatusLabels = [
+    'captured' => 'Captured',
+    'low_accuracy' => 'Low accuracy',
+    'permission_denied' => 'Permission denied',
+    'timed_out' => 'Timed out',
+    'unavailable' => 'Unavailable',
+    'unsupported' => 'Unsupported browser',
+    'sharing_disabled' => 'Location sharing off',
+];
+$locationStatusBadges = [
+    'captured' => 'badge-present',
+    'low_accuracy' => 'badge-late',
+    'permission_denied' => 'badge-pending',
+];
 
 $pageTitle = __('attendance_detail');
 $bodyClass = 'admin-attendance-detail';
@@ -134,16 +148,58 @@ $formReason = is_post() ? $reason : '';
         <?php else: ?>
             <div class="row g-3">
                 <?php foreach ($locationRows as $event): ?>
+                    <?php
+                    $hasCoordinates = $event['latitude'] !== null && $event['longitude'] !== null;
+                    $status = (string) $event['location_status'];
+                    $statusLabel = $locationStatusLabels[$status] ?? 'Unavailable';
+                    $statusBadge = $locationStatusBadges[$status] ?? 'badge-off';
+                    $clientIp = (string) ($event['client_ip'] ?? '');
+                    $networkLabel = in_array($clientIp, ['127.0.0.1', '::1'], true)
+                        ? 'Localhost'
+                        : ($event['office_network'] === 'office' ? 'Office network'
+                            : ($event['office_network'] === 'other' ? 'Other network' : 'Unknown'));
+                    ?>
                     <div class="col-md-6">
-                        <strong><?= e(ucwords(str_replace('_', ' ', $event['event_type']))) ?> · <?= e(format_datetime($event['event_time'])) ?></strong>
-                        <div><?= e(attendance_location_label($event)) ?></div>
-                        <?php if ($event['latitude'] !== null && $event['longitude'] !== null): ?>
-                            <div>Coordinates: <?= e($event['latitude']) ?>, <?= e($event['longitude']) ?></div>
-                            <div>Office area: <?= e($event['office_proximity'] === 'within' ? 'Within office area' : ($event['office_proximity'] === 'outside' ? 'Outside office area' : 'Not configured')) ?></div>
-                            <a target="_blank" rel="noopener noreferrer" href="<?= e('https://www.google.com/maps/search/?api=1&query=' . rawurlencode($event['latitude'] . ',' . $event['longitude'])) ?>">View Map</a>
-                        <?php endif; ?>
-                        <div>Network: <?= e($event['office_network'] === 'office' ? 'Office network' : ($event['office_network'] === 'other' ? 'Other network' : 'Unknown')) ?></div>
-                        <div>Recorded IP: <?= e((string) ($event['client_ip'] ?? 'Unknown')) ?></div>
+                        <article class="attendance-location-event h-100">
+                            <header class="attendance-location-event__header">
+                                <div class="attendance-location-event__title"><?= e(strtoupper(str_replace('_', ' ', (string) $event['event_type']))) ?></div>
+                                <div class="attendance-location-event__time"><?= e(format_datetime($event['event_time'])) ?></div>
+                            </header>
+                            <div class="attendance-location-event__status">
+                                <span class="status-badge <?= e($statusBadge) ?>"><?= e($statusLabel) ?></span>
+                                <?php if ($event['accuracy_metres'] !== null): ?>
+                                    <span class="attendance-location-event__accuracy">Accuracy ±<?= e((string) round((float) $event['accuracy_metres'])) ?> m</span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="attendance-location-event__fact">
+                                <span>Office area</span>
+                                <?php if ($event['office_proximity'] === 'within'): ?>
+                                    <strong class="attendance-location-event__positive">Within office area</strong>
+                                <?php elseif ($event['office_proximity'] === 'outside'): ?>
+                                    <strong class="attendance-location-event__warning">Outside office area</strong>
+                                <?php else: ?>
+                                    <strong>Office comparison unavailable</strong>
+                                    <small><?= $hasCoordinates ? 'Office location has not been configured.' : 'No coordinates were captured for this event.' ?></small>
+                                <?php endif; ?>
+                            </div>
+                            <div class="attendance-location-event__fact">
+                                <span>Network</span><strong><?= e($networkLabel) ?></strong>
+                            </div>
+                            <?php if ($hasCoordinates): ?>
+                                <a class="btn btn-sm btn-outline-secondary attendance-location-event__map" target="_blank" rel="noopener noreferrer" href="<?= e('https://www.google.com/maps/search/?api=1&query=' . rawurlencode($event['latitude'] . ',' . $event['longitude'])) ?>">View Map <i class="bi bi-box-arrow-up-right ms-1" aria-hidden="true"></i></a>
+                            <?php endif; ?>
+                            <details class="policy-disclosure attendance-location-event__technical">
+                                <summary><span class="attendance-location-event__show">Show technical details</span><span class="attendance-location-event__hide">Hide technical details</span></summary>
+                                <div class="policy-disclosure-body">
+                                    <dl class="attendance-location-event__technical-grid mb-0">
+                                        <div><dt>Latitude</dt><dd><?= e($hasCoordinates ? (string) $event['latitude'] : 'Not recorded') ?></dd></div>
+                                        <div><dt>Longitude</dt><dd><?= e($hasCoordinates ? (string) $event['longitude'] : 'Not recorded') ?></dd></div>
+                                        <div><dt>Recorded IP</dt><dd><?= e($clientIp !== '' ? $clientIp : 'Unknown') ?></dd></div>
+                                        <div><dt>Capture method</dt><dd><?= e($event['capture_method'] !== null ? ucwords(str_replace('_', ' ', (string) $event['capture_method'])) : 'Not recorded') ?></dd></div>
+                                    </dl>
+                                </div>
+                            </details>
+                        </article>
                     </div>
                 <?php endforeach; ?>
             </div>
