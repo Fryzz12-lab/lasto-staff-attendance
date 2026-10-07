@@ -18,7 +18,7 @@
 <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
 <div id="loadingOverlay" class="loading-overlay d-none">
     <div class="spinner-border text-light" role="status"></div>
-    <div class="mt-2 text-light"><?= e(__('loading')) ?></div>
+    <div class="mt-2 text-light" data-loading-label><?= e(__('loading')) ?></div>
 </div>
 
 <script>

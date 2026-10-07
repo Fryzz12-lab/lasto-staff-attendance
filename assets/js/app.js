@@ -136,10 +136,13 @@
     form.querySelector('[data-password-error]')?.classList.add('d-none');
   });
   const overlay = document.getElementById('loadingOverlay');
+  const loadingLabel = overlay?.querySelector('[data-loading-label]');
+  const defaultLoadingLabel = loadingLabel?.textContent || 'Loading...';
   let toastContainer = document.getElementById('toastContainer');
 
-  function showLoading(show) {
+  function showLoading(show, message) {
     if (!overlay) return;
+    if (loadingLabel) loadingLabel.textContent = show && message ? message : defaultLoadingLabel;
     overlay.classList.toggle('d-none', !show);
   }
 
@@ -648,17 +651,23 @@
           }
           result = await apiPost('/api/clock.php', { action });
           if (result?.success && result.location_event_id && btn.dataset.locationPreference === 'enabled') {
-            const location = await new Promise((resolve) => {
-              if (!navigator.geolocation || !window.isSecureContext) {
-                resolve({ location_status: 'unsupported' }); return;
-              }
-              try { navigator.geolocation.getCurrentPosition(
-                (position) => resolve({ location_status: 'captured', latitude: position.coords.latitude,
-                  longitude: position.coords.longitude, accuracy_metres: position.coords.accuracy }),
-                (error) => resolve({ location_status: error.code === 1 ? 'permission_denied' : error.code === 3 ? 'timed_out' : 'unavailable' }),
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-              ); } catch (_) { resolve({ location_status: 'unavailable' }); }
-            });
+            showLoading(true, 'Clock recorded. Getting your location…');
+            let location;
+            try {
+              location = await new Promise((resolve) => {
+                if (!navigator.geolocation || !window.isSecureContext) {
+                  resolve({ location_status: 'unsupported' }); return;
+                }
+                try { navigator.geolocation.getCurrentPosition(
+                  (position) => resolve({ location_status: 'captured', latitude: position.coords.latitude,
+                    longitude: position.coords.longitude, accuracy_metres: position.coords.accuracy }),
+                  (error) => resolve({ location_status: error.code === 1 ? 'permission_denied' : error.code === 3 ? 'timed_out' : 'unavailable' }),
+                  { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                ); } catch (_) { resolve({ location_status: 'unavailable' }); }
+              });
+            } finally {
+              showLoading(false);
+            }
             const saved = await apiPost('/api/clock.php', { action: 'location_result', event_id: result.location_event_id, ...location });
             if (!saved.success) result.location_notice = 'Location could not be saved.';
             if (location.location_status === 'permission_denied') {
