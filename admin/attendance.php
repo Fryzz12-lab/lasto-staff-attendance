@@ -30,7 +30,11 @@ $countStmt->execute($params);
 $total = (int) $countStmt->fetchColumn();
 
 // Paginated rows
-$sql  = "SELECT a.*, u.full_name, u.employee_id" . $where;
+$sql  = "SELECT a.*, u.full_name, u.employee_id,
+    li.location_status AS in_location_status, li.accuracy_metres AS in_location_accuracy,
+    lo.location_status AS out_location_status, lo.accuracy_metres AS out_location_accuracy" .
+    str_replace(' WHERE ', " LEFT JOIN attendance_location_events li ON li.attendance_id=a.id AND li.event_type='clock_in'
+    LEFT JOIN attendance_location_events lo ON lo.attendance_id=a.id AND lo.event_type='clock_out' WHERE ", $where);
 $sql .= " ORDER BY a.work_date DESC, u.full_name LIMIT {$perPage} OFFSET {$offset}";
 $stmt = db()->prepare($sql);
 $stmt->execute($params);
@@ -114,8 +118,9 @@ require __DIR__ . '/../includes/layout_header.php';
                             <td><?= e($r['full_name']) ?></td>
                             <td>
                                 <?= e(format_time($r['clock_in'])) ?>
+                                <?php if ($r['clock_in']): ?><small class="d-block text-muted"><?= e(attendance_location_label($r['in_location_status'] === null ? null : ['location_status' => $r['in_location_status'], 'accuracy_metres' => $r['in_location_accuracy']])) ?></small><?php endif; ?>
                             </td>
-                            <td><?= e(format_time($r['clock_out'])) ?></td>
+                            <td><?= e(format_time($r['clock_out'])) ?><?php if ($r['clock_out']): ?><small class="d-block text-muted"><?= e(attendance_location_label($r['out_location_status'] === null ? null : ['location_status' => $r['out_location_status'], 'accuracy_metres' => $r['out_location_accuracy']])) ?></small><?php endif; ?></td>
                             <td><?= attendance_status_badge($r) ?></td>
                             <td><?= e(format_minutes((int)$r['total_break_minutes'])) ?></td>
                             <td><?= e(format_minutes((int)$r['work_minutes'])) ?></td>
@@ -136,8 +141,8 @@ require __DIR__ . '/../includes/layout_header.php';
                             <div class="attendance-record-mobile__status"><?= attendance_status_badge($r) ?></div>
                         </div>
                         <div class="attendance-record-mobile__grid">
-                            <div><span>Clock In</span><strong><?= e(format_time($r['clock_in'])) ?></strong></div>
-                            <div><span>Clock Out</span><strong><?= e(format_time($r['clock_out'])) ?></strong></div>
+                            <div><span>Clock In</span><strong><?= e(format_time($r['clock_in'])) ?></strong><small><?= $r['clock_in'] ? e(attendance_location_label($r['in_location_status'] === null ? null : ['location_status' => $r['in_location_status'], 'accuracy_metres' => $r['in_location_accuracy']])) : '' ?></small></div>
+                            <div><span>Clock Out</span><strong><?= e(format_time($r['clock_out'])) ?></strong><small><?= $r['clock_out'] ? e(attendance_location_label($r['out_location_status'] === null ? null : ['location_status' => $r['out_location_status'], 'accuracy_metres' => $r['out_location_accuracy']])) : '' ?></small></div>
                             <div><span>Break Time</span><strong><?= e(format_minutes((int)$r['total_break_minutes'])) ?></strong></div>
                             <div><span>Working Time</span><strong><?= e(format_minutes((int)$r['work_minutes'])) ?></strong></div>
                         </div>

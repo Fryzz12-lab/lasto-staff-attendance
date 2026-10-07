@@ -547,6 +547,24 @@
         let result;
         if (action === 'clock_in' || action === 'clock_out') {
           result = await apiPost('/api/clock.php', { action });
+          if (result?.success && result.location_event_id && btn.dataset.locationEnabled === '1') {
+            const location = await new Promise((resolve) => {
+              if (!navigator.geolocation || !window.isSecureContext) {
+                resolve({ location_status: 'unsupported' }); return;
+              }
+              try { navigator.geolocation.getCurrentPosition(
+                (position) => resolve({ location_status: 'captured', latitude: position.coords.latitude,
+                  longitude: position.coords.longitude, accuracy_metres: position.coords.accuracy }),
+                (error) => resolve({ location_status: error.code === 1 ? 'permission_denied' : error.code === 3 ? 'timed_out' : 'unavailable' }),
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+              ); } catch (_) { resolve({ location_status: 'unavailable' }); }
+            });
+            const saved = await apiPost('/api/clock.php', { action: 'location_result', event_id: result.location_event_id, ...location });
+            if (!saved.success) result.location_notice = 'Location could not be saved.';
+            if (location.location_status === 'permission_denied') {
+              result.location_notice = 'Location is blocked in your browser. See Attendance Location in your profile to enable it.';
+            }
+          }
         } else if (action === 'start_break') {
           result = await apiPost('/api/break.php', { action: 'start', type });
         } else if (action === 'end_break') {
@@ -556,7 +574,7 @@
         if (result && result.success) {
           if (action === 'clock_in') earthPulse('in');
           else if (action === 'clock_out') earthPulse('out');
-          showToast(result.message || 'Done', result.exceeded ? 'warning' : 'success');
+          showToast((result.message || 'Done') + (result.location_notice ? ' ' + result.location_notice : ''), result.location_notice || result.exceeded ? 'warning' : 'success');
           setTimeout(() => window.location.reload(), 500);
         } else {
           showToast((result && result.message) || 'Action failed', 'danger');

@@ -32,6 +32,13 @@ $user = current_user();
 $userId = (int) $user['id'];
 
 try {
+    if ($action === 'location_result') {
+        $eventId = filter_var($input['event_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        if (!$eventId || !attendance_location_finalize((int) $eventId, $userId, $input)) {
+            json_response(['success' => false, 'message' => 'Location result could not be saved.'], 400);
+        }
+        json_response(['success' => true]);
+    }
     if ($action === 'clock_in') {
         json_response(clock_in($userId));
     }

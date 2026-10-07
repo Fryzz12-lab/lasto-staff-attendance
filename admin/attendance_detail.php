@@ -87,6 +87,10 @@ $audit = db()->prepare(
 $audit->execute([$id]);
 $auditRows = $audit->fetchAll();
 
+$locations = db()->prepare('SELECT * FROM attendance_location_events WHERE attendance_id=? ORDER BY event_time, id');
+$locations->execute([$id]);
+$locationRows = $locations->fetchAll();
+
 $pageTitle = __('attendance_detail');
 $bodyClass = 'admin-attendance-detail';
 $activeMenu = 'attendance';
@@ -120,6 +124,31 @@ $formReason = is_post() ? $reason : '';
 
 <div class="mb-3">
     <a href="<?= e($returnTo) ?>" class="btn btn-sm btn-outline-secondary">&larr; <?= e(__('back')) ?></a>
+</div>
+
+<div class="card-soft mb-3">
+    <div class="card-header">Attendance location</div>
+    <div class="card-body">
+        <?php if (!$locationRows): ?>
+            <p class="form-hint mb-0">Legacy record / location unavailable.</p>
+        <?php else: ?>
+            <div class="row g-3">
+                <?php foreach ($locationRows as $event): ?>
+                    <div class="col-md-6">
+                        <strong><?= e(ucwords(str_replace('_', ' ', $event['event_type']))) ?> · <?= e(format_datetime($event['event_time'])) ?></strong>
+                        <div><?= e(attendance_location_label($event)) ?></div>
+                        <?php if ($event['latitude'] !== null && $event['longitude'] !== null): ?>
+                            <div>Coordinates: <?= e($event['latitude']) ?>, <?= e($event['longitude']) ?></div>
+                            <div>Office area: <?= e($event['office_proximity'] === 'within' ? 'Within office area' : ($event['office_proximity'] === 'outside' ? 'Outside office area' : 'Not configured')) ?></div>
+                            <a target="_blank" rel="noopener noreferrer" href="<?= e('https://www.google.com/maps/search/?api=1&query=' . rawurlencode($event['latitude'] . ',' . $event['longitude'])) ?>">View Map</a>
+                        <?php endif; ?>
+                        <div>Network: <?= e($event['office_network'] === 'office' ? 'Office network' : ($event['office_network'] === 'other' ? 'Other network' : 'Unknown')) ?></div>
+                        <div>Recorded IP: <?= e((string) ($event['client_ip'] ?? 'Unknown')) ?></div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </div>
 </div>
 
 <div class="row g-3 align-items-stretch">

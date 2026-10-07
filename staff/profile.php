@@ -16,6 +16,13 @@ if (is_post()) {
     require_csrf();
     $action = (string) post('action', 'profile');
 
+    if ($action === 'attendance_location') {
+        $enabled = (string) post('attendance_location_enabled', '0') === '1' ? 1 : 0;
+        db()->prepare('UPDATE users SET attendance_location_enabled=? WHERE id=?')->execute([$enabled, $userId]);
+        flash_set('success', 'Attendance Location setting saved.');
+        redirect('/staff/profile.php');
+    }
+
     if ($action === 'password') {
         $current = (string) post('current_password');
         $new = (string) post('new_password');
@@ -86,6 +93,50 @@ require __DIR__ . '/../includes/layout_header.php';
 ?>
 
 <h2 class="h4 mb-3 d-none d-lg-block"><?= e(__('my_profile')) ?></h2>
+
+<div class="card-soft staff-profile-card mb-3">
+    <div class="card-header"><i class="bi bi-geo-alt me-1"></i> Attendance Location</div>
+    <div class="card-body">
+        <p class="form-hint">Location is requested only when you Clock In, Clock Out, or start/end approved work-from-home time. Your location is not continuously tracked.</p>
+        <form method="post" class="d-flex align-items-center gap-3 flex-wrap">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="attendance_location">
+            <input type="hidden" name="attendance_location_enabled" value="0">
+            <label class="form-check-label" for="attendanceLocationEnabled">Attendance Location</label>
+            <input id="attendanceLocationEnabled" type="checkbox" name="attendance_location_enabled" value="1" <?= !empty($user['attendance_location_enabled']) ? 'checked' : '' ?>>
+            <span><?= !empty($user['attendance_location_enabled']) ? 'On' : 'Off' ?></span>
+            <button class="btn btn-sm btn-accent" type="submit">Save</button>
+        </form>
+        <div class="mt-3">Browser Permission: <strong id="attendanceBrowserPermission">Checking…</strong></div>
+        <p class="form-hint mb-2" id="attendanceLocationHelp">Your browser will ask for location access the next time it is needed.</p>
+        <details><summary>How to enable location</summary>
+            <ol class="mt-2 mb-0"><li>Open your browser's site information or settings for this attendance website.</li><li>Find Location permission and change it to Allow.</li><li>Return here and try again.</li></ol>
+        </details>
+    </div>
+</div>
+<script>
+(async () => {
+  const label = document.getElementById('attendanceBrowserPermission');
+  const help = document.getElementById('attendanceLocationHelp');
+  if (!label || !help) return;
+  if (!navigator.geolocation || !window.isSecureContext) {
+    label.textContent = 'Unknown / unavailable';
+    help.textContent = 'Location requires a supported browser and HTTPS.';
+    return;
+  }
+  if (!navigator.permissions?.query) { label.textContent = 'Unknown'; return; }
+  try {
+    const permission = await navigator.permissions.query({ name: 'geolocation' });
+    const update = () => {
+      label.textContent = ({ granted: 'Allowed', prompt: 'Ask / Not decided', denied: 'Blocked' })[permission.state] || 'Unknown';
+      help.textContent = permission.state === 'granted' ? 'Location access is ready for attendance.' :
+        permission.state === 'denied' ? 'Your browser is currently blocking location access for this attendance system.' :
+        'Your browser will ask for location access the next time it is needed.';
+    };
+    update(); permission.addEventListener?.('change', update);
+  } catch (_) { label.textContent = 'Unknown'; }
+})();
+</script>
 
 <style>
 .profile-balance-grid{display:grid;grid-template-columns:1fr;gap:1rem}

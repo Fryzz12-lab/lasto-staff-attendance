@@ -724,9 +724,10 @@ function clock_in(int $userId): array
         db()->prepare('UPDATE attendance SET clock_in=?, late_minutes=?, status=? WHERE id=?')
             ->execute([$clockIn, $late, $late > 0 ? 'late' : 'present', $att['id']]);
         write_audit((int) $att['id'], $userId, $userId, 'clock_in', 'clock_in', null, $clockIn, 'Staff clock in');
+        $locationEventId = attendance_location_start((int) $att['id'], $userId, 'clock_in', $clockIn);
         $message = __('msg_clocked_in', ['time' => format_time($clockIn)]);
         $message .= $late > 0 ? __('msg_status_late', ['time' => format_minutes($late)]) : __('msg_status_ontime');
-        return ['success' => true, 'message' => $message, 'attendance_id' => (int) $att['id']];
+        return ['success' => true, 'message' => $message, 'attendance_id' => (int) $att['id'], 'location_event_id' => $locationEventId];
     });
 }
 
@@ -748,8 +749,9 @@ function clock_out(int $userId): array
         recalculate_attendance((int) $att['id']);
         ensure_offday_adjustment_review((int)$att['id']);
         write_audit((int) $att['id'], $userId, $userId, 'clock_out', 'clock_out', null, $clockOut, 'Staff clock out');
+        $locationEventId = attendance_location_start((int) $att['id'], $userId, 'clock_out', $clockOut);
         $att = get_attendance($userId, today_str());
-        return ['success' => true, 'message' => __('msg_clocked_out', [
+        return ['success' => true, 'location_event_id' => $locationEventId, 'message' => __('msg_clocked_out', [
             'time' => format_time($clockOut), 'work' => format_minutes((int) $att['work_minutes']),
         ])];
     });

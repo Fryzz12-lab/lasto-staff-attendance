@@ -30,6 +30,12 @@ if ($scheduledOffDay && $att) {
 }
 $offdayAttendanceLabel = !$att || !$att['clock_in'] ? __('offday_not_clocked_in') : ($att['clock_out'] ? __('offday_completed') : __('offday_working'));
 $offdayReviewLabel = !$att || !$att['clock_out'] ? __('offday_review_after_clockout') : ($offdayReview ? __('offday_review_' . $offdayReview['status']) : __('offday_review_pending'));
+$locationEvents = [];
+if ($att) {
+    $locationStmt = db()->prepare('SELECT event_type,location_status,accuracy_metres FROM attendance_location_events WHERE attendance_id=?');
+    $locationStmt->execute([(int) $att['id']]);
+    foreach ($locationStmt->fetchAll() as $event) $locationEvents[$event['event_type']] = $event;
+}
 
 $pageTitle = __('dashboard');
 $activeMenu = 'dashboard';
@@ -150,6 +156,13 @@ usort($activities, fn($a, $b) => $a['ts'] <=> $b['ts']);
 require __DIR__ . '/../includes/layout_header.php';
 ?>
 
+<?php if (!empty($att['clock_in'])): ?>
+<div class="small text-muted mb-2">Attendance Location:
+    Clock In: <?= e(attendance_location_label($locationEvents['clock_in'] ?? null)) ?>
+    <?php if (!empty($att['clock_out'])): ?> · Clock Out: <?= e(attendance_location_label($locationEvents['clock_out'] ?? null)) ?><?php endif; ?>
+</div>
+<?php endif; ?>
+
 <!-- Compact Header: Greeting & Integrated Status Strip -->
 <div class="dash-compact-header mb-3">
     <div class="dash-greeting-block">
@@ -254,6 +267,7 @@ require __DIR__ . '/../includes/layout_header.php';
         <?php endif; ?>
         <button type="button" class="btn btn-accent btn-action-lg px-5 py-3 fw-bold fs-5 shadow-sm"
                 data-action="clock_in"
+                data-location-enabled="<?= !empty($user['attendance_location_enabled']) ? '1' : '0' ?>"
                 data-confirm="<?= e(__('confirm_clock_in')) ?>"
                 data-confirm-title="<?= e(__('clock_in')) ?>"
                 data-confirm-label="<?= e(__('clock_in')) ?>">
@@ -522,6 +536,7 @@ require __DIR__ . '/../includes/layout_header.php';
                 </div>
                 <button type="button" class="btn btn-clock-out"
                         data-action="clock_out"
+                        data-location-enabled="<?= !empty($user['attendance_location_enabled']) ? '1' : '0' ?>"
                         data-confirm="<?= e(__('confirm_clock_out')) ?>"
                         data-confirm-title="<?= e(__('clock_out')) ?>"
                         data-confirm-label="<?= e(__('clock_out')) ?>">
