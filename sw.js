@@ -3,7 +3,7 @@
  * Strategy: Network-First for dynamic PHP pages & APIs; Cache-First for static assets.
  */
 
-const CACHE_NAME = 'sas-static-v10';
+const CACHE_NAME = 'sas-static-v15';
 const STATIC_ASSETS = [
   './manifest.webmanifest',
   './assets/css/app.css',
@@ -106,3 +106,61 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+// Push notification event: display native system notification banner
+self.addEventListener('push', (event) => {
+  let payload = {
+    title: 'Staff Attendance',
+    body: 'You have a new update.',
+    icon: './assets/img/icon-192.png',
+    badge: './assets/img/icon-192.png',
+    data: { url: './' }
+  };
+
+  if (event.data) {
+    try {
+      const json = event.data.json();
+      payload = Object.assign(payload, json);
+    } catch (e) {
+      payload.body = event.data.text() || payload.body;
+    }
+  }
+
+  const options = {
+    body: payload.body,
+    icon: payload.icon || './assets/img/icon-192.png',
+    badge: payload.badge || './assets/img/icon-192.png',
+    vibrate: [120, 60, 120],
+    data: payload.data || { url: payload.url || './' },
+    tag: payload.tag || ('sas-' + Date.now()),
+    renotify: true
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title, options)
+  );
+});
+
+// Notification click event: focus existing tab or open new window to target URL
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const urlToOpen = event.notification.data?.url || './';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if (client.url.includes(self.registration.scope) && 'focus' in client) {
+          return client.focus().then(() => {
+            if ('navigate' in client) {
+              return client.navigate(urlToOpen);
+            }
+          });
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
+  );
+});
+

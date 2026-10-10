@@ -1,6 +1,6 @@
 <?php
 /**
- * Staff ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â My Profile
+ * Staff — My Profile
  */
 
 declare(strict_types=1);
@@ -10,7 +10,6 @@ require_login();
 
 $user = current_user();
 $userId = (int) $user['id'];
-$balances = employee_balances($userId);
 
 if (is_post()) {
     require_csrf();
@@ -105,7 +104,7 @@ require __DIR__ . '/../includes/layout_header.php';
         <p class="form-hint attendance-location-description mb-3"><span class="d-none d-sm-inline">Choose whether to share your location at Clock In and Clock Out; you are not continuously tracked.</span><span class="d-inline d-sm-none">Share your location for Clock In and Clock Out only. Not continuously tracked.</span></p>
         <label class="notification-preference attendance-location-toggle">
             <span>Location sharing</span>
-            <span class="attendance-location-toggle-control">Allow
+            <span class="attendance-location-toggle-control"><span class="attendance-location-status" data-attendance-location-label aria-live="polite">Off</span>
                 <input type="checkbox" class="notification-toggle" data-attendance-location-toggle aria-label="Allow attendance location sharing" <?= (int)($user['attendance_location_enabled'] ?? 0) === 1 ? 'checked' : '' ?>>
                 <span class="notification-switch" aria-hidden="true"></span>
             </span>
@@ -122,29 +121,9 @@ require __DIR__ . '/../includes/layout_header.php';
 </div>
 
 <style>
-.profile-balance-grid{display:grid;grid-template-columns:1fr;gap:1rem}
-.profile-balance-card{background:#fff;border:1px solid rgba(226,232,240,.8);border-radius:1rem;box-shadow:0 1px 3px rgba(15,23,42,.06);padding:1.25rem}
-.profile-balance-card__header{display:flex;align-items:center;gap:.65rem;color:#475569;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
-.profile-balance-card__icon{display:inline-flex;width:2rem;height:2rem;align-items:center;justify-content:center;border-radius:.65rem;font-size:1rem}
-.profile-balance-card__value{display:flex;align-items:baseline;gap:.55rem;margin-top:1rem}.profile-balance-card__number{font-size:2.25rem;font-weight:700;line-height:1;color:#0f172a}.profile-balance-card__unit{font-size:.875rem;font-weight:600;color:#64748b}.profile-balance-card__description{margin:.65rem 0 0;color:#64748b;font-size:.875rem}
-@media(min-width:768px){.profile-balance-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .staff-profile-card,.notification-settings-card{background:#fff;border:1px solid #e2e8f0;border-radius:1rem;box-shadow:0 1px 3px rgba(15,23,42,.06)}
 .staff-email-verification-card{display:none}
 </style>
-<?php $earnedDays = (int)($balances['replacement_off'] ?? 0); $owedDays = (int)($balances['cuti_perlu_ganti'] ?? 0); ?>
-<section class="profile-balance-grid mb-3" aria-label="Leave balances">
-    <article class="profile-balance-card">
-        <div class="profile-balance-card__header"><span class="profile-balance-card__icon" style="background:#ecfdf5;color:#059669"><i class="bi bi-calendar-check" aria-hidden="true"></i></span><span><?= e(__('leave_earned_title')) ?></span></div>
-        <div class="profile-balance-card__value"><span class="profile-balance-card__number"><?= e((string)$earnedDays) ?></span><span class="profile-balance-card__unit"><?= e(__('days_available')) ?></span></div>
-        <p class="profile-balance-card__description mb-0"><?= e(__('leave_earned_desc')) ?></p>
-    </article>
-    <article class="profile-balance-card">
-        <div class="profile-balance-card__header"><span class="profile-balance-card__icon" style="background:#fffbeb;color:#d97706"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></span><span><?= e(__('leave_replace_title')) ?></span></div>
-        <div class="profile-balance-card__value"><span class="profile-balance-card__number"><?= e((string)$owedDays) ?></span><span class="profile-balance-card__unit"><?= e(__('days_unit')) ?></span></div>
-        <p class="profile-balance-card__description mb-0"><?= e($owedDays > 0 ? __('leave_replace_desc') : __('leave_replace_clear')) ?></p>
-    </article>
-</section>
-
 <div class="row g-3 staff-profile-row">
     <div class="col-lg-8 d-flex">
         <div class="card-soft staff-profile-card w-100 d-flex flex-column">
@@ -251,7 +230,7 @@ require __DIR__ . '/../includes/layout_header.php';
         <div class="staff-email-verification-row">
             <div class="staff-email-verification-info">
                 <strong>Email verification</strong>
-                <div><a href="mailto:<?= e((string) $user['email']) ?>"><?= e((string) $user['email']) ?></a> <span aria-hidden="true">Ãƒâ€šÃ‚Â·</span> <?= !empty($user['email_verified_at']) ? '<span class="email-status email-status--verified">Verified</span>' : '<span class="email-status email-status--pending">' ?></div>
+                <div><a href="mailto:<?= e((string) $user['email']) ?>"><?= e((string) $user['email']) ?></a> <span aria-hidden="true">&middot;</span> <?= !empty($user['email_verified_at']) ? '<span class="email-status email-status--verified">Verified</span>' : '<span class="email-status email-status--pending">' ?></div>
             </div>
             <?php if (empty($user['email_verified_at'])): ?>
                 <form method="post">
@@ -279,7 +258,7 @@ require __DIR__ . '/../includes/layout_header.php';
                 'leave_decision' => 'Leave / WFH decision',
                 'missing_clock_out' => 'Missing clock-out reminder',
             ] as $key => $notice): ?>
-                <label class="notification-preference"><span><?= e(__('notice_' . $key)) ?></span><input type="checkbox" class="notification-option" data-notification-key="<?= e($key) ?>"><span class="notification-checkbox" aria-hidden="true">ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“</span></label>
+                <label class="notification-preference"><span><?= e(__('notice_' . $key)) ?></span><input type="checkbox" class="notification-option" data-notification-key="<?= e($key) ?>"><span class="notification-checkbox" aria-hidden="true"></span></label>
             <?php endforeach; ?>
         </div>
     </div>

@@ -205,8 +205,14 @@ require __DIR__ . '/../includes/layout_header.php';
         </div>
         <div class="notification-preferences mt-3" aria-label="<?= e(__('notice_admin')) ?>">
             <?php foreach (['new_leave_request' => 'New leave request', 'new_wfh_request' => 'New WFH request', 'new_correction' => 'New attendance correction', 'missing_clock_out' => 'Missing clock-out', 'staff_setup' => 'Staff account setup completed', 'job_failure' => 'Backup or scheduled job failure'] as $key => $notice): ?>
-                <label class="notification-preference"><span><?= e(__('notice_' . $key)) ?></span><input type="checkbox" class="notification-option" data-notification-key="<?= e($key) ?>"><span class="notification-checkbox" aria-hidden="true">✓</span></label>
+                <label class="notification-preference"><span><?= e(__('notice_' . $key)) ?></span><input type="checkbox" class="notification-option" data-notification-key="<?= e($key) ?>"><span class="notification-checkbox" aria-hidden="true"></span></label>
             <?php endforeach; ?>
+        </div>
+        <div class="mt-3 pt-3 border-top border-secondary-subtle d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <small class="text-muted">Receive real-time staff attendance alerts on this device</small>
+            <button type="button" class="btn btn-sm btn-outline-info" id="btnTestPushNotification">
+                <i class="bi bi-send me-1"></i> Send Test Notification
+            </button>
         </div>
     </div>
 <div class="card-soft staff-profile-card mt-3">

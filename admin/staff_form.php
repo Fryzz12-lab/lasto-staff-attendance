@@ -26,6 +26,9 @@ if ($id > 0) {
     }
 }
 
+$offices = db()->query('SELECT id, name, code, latitude, longitude, radius_meters, is_active FROM offices ORDER BY is_active DESC, name ASC')->fetchAll();
+$defaultOfficeId = !empty($offices) ? (int) $offices[0]['id'] : null;
+
 $pageTitle = $staff ? __('edit_staff') : __('add_staff');
 $activeMenu = 'staff';
 $bodyClass = 'admin-staff-form-page';
@@ -101,6 +104,8 @@ if (is_post()) {
     $email        = strtolower(trim((string) post('email')));
     $phone        = normalize_account_phone((string) post('phone'));
     $position     = trim((string) post('job_position'));
+    $officeId     = post('office_id');
+    $officeId     = ($officeId !== null && $officeId !== '' && is_numeric($officeId)) ? (int) $officeId : null;
     $joining      = trim((string) post('joining_date'));
     $endDate      = trim((string) post('employment_end_date'));
     $offDay       = (int) post('weekly_off_day', 0);
@@ -159,10 +164,10 @@ if (is_post()) {
                     $lock = db()->prepare('SELECT id FROM users WHERE id=? FOR UPDATE');
                     $lock->execute([$id]);
                     $emailChanged = strcasecmp((string) ($staff['email'] ?? ''), $email) !== 0;
-                    $sql = 'UPDATE users SET username=?, full_name=?, email=?, email_verified_at=CASE WHEN ?=1 THEN NULL ELSE email_verified_at END, phone=?, job_position=?, joining_date=?, employment_end_date=?, weekly_off_day=?, is_active=? WHERE id=?';
+                    $sql = 'UPDATE users SET username=?, full_name=?, email=?, email_verified_at=CASE WHEN ?=1 THEN NULL ELSE email_verified_at END, phone=?, job_position=?, office_id=?, joining_date=?, employment_end_date=?, weekly_off_day=?, is_active=? WHERE id=?';
                     db()->prepare($sql)->execute([
                         $username, $fullName, $email ?: null, $emailChanged ? 1 : 0,
-                        $phone ?: null, $position ?: null,
+                        $phone ?: null, $position ?: null, $officeId,
                         $joining ?: null, $endDate ?: null, $offDay, $isActive, $id,
                     ]);
                     if ($emailChanged) {
@@ -175,11 +180,11 @@ if (is_post()) {
                         $tempPassword = 'Temp@' . rand(1000, 9999);
                     }
                     $hash = password_hash($tempPassword, PASSWORD_DEFAULT);
-                    $sql = 'INSERT INTO users (employee_id, username, password_hash, full_name, email, phone, job_position, role, joining_date, employment_end_date, weekly_off_day, is_active, must_change_password)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, \'staff\', ?, ?, ?, ?, 1)';
+                    $sql = 'INSERT INTO users (employee_id, username, password_hash, full_name, email, phone, job_position, office_id, role, joining_date, employment_end_date, weekly_off_day, is_active, must_change_password)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, \'staff\', ?, ?, ?, ?, 1)';
                     db()->prepare($sql)->execute([
                         $employeeId, $username, $hash, $fullName, $email ?: null,
-                        $phone ?: null, $position ?: null,
+                        $phone ?: null, $position ?: null, $officeId,
                         $joining ?: today_str(), $endDate ?: null, $offDay, $isActive,
                     ]);
                     $userId = (int) db()->lastInsertId();
@@ -448,6 +453,26 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
                             <input name="job_position" class="form-control" value="<?= e((string)$v('job_position')) ?>">
                         </div>
                         <div class="col-md-6">
+                            <label class="form-label" for="staff_office_id"><?= e(__('assigned_office')) ?> *</label>
+                            <select id="staff_office_id" name="office_id" class="form-select" required>
+                                <option value="">-- <?= e(__('select_office')) ?> --</option>
+                                <?php foreach ($offices as $off): ?>
+                                    <?php
+                                        $isConfigured = $off['latitude'] !== null && $off['longitude'] !== null && is_numeric($off['latitude']) && is_numeric($off['longitude']);
+                                        $isSelected = (int) $v('office_id', $defaultOfficeId) === (int) $off['id'];
+                                    ?>
+                                    <option value="<?= (int) $off['id'] ?>"
+                                            data-configured="<?= $isConfigured ? '1' : '0' ?>"
+                                            <?= $isSelected ? 'selected' : '' ?>>
+                                        <?= e($off['name']) ?><?= !empty($off['code']) ? ' (' . e($off['code']) . ')' : '' ?><?= !$isConfigured ? ' ⚠ (' . e(__('location_not_configured')) . ')' : '' ?><?= !(int)$off['is_active'] ? ' [' . e(__('inactive')) . ']' : '' ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <div id="office_unconfigured_warn" class="form-hint text-warning mt-1" style="display:none;">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i> <?= e(__('office_unconfigured_warning')) ?>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
                             <label class="form-label"><?= e(__('phone')) ?></label>
                             <div class="input-group">
                                 <span class="input-group-text" id="edit-phone-prefix">+60</span>
@@ -505,8 +530,8 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
 
     <?php if ($staff): ?>
     <div class="col-lg-4 d-flex">
-        <details open class="card-soft staff-advanced-recovery w-100 d-flex flex-column mb-0">
-            <summary class="card-header"><i class="bi bi-key-fill text-warning me-1"></i> Temporary Password Override <i class="bi bi-chevron-down staff-recovery-chevron ms-auto"></i></summary>
+        <div class="card-soft staff-advanced-recovery w-100 d-flex flex-column mb-0">
+            <div class="card-header"><i class="bi bi-key-fill text-warning me-1"></i> Temporary Password Override</div>
             <div class="card-body d-flex flex-column justify-content-between flex-grow-1">
                 <div>
                     <p class="form-hint mb-3"><?= e(__('direct_override_hint')) ?></p>
@@ -553,7 +578,7 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
                     <button form="override-password-form" class="btn btn-warning w-100" id="btn_submit_temp_pw"><?= e(__('set_temp_password_btn')) ?></button>
                 </div>
             </div>
-        </details>
+        </div>
     </div>
     <?php endif; ?>
 </div>
@@ -602,8 +627,6 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
 <script>
 (function() {
     function initStaffFormScript() {
-        const recoveryPanel = document.querySelector('.staff-advanced-recovery');
-        if (recoveryPanel && window.matchMedia('(max-width: 767.98px)').matches) recoveryPanel.removeAttribute('open');
         const fullNameInput = document.getElementById('input_full_name');
         const usernameInput = document.getElementById('input_username');
         const isEditMode = <?= $staff ? 'true' : 'false' ?>;
@@ -662,6 +685,21 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
             genBtn.addEventListener('click', () => {
                 tempPwInput.value = 'Temp@' + Math.floor(1000 + Math.random() * 9000);
             });
+        }
+
+        const officeSelect = document.getElementById('staff_office_id');
+        const officeWarn = document.getElementById('office_unconfigured_warn');
+        if (officeSelect && officeWarn) {
+            const checkOfficeConfig = () => {
+                const opt = officeSelect.options[officeSelect.selectedIndex];
+                if (opt && opt.getAttribute('data-configured') === '0') {
+                    officeWarn.style.display = 'block';
+                } else {
+                    officeWarn.style.display = 'none';
+                }
+            };
+            officeSelect.addEventListener('change', checkOfficeConfig);
+            checkOfficeConfig();
         }
     }
 

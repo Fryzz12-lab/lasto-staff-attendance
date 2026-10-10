@@ -10,25 +10,15 @@ require_admin();
 
 if (is_post() && (string) post('form_action', '') === '') {
     require_csrf();
-    $officeLat = trim((string) post('office_latitude', ''));
-    $officeLon = trim((string) post('office_longitude', ''));
-    $officeIp = trim((string) post('office_public_ip', ''));
-    $officeRadius = trim((string) post('office_radius_metres', '100'));
     if (trim((string) post('company_name')) === ''
         || !in_array(post('default_language'), ['en', 'ms', 'zh'], true)
-        || filter_var(post('session_timeout_minutes'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 10080]]) === false
-        || (($officeLat === '') !== ($officeLon === ''))
-        || ($officeLat !== '' && (!is_numeric($officeLat) || (float)$officeLat < -90 || (float)$officeLat > 90))
-        || ($officeLon !== '' && (!is_numeric($officeLon) || (float)$officeLon < -180 || (float)$officeLon > 180))
-        || !is_numeric($officeRadius) || (float)$officeRadius < 1 || (float)$officeRadius > 100000
-        || ($officeIp !== '' && !filter_var($officeIp, FILTER_VALIDATE_IP))) {
+        || filter_var(post('session_timeout_minutes'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 10080]]) === false) {
         flash_set('danger', __('settings_invalid'));
         redirect('/admin/settings.php');
     }
     $keys = [
         'company_name', 'default_language', 'enable_leave_module',
         'enable_early_leave_calc', 'session_timeout_minutes',
-        'office_latitude', 'office_longitude', 'office_radius_metres', 'office_public_ip',
     ];
     $stmt = db()->prepare(
         'INSERT INTO system_settings (setting_key, setting_value) VALUES (?, ?)
@@ -121,15 +111,19 @@ require __DIR__ . '/../includes/layout_header.php';
                 </div>
             </div>
             <div class="card-soft mt-3">
-                <div class="card-header">Office attendance location</div>
-                <div class="card-body">
-                    <p class="form-hint">Coordinates compare captured positions with the office area. Network matches are supporting evidence only.</p>
-                    <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label" for="office_latitude">Office latitude</label><input id="office_latitude" name="office_latitude" type="number" step="any" min="-90" max="90" class="form-control" value="<?= e(s('office_latitude')) ?>"></div>
-                        <div class="col-md-6"><label class="form-label" for="office_longitude">Office longitude</label><input id="office_longitude" name="office_longitude" type="number" step="any" min="-180" max="180" class="form-control" value="<?= e(s('office_longitude')) ?>"></div>
-                        <div class="col-md-6"><label class="form-label" for="office_radius_metres">Office radius (metres)</label><input id="office_radius_metres" name="office_radius_metres" type="number" min="1" max="100000" class="form-control" value="<?= e(s('office_radius_metres', '100')) ?>"></div>
-                        <div class="col-md-6"><label class="form-label" for="office_public_ip">Office public IP (optional)</label><input id="office_public_ip" name="office_public_ip" class="form-control" value="<?= e(s('office_public_ip')) ?>"></div>
+                <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-2 text-accent d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                            <i class="bi bi-buildings fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0"><?= e(__('office_locations')) ?></h6>
+                            <p class="text-muted small mb-0">Branch locations, GPS coordinates, geofences, and attendance policies are managed in the Office Locations section.</p>
+                        </div>
                     </div>
+                    <a href="<?= e(url('/admin/offices.php')) ?>" class="btn btn-sm btn-outline-primary text-nowrap">
+                        <?= e(__('manage_offices')) ?> <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
                 </div>
             </div>
         </div>
@@ -140,5 +134,6 @@ require __DIR__ . '/../includes/layout_header.php';
         <button class="btn btn-accent"><?= e(__('save_settings')) ?></button>
     </div>
 </form>
+
 
 <?php require __DIR__ . '/../includes/layout_footer.php'; ?>

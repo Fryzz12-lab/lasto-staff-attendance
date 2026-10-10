@@ -63,6 +63,30 @@ require __DIR__ . '/../includes/layout_header.php';
 
 <h2 class="h4 mb-3 d-none d-lg-block"><?= e(__('leave_requests')) ?></h2>
 
+<style>
+.profile-balance-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;background:#fff;border:1px solid rgba(226,232,240,.8);border-radius:1rem;box-shadow:0 1px 3px rgba(15,23,42,.06);padding:1.25rem}
+.profile-balance-card{min-width:0;padding:0 .9rem}
+.profile-balance-card + .profile-balance-card{border-left:1px solid rgba(148,163,184,.35)}
+.profile-balance-card__header{display:flex;align-items:center;gap:.65rem;color:#475569;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.profile-balance-card__icon{display:inline-flex;width:2rem;height:2rem;align-items:center;justify-content:center;border-radius:.65rem;font-size:1rem}
+.profile-balance-card__value{display:flex;align-items:baseline;gap:.55rem;margin-top:1rem}.profile-balance-card__number{font-size:2.25rem;font-weight:700;line-height:1;color:#0f172a}.profile-balance-card__unit{font-size:.875rem;font-weight:600;color:#64748b}.profile-balance-card__description{margin:.65rem 0 0;color:#64748b;font-size:.875rem}
+</style>
+<?php $balances = employee_balances($userId); ?>
+<?php $earnedDays = (int)($balances['replacement_off'] ?? 0); $owedDays = (int)($balances['cuti_perlu_ganti'] ?? 0); ?>
+<section class="profile-balance-grid mb-3" aria-label="Leave balance">
+    <article class="profile-balance-card">
+        <div class="profile-balance-card__header"><span class="profile-balance-card__icon" style="background:#ecfdf5;color:#059669"><i class="bi bi-calendar-check" aria-hidden="true"></i></span><span><?= e(__('leave_earned_title')) ?></span></div>
+        <div class="profile-balance-card__value"><span class="profile-balance-card__number"><?= e((string)$earnedDays) ?></span><span class="profile-balance-card__unit"><?= e(__('days_available')) ?></span></div>
+        <p class="profile-balance-card__description mb-0"><?= e(__('leave_earned_desc')) ?></p>
+    </article>
+    <article class="profile-balance-card">
+        <div class="profile-balance-card__header"><span class="profile-balance-card__icon" style="background:#fffbeb;color:#d97706"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></span><span><?= e(__('leave_replace_title')) ?></span></div>
+        <div class="profile-balance-card__value"><span class="profile-balance-card__number"><?= e((string)$owedDays) ?></span><span class="profile-balance-card__unit"><?= e(__('days_unit')) ?></span></div>
+        <p class="profile-balance-card__description mb-0"><?= e($owedDays > 0 ? __('leave_replace_desc') : __('leave_replace_clear')) ?></p>
+    </article>
+</section>
+
+
 <!-- Mobile Summary Chips (< 768px) -->
 <div class="d-md-none mb-3">
     <div class="d-flex gap-2">
@@ -87,6 +111,7 @@ require __DIR__ . '/../includes/layout_header.php';
         <button class="btn btn-accent w-100 py-2 fw-semibold shadow-sm d-flex align-items-center justify-content-center gap-2" type="button" data-bs-toggle="collapse" data-bs-target="#newRequestCard" aria-expanded="<?= $isFormOpen ? 'true' : 'false' ?>" aria-controls="newRequestCard">
             <i class="bi bi-calendar-plus"></i>
             <span><?= e(__('new_request')) ?></span>
+            <i class="bi bi-chevron-down staff-leave-toggle-chevron" aria-hidden="true"></i>
         </button>
     </div>
 <?php endif; ?>
@@ -104,11 +129,12 @@ require __DIR__ . '/../includes/layout_header.php';
                     <p class="form-hint mb-3"><?= e(__('leave_wfh_hint')) ?></p>
                     <form method="post">
                         <?= csrf_field() ?>
-                        <div class="mb-3">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
                             <label class="form-label"><?= e(__('date')) ?></label>
                             <input type="date" name="leave_date" class="form-control" required min="<?= e(today_str()) ?>">
-                        </div>
-                        <div class="mb-3">
+                            </div>
+                            <div class="col-12 col-md-6">
                             <label class="form-label"><?= e(__('type')) ?></label>
                             <select name="leave_type" class="form-select" required>
                                 <option value="medical"><?= e(__('leave_medical')) ?></option>
@@ -117,12 +143,13 @@ require __DIR__ . '/../includes/layout_header.php';
                                 <option value="emergency"><?= e(__('leave_emergency')) ?></option>
                                 <option value="other"><?= e(__('leave_other')) ?></option>
                             </select>
-                        </div>
-                        <div class="mb-3">
+                            </div>
+                            <div class="col-12">
                             <label class="form-label"><?= e(__('reason')) ?></label>
                             <textarea name="reason" class="form-control" rows="3" required placeholder="<?= e(__('leave_reason_placeholder')) ?>"></textarea>
+                            </div>
                         </div>
-                        <button class="btn btn-accent w-100 w-md-auto"><i class="bi bi-send me-1"></i><?= e(__('submit_request')) ?></button>
+                        <button class="btn btn-accent w-100 w-md-auto mt-3"><i class="bi bi-send me-1"></i><?= e(__('submit_request')) ?></button>
                     </form>
                 </div>
             </div>
@@ -130,7 +157,14 @@ require __DIR__ . '/../includes/layout_header.php';
     </div>
     <div class="col-12 staff-leave-requests-column">
         <div class="card-soft staff-leave-requests-card">
-            <div class="card-header"><?= e(__('my_requests')) ?></div>
+            <div class="card-header staff-leave-requests-header">
+                <span><?= e(__('my_requests')) ?></span>
+                <div class="staff-leave-summary-stats d-none d-md-flex" aria-label="Request summary">
+                    <span class="staff-leave-summary-pill staff-leave-summary-pill--pending"><?= e(__('st_pending')) ?> <strong><?= $pendingCount ?></strong></span>
+                    <span class="staff-leave-summary-pill staff-leave-summary-pill--approved"><?= e(__('st_approved')) ?> <strong><?= $approvedCount ?></strong></span>
+                    <span class="staff-leave-summary-pill staff-leave-summary-pill--rejected"><?= e(__('st_rejected')) ?> <strong><?= $rejectedCount ?></strong></span>
+                </div>
+            </div>
             <div class="card-body p-0">
                 <?php if (!$rows): ?>
                     <div class="empty-state"><?= e(__('no_leave')) ?></div>
@@ -155,7 +189,7 @@ require __DIR__ . '/../includes/layout_header.php';
                                     <td>
                                         <div><?= e($r['reason']) ?></div>
                                         <?php if (!empty($r['admin_note'])): ?>
-                                            <div class="small text-info mt-1"><i class="bi bi-chat-left-dots me-1"></i><strong>Admin:</strong> <?= e($r['admin_note']) ?></div>
+                                            <div class="staff-leave-admin-feedback small mt-2"><div class="staff-leave-admin-feedback__label"><i class="bi bi-chat-left-dots me-1"></i>Admin Feedback</div><div><?= e($r['admin_note']) ?></div></div>
                                         <?php endif; ?>
                                     </td>
                                     <td><?= status_badge($r['status']) ?></td>

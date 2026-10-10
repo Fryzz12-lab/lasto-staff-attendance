@@ -10,8 +10,11 @@ require_admin();
 
 $q = trim((string) get('q', ''));
 $status = (string) get('status', 'all');
+$officeFilter = get('office_id');
 
-$where = " FROM users u WHERE u.role = 'staff'";
+$offices = db()->query('SELECT id, name, code FROM offices ORDER BY is_active DESC, name ASC')->fetchAll();
+
+$where = " FROM users u LEFT JOIN offices o ON o.id = u.office_id WHERE u.role = 'staff'";
 $params = [];
 
 if ($q !== '') {
@@ -24,6 +27,10 @@ if ($status === 'active') {
 } elseif ($status === 'inactive') {
     $where .= ' AND u.is_active = 0';
 }
+if ($officeFilter !== null && $officeFilter !== '' && $officeFilter !== 'all') {
+    $where .= ' AND u.office_id = ?';
+    $params[] = (int) $officeFilter;
+}
 
 $page = max(1, (int) get('page', 1));
 $perPage = 25;
@@ -33,7 +40,7 @@ $countStmt = db()->prepare("SELECT COUNT(*)" . $where);
 $countStmt->execute($params);
 $total = (int) $countStmt->fetchColumn();
 
-$sql = "SELECT u.*" . $where . " ORDER BY u.full_name LIMIT {$perPage} OFFSET {$offset}";
+$sql = "SELECT u.*, o.name AS office_name, o.code AS office_code" . $where . " ORDER BY u.full_name LIMIT {$perPage} OFFSET {$offset}";
 $stmt = db()->prepare($sql);
 $stmt->execute($params);
 $rows = $stmt->fetchAll();
@@ -52,7 +59,7 @@ require __DIR__ . '/../includes/layout_header.php';
 <div class="card-soft mb-3">
     <div class="card-body">
         <form class="row g-2" method="get">
-            <div class="col-md-8">
+            <div class="col-md-6">
                 <label class="form-label" for="filter-q">Search by Name, Username or Email</label>
                 <div class="search-bar-combo">
                     <input id="filter-q" type="search" name="q" class="form-control search-bar-combo__input" placeholder="Name, username or email…" value="<?= e($q) ?>">
@@ -62,7 +69,18 @@ require __DIR__ . '/../includes/layout_header.php';
                     </button>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
+                <label class="form-label" for="filter-office"><?= e(__('assigned_office')) ?></label>
+                <select id="filter-office" name="office_id" class="form-select">
+                    <option value="all" <?= ($officeFilter === null || $officeFilter === 'all' || $officeFilter === '') ? 'selected' : '' ?>>All Offices</option>
+                    <?php foreach ($offices as $off): ?>
+                        <option value="<?= (int) $off['id'] ?>" <?= ((string) $officeFilter === (string) $off['id']) ? 'selected' : '' ?>>
+                            <?= e($off['name']) ?><?= !empty($off['code']) ? ' (' . e($off['code']) . ')' : '' ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-md-3">
                 <label class="form-label" for="filter-status"><?= e(__('filter_account_status')) ?></label>
                 <select id="filter-status" name="status" class="form-select">
                     <option value="all" <?= $status === 'all' ? 'selected' : '' ?>><?= e(__('all_statuses')) ?></option>
@@ -111,7 +129,14 @@ require __DIR__ . '/../includes/layout_header.php';
                                 <?php if (!empty($r['email'])): ?><div class="form-hint small"><?= e($r['email']) ?></div><?php endif; ?>
                             </td>
                             <td><code class="username-badge"><?= e($r['username']) ?></code></td>
-                            <td><?= e((string) $r['job_position']) ?></td>
+                            <td>
+                                <div><?= e((string) $r['job_position']) ?></div>
+                                <?php if (!empty($r['office_name'])): ?>
+                                    <div class="small text-muted mt-1">
+                                        <i class="bi bi-buildings me-1 text-accent"></i><?= e($r['office_name']) ?>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
                             <td>
                                 <?= (int)$r['is_active']
                                     ? '<span class="status-badge badge-completed">' . e(__('active')) . '</span>'
@@ -140,6 +165,7 @@ require __DIR__ . '/../includes/layout_header.php';
                         <div class="staff-management-card__details">
                             <div><span><?= e(__('username')) ?></span><code class="username-badge"><?= e($r['username']) ?></code></div>
                             <div><span><?= e(__('position')) ?></span><strong><?= e((string) $r['job_position']) ?></strong></div>
+                            <div><span><?= e(__('assigned_office')) ?></span><strong><?= e($r['office_name'] ?? '—') ?></strong></div>
                             <div><span><?= e(__('off_day')) ?></span><strong><?= e(weekday_name((int) $r['weekly_off_day'], lang_current())) ?></strong></div>
                         </div>
                         <div class="staff-management-card__actions"><a data-spa="0" class="btn btn-sm btn-outline-secondary" href="<?= e(url('/admin/staff_form.php?' . http_build_query(['id' => (int)$r['id'], 'return_to' => $_SERVER['REQUEST_URI'] ?? '/admin/staff.php']))) ?>"><?= e(__('edit')) ?></a><button type="button" class="btn btn-sm btn-outline-danger" data-delete-staff data-staff-id="<?= (int)$r['id'] ?>" data-staff-name="<?= e($r['full_name']) ?>" data-csrf="<?= e(csrf_token()) ?>"><?= e(__('delete')) ?></button></div>
@@ -148,8 +174,9 @@ require __DIR__ . '/../includes/layout_header.php';
             </div>
             <?php
             $filterParams = array_filter([
-                'q'      => $q !== '' ? $q : null,
-                'status' => $status !== 'all' ? $status : null,
+                'q'         => $q !== '' ? $q : null,
+                'status'    => $status !== 'all' ? $status : null,
+                'office_id' => ($officeFilter !== null && $officeFilter !== 'all' && $officeFilter !== '') ? $officeFilter : null,
             ]);
             echo pagination_links($total, $page, $perPage, $filterParams);
             ?>

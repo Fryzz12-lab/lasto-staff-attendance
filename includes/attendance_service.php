@@ -7,6 +7,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/adjustment_service.php';
+require_once __DIR__ . '/push_service.php';
+require_once __DIR__ . '/attendance_location.php';
 
 /** The company schedule is provisioned by setup/migration, never by a staff form. */
 function standard_schedule_id(): int
@@ -152,7 +154,7 @@ function assign_employee_schedule(int $userId, int $scheduleId, int $offDay): vo
         db()->prepare('INSERT INTO schedule_assignments (user_id,schedule_id,effective_from,weekly_off_day) VALUES (?,?,?,?)')
             ->execute([$userId, $scheduleId, $today, $offDay]);
         $att = get_attendance($userId, $today);
-        if ($att && !$att['clock_in']) {
+        if ($att) {
             reconcile_attendance_day_status($userId, $today, $att);
         }
     });
@@ -256,6 +258,21 @@ function submit_leave_request(int $userId, string $date, string $type, string $r
         }
         db()->prepare('INSERT INTO leave_requests (user_id,leave_date,leave_type,reason) VALUES (?,?,?,?)')
             ->execute([$userId, $date, $type, trim($reason)]);
+        try {
+            $uStmt = db()->prepare('SELECT full_name FROM users WHERE id = ? LIMIT 1');
+            $uStmt->execute([$userId]);
+            $uName = $uStmt->fetchColumn() ?: 'Staff member';
+            $tUpper = strtoupper($type);
+            push_send_to_admins(
+                "New {$tUpper} Request",
+                "{$uName} submitted a {$tUpper} request for {$date}.",
+                '/admin/leave_requests.php',
+                'admin-leave-' . $date . '-' . $userId,
+                ($type === 'wfh' ? 'new_wfh_request' : 'new_leave_request')
+            );
+        } catch (Throwable $pe) {
+            error_log('[Push] ' . $pe->getMessage());
+        }
     });
 }
 
@@ -273,7 +290,7 @@ function review_leave_request(int $requestId, string $decision, int $reviewerId,
     $stmt->execute([$requestId]);
     $userId = (int) $stmt->fetchColumn();
     if (!$userId) throw new InvalidArgumentException(__('msg_request_not_found'));
-    with_employee_lock($userId, function () use ($requestId, $decision, $reviewerId, $note, $userId): void {
+    with_employee_lock($userId, function () use ($requestId, $decision, $reviewerId, $note, $userId, $requiresReplacement): void {
         $stmt = db()->prepare('SELECT * FROM leave_requests WHERE id=? FOR UPDATE');
         $stmt->execute([$requestId]);
         $request = $stmt->fetch();
@@ -304,6 +321,23 @@ function review_leave_request(int $requestId, string $decision, int $reviewerId,
         if ($decision === 'approved' && $request['leave_date'] <= today_str()) {
             $att = ensure_attendance_row($userId, $request['leave_date']);
             write_audit((int) $att['id'], $userId, $reviewerId, 'request_approved', 'work_arrangement', null, $request['leave_type'], $note);
+        }
+        try {
+            $tUpper = strtoupper($request['leave_type']);
+            $sText = ($decision === 'approved') ? 'Approved' : 'Declined';
+            $body = ($decision === 'approved')
+                ? "Your {$tUpper} request for {$request['leave_date']} has been approved."
+                : "Your {$tUpper} request for {$request['leave_date']} was declined.";
+            push_send_to_user(
+                $userId,
+                "{$tUpper} Request {$sText}",
+                $body,
+                '/staff/leave.php',
+                'staff-leave-' . $requestId,
+                'leave_decision'
+            );
+        } catch (Throwable $pe) {
+            error_log('[Push] ' . $pe->getMessage());
         }
     });
 }
@@ -539,7 +573,7 @@ function reconcile_attendance_day_status(int $userId, string $date, ?array $att 
     if (!empty($att['clock_in'])) {
         // Preserve punches and their status; WFH remains visible throughout the shift.
         db()->prepare('UPDATE attendance SET is_wfh=?, is_day_off=?, was_scheduled_off_day=?, scheduled_off_weekday=? WHERE id=?')
-            ->execute([(int) $isWfh, $isWfh ? 0 : (int) $att['is_day_off'], $scheduledOff ? 1 : (int)($att['was_scheduled_off_day'] ?? 0), $schedule['weekly_off_day'] ?? ($att['scheduled_off_weekday'] ?? null), $att['id']]);
+            ->execute([(int) $isWfh, $isWfh ? 0 : (int) $shouldOff, $scheduledOff ? 1 : (int)($att['was_scheduled_off_day'] ?? 0), $schedule['weekly_off_day'] ?? ($att['scheduled_off_weekday'] ?? null), $att['id']]);
         if ($att['status'] === 'wfh') recalculate_attendance((int) $att['id']);
         return get_attendance($userId, $date);
     }
@@ -751,6 +785,9 @@ function clock_in(int $userId): array
 {
     return with_employee_lock($userId, function () use ($userId): array {
         $date = today_str();
+        if (has_approved_leave($userId, $date)) {
+            return ['success' => false, 'message' => __('msg_leave_today')];
+        }
         $att = ensure_attendance_row($userId, $date);
         if ($att['clock_in']) {
             return ['success' => false, 'message' => __('msg_already_clocked_in')];
