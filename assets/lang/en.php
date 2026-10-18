@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /** Translations */
 return array (
   'notice_desktop' => 'Desktop notifications',
@@ -54,7 +54,7 @@ return array (
   'policy_leave_maternity_amount' => '98 consecutive days',
   'policy_leave_maternity_details' => 'Includes rest days and public holidays. Maternity allowance has separate eligibility requirements: at least 90 days of employment in the nine months before confinement, employment at some time in the four months before confinement, and fewer than five surviving natural children at confinement. These allowance conditions do not remove the maternity leave entitlement. Notify the employer of the expected confinement and intended leave start within the 60 days before the expected birth (sections 37 and 40).',
   'policy_internship_arrangements' => 'Coordinate leave with the supervisor and university or training provider. Any applicable statutory employment rights remain in place; internship arrangements must not reduce them.',
-  'policy_legal_source' => 'Source: JTKSM â€” Employment Act 1955, sections 37, 40, 60D, 60E, 60F and 60FA',
+  'policy_legal_source' => 'Source: JTKSM — Employment Act 1955, sections 37, 40, 60D, 60E, 60F and 60FA',
   'settings_invalid' => 'Enter a company name, a supported language, and a timeout between 1 and 10,080 minutes.',
   'settings_language_help' => 'Used when no language has been selected. Your language selection in the top bar takes priority.',
   'settings_timeout_help' => 'Logs out after this period without a server request. Automatic page updates also refresh activity, so an open page may keep the session active.',

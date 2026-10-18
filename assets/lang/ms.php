@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /** Translations */
 return array (
   'notice_desktop' => 'Pemberitahuan desktop',
@@ -54,7 +54,7 @@ return array (
   'policy_leave_maternity_amount' => '98 hari berturut-turut',
   'policy_leave_maternity_details' => 'Termasuk hari rehat dan cuti am. Elaun bersalin mempunyai syarat berasingan: sekurang-kurangnya 90 hari bekerja dalam sembilan bulan sebelum bersalin, pernah bekerja dalam empat bulan sebelum bersalin, dan kurang daripada lima anak kandung yang masih hidup ketika bersalin. Syarat elaun ini tidak menghapuskan kelayakan cuti bersalin. Maklumkan majikan tentang jangkaan kelahiran dan tarikh mula cuti dalam tempoh 60 hari sebelum jangkaan bersalin (seksyen 37 dan 40).',
   'policy_internship_arrangements' => 'Selaraskan cuti dengan penyelia dan universiti atau penyedia latihan. Hak pekerjaan berkanun yang terpakai kekal berkuat kuasa; aturan internship tidak boleh mengurangkannya.',
-  'policy_legal_source' => 'Sumber: JTKSM â€” Akta Kerja 1955, seksyen 37, 40, 60D, 60E, 60F dan 60FA',
+  'policy_legal_source' => 'Sumber: JTKSM — Akta Kerja 1955, seksyen 37, 40, 60D, 60E, 60F dan 60FA',
   'settings_invalid' => 'Masukkan nama syarikat, bahasa yang disokong dan tamat sesi antara 1 hingga 10,080 minit.',
   'settings_language_help' => 'Digunakan jika tiada bahasa dipilih. Pilihan bahasa di bar atas diberi keutamaan.',
   'settings_timeout_help' => 'Log keluar selepas tempoh ini tanpa permintaan pelayan. Kemas kini automatik turut memperbaharui aktiviti, jadi halaman terbuka boleh mengekalkan sesi.',
