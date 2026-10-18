@@ -36,23 +36,9 @@ function attendance_location_admin_view(array $event, ?string $officeName = null
         $distanceStr = $distance < 1000 ? round($distance) . ' m' : round($distance / 1000, 1) . ' km';
     }
 
-    $withinExtra = '';
-    if ($officeName) {
-        $parts = [$officeName];
-        if ($distanceStr) $parts[] = $distanceStr . ($allowedRadius ? " / {$allowedRadius} m allowed" : '');
-        $withinExtra = ' (' . implode(' · ', $parts) . ')';
-    }
-
-    $outsideExtra = '';
-    if ($officeName) {
-        $parts = [$officeName];
-        if ($distanceStr) $parts[] = $distanceStr . ' from office';
-        $outsideExtra = ' (' . implode(' · ', $parts) . ')';
-    }
-
     $office = match ($proximity) {
-        'within' => ['label' => 'Within office area' . $withinExtra, 'tone' => 'positive', 'helper' => null],
-        'outside' => ['label' => 'Outside office area' . $outsideExtra, 'tone' => 'warning', 'helper' => null],
+        'within' => ['label' => 'Within Office Area', 'tone' => 'positive', 'helper' => null],
+        'outside' => ['label' => 'Outside Office Area', 'tone' => 'warning', 'helper' => null],
         default => [
             'label' => 'Office comparison unavailable',
             'tone' => 'unavailable',
@@ -76,6 +62,7 @@ function attendance_location_admin_view(array $event, ?string $officeName = null
         'office' => $office,
         'office_name' => $officeName,
         'distance_metres' => $distance,
+        'allowed_radius' => $allowedRadius,
         'network' => $network,
         'client_ip' => $clientIp,
         'map_url' => $hasCoordinates

@@ -9,5 +9,7 @@ config/vapid.json
 deployment-artifacts/
 storage/*
 !storage/.htaccess
+tests/uat/*
+!tests/uat/.htaccess
 scratch/*
 !scratch/.htaccess

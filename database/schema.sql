@@ -16,6 +16,7 @@ CREATE DATABASE IF NOT EXISTS `staff_attendance`
 
 USE `staff_attendance`;
 
+DROP TABLE IF EXISTS `notifications`;
 DROP TABLE IF EXISTS `push_subscriptions`;
 DROP TABLE IF EXISTS `attendance_audit_logs`;
 DROP TABLE IF EXISTS `account_recovery_tokens`;
@@ -261,6 +262,22 @@ CREATE TABLE `break_records` (
 -- =========================
 -- Leave / Day Off requests
 -- =========================
+CREATE TABLE IF NOT EXISTS `notifications` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` INT UNSIGNED NOT NULL,
+  `event_type` VARCHAR(48) NOT NULL,
+  `event_key` VARCHAR(100) NOT NULL,
+  `title` VARCHAR(160) NOT NULL,
+  `message` VARCHAR(500) NOT NULL,
+  `destination` VARCHAR(255) NOT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `read_at` DATETIME DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_notification_event` (`user_id`, `event_key`),
+  KEY `idx_notification_inbox` (`user_id`, `read_at`, `created_at`),
+  CONSTRAINT `fk_notifications_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE `leave_requests` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `user_id` INT UNSIGNED NOT NULL,
@@ -415,6 +432,7 @@ CREATE TABLE `push_subscriptions` (
   `p256dh` VARCHAR(255) NOT NULL,
   `auth` VARCHAR(255) NOT NULL,
   `user_agent` VARCHAR(255) DEFAULT NULL,
+  `notification_preferences` TEXT DEFAULT NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),

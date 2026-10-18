@@ -1,7 +1,7 @@
 -- Migration: Push Notification Subscriptions & Preferences
 -- Staff Attendance & Workforce Management System
 
-USE `staff_attendance`;
+-- Select the target database in phpMyAdmin before importing this file.
 
 CREATE TABLE IF NOT EXISTS `push_subscriptions` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,

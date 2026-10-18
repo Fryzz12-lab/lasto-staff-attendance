@@ -15,6 +15,7 @@ require_once __DIR__ . '/attendance_service.php';
 require_once __DIR__ . '/attendance_location.php';
 require_once __DIR__ . '/adjustment_service.php';
 require_once __DIR__ . '/badge_service.php';
+require_once __DIR__ . '/notification_service.php';
 require_once __DIR__ . '/date_filter.php';
 require_once __DIR__ . '/account_recovery.php';
 require_once __DIR__ . '/security_questions.php';

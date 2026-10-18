@@ -110,27 +110,10 @@ require __DIR__ . '/../includes/layout_header.php';
                     <?php endforeach; ?>
                 </div>
             </div>
-            <div class="card-soft mt-3">
-                <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="rounded-circle bg-primary bg-opacity-10 p-2 text-accent d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
-                            <i class="bi bi-buildings fs-5"></i>
-                        </div>
-                        <div>
-                            <h6 class="fw-bold mb-0"><?= e(__('office_locations')) ?></h6>
-                            <p class="text-muted small mb-0">Branch locations, GPS coordinates, geofences, and attendance policies are managed in the Office Locations section.</p>
-                        </div>
-                    </div>
-                    <a href="<?= e(url('/admin/offices.php')) ?>" class="btn btn-sm btn-outline-primary text-nowrap">
-                        <?= e(__('manage_offices')) ?> <i class="bi bi-arrow-right ms-1"></i>
-                    </a>
-                </div>
-            </div>
         </div>
 
     </div>
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3">
-        <a href="<?= e(url('/admin/schedules.php')) ?>"><?= e(__('schedules')) ?> <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+    <div class="d-flex justify-content-end align-items-center gap-3 mt-3">
         <button class="btn btn-accent"><?= e(__('save_settings')) ?></button>
     </div>
 </form>

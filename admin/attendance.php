@@ -104,7 +104,7 @@ require __DIR__ . '/../includes/layout_header.php';
             <div class="col-md-2"><button class="btn btn-accent w-100"><?= e(__('filter')) ?></button></div>
         <div class="col-12 d-flex flex-wrap align-items-center gap-3" style="flex-basis:100%">
                 <span class="form-hint" data-auto-filter-hint hidden><?= e(__('filters_auto_hint')) ?></span>
-                <a href="<?= e(url('/admin/attendance.php')) ?>" class="small"><?= e(__('filters_reset')) ?></a>
+                <a href="<?= e(url('/admin/attendance.php')) ?>" class="small staff-filter-reset-link"><?= e(__('filters_reset')) ?></a>
             </div>
         </form>
     </div>
@@ -120,11 +120,11 @@ require __DIR__ . '/../includes/layout_header.php';
                     <colgroup>
                         <col style="width: 12%;">
                         <col style="width: 20%;">
-                        <col style="width: 10%;">
-                        <col style="width: 10%;">
-                        <col style="width: 19%;">
-                        <col style="width: 9%;">
-                        <col style="width: 9%;">
+                        <col style="width: 12%;">
+                        <col style="width: 12%;">
+                        <col style="width: 17%;">
+                        <col style="width: 8%;">
+                        <col style="width: 8%;">
                         <col style="width: 11%;">
                     </colgroup>
                     <thead>

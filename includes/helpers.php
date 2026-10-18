@@ -138,7 +138,7 @@ function format_datetime(?string $datetime): string
     }
     try {
         $dt = new DateTimeImmutable($datetime, new DateTimeZone('Asia/Kuala_Lumpur'));
-        return $dt->format('d/m/Y, g:i A');
+        return $dt->format('d M Y, g:i A');
     } catch (Exception $e) {
         return '—';
     }

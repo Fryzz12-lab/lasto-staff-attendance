@@ -28,4 +28,4 @@ The preference migration keeps existing `1` values enabled. Earlier `0` values c
 
 ## Initial administrator
 
-The first administrator must use a unique password and complete security-question setup. Do not distribute the seeded demo credentials. Keep at least one second trusted admin account or document the admin-assisted recovery procedure.
+The first administrator must use a unique password and complete the password setup flow. Do not distribute the seeded demo credentials. Keep at least one second trusted admin account or document the admin-assisted recovery procedure.

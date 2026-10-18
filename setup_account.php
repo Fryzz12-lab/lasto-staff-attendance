@@ -1,6 +1,6 @@
 <?php
 /**
- * Mandatory Account Setup (Password & Security Questions)
+ * Mandatory Account Setup
  */
 
 declare(strict_types=1);
@@ -16,16 +16,10 @@ if (empty($user['must_change_password'])) {
 }
 
 $error = '';
-$availableQuestions = get_available_security_questions();
-
 if (is_post()) {
     require_csrf();
     $newPassword     = (string) post('new_password');
     $confirmPassword = (string) post('confirm_password');
-    $q1              = trim((string) post('question_1'));
-    $a1              = trim((string) post('answer_1'));
-    $q2              = trim((string) post('question_2'));
-    $a2              = trim((string) post('answer_2'));
 
     if (($policyError = password_policy_error($newPassword)) !== null) {
         $error = __($policyError);
@@ -34,11 +28,6 @@ if (is_post()) {
     } else {
         try {
         db()->beginTransaction();
-        $qResult = save_user_security_questions((int) $user['id'], $q1, $a1, $q2, $a2);
-        if (!$qResult['success']) {
-            db()->rollBack();
-            $error = $qResult['message'];
-        } else {
             $newHash = hash_new_password($newPassword);
             $newAuthVersion = (int) ($user['auth_version'] ?? 0) + 1;
 
@@ -51,7 +40,6 @@ if (is_post()) {
             session_regenerate_id(true);
             flash_set('success', __('msg_account_setup_success'));
             redirect('/');
-        }
         } catch (Throwable $exception) {
             if (db()->inTransaction()) db()->rollBack();
             error_log((string) $exception);
@@ -110,39 +98,6 @@ require __DIR__ . '/includes/layout_header.php';
                         <i class="bi bi-eye" aria-hidden="true"></i>
                     </button>
                 </div>
-            </div>
-        </div>
-
-        <div class="card-soft p-3 mb-3 border">
-            <h6 class="fw-bold mb-2 text-accent"><i class="bi bi-patch-question me-1"></i> <?= e(__('security_questions')) ?></h6>
-            <p class="form-hint"><?= e(__('security_answers_hint')) ?></p>
-            
-            <div class="mb-3">
-                <label class="form-label" for="question_1"><?= e(__('security_question_1')) ?> *</label>
-                <select name="question_1" id="question_1" class="form-select" required>
-                    <option value=""><?= e(__('select_question')) ?></option>
-                    <?php foreach ($availableQuestions as $key => $label): ?>
-                        <option value="<?= e($key) ?>" <?= post('question_1') === $key ? 'selected' : '' ?>>
-                            <?= e($label) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-                <input type="text" name="answer_1" class="form-control mt-1"
-                       placeholder="<?= e(__('answer_1')) ?>" value="<?= e((string) post('answer_1', '')) ?>" required autocomplete="off">
-            </div>
-
-            <div class="mb-1">
-                <label class="form-label" for="question_2"><?= e(__('security_question_2')) ?> *</label>
-                <select name="question_2" id="question_2" class="form-select" required>
-                    <option value=""><?= e(__('select_question')) ?></option>
-                    <?php foreach ($availableQuestions as $key => $label): ?>
-                        <option value="<?= e($key) ?>" <?= post('question_2') === $key ? 'selected' : '' ?>>
-                            <?= e($label) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-                <input type="text" name="answer_2" class="form-control mt-1"
-                       placeholder="<?= e(__('answer_2')) ?>" value="<?= e((string) post('answer_2', '')) ?>" required autocomplete="off">
             </div>
         </div>
 

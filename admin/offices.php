@@ -97,11 +97,47 @@ $bodyClass = 'admin-offices-page';
 
 require __DIR__ . '/../includes/layout_header.php';
 ?>
+<style>
+.office-policy-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+.office-policy-option { display: flex; align-items: flex-start; gap: .75rem; min-height: 105px; padding: 1rem; border: 1px solid var(--border); border-radius: .75rem; cursor: pointer; }
+.office-policy-option:has(input:checked) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+.office-policy-option input { flex: 0 0 auto; margin-top: .25rem; accent-color: #0f766e; }
+.office-policy-option__body { display: grid; gap: .25rem; min-width: 0; }
+.office-policy-option__body small { color: var(--muted); line-height: 1.45; }
+.office-policy-current { display: inline-block; width: fit-content; margin-top: .25rem; padding: .15rem .5rem; border-radius: 999px; background: #0f766e; color: #fff; font-size: .7rem; font-weight: 700; text-transform: uppercase; }
+.office-location-status { background: #f8fafc; border: 1px solid #dbe3ec; }
+.office-staff-count { color: #0f766e; }
+.office-staff-count:hover { color: #115e59; }
+html[data-theme='night'] .admin-offices-page .office-location-status { background: #122238; border-color: #29415d; }
+html[data-theme='night'] .admin-offices-page .office-location-status .text-muted { color: #b6c8de !important; }
+html[data-theme='night'] .admin-offices-page .office-location-status .text-success { color: #6ee7b7 !important; }
+html[data-theme='night'] .admin-offices-page .office-location-status .text-warning { color: #fcd34d !important; }
+html[data-theme='night'] .admin-offices-page .office-staff-count { color: #5eead4; }
+html[data-theme='night'] .admin-offices-page .office-staff-count:hover { color: #99f6e4; }
+html[data-theme='night'] .admin-offices-page .office-badge--success,
+html[data-theme='night'] .admin-offices-page .office-policy-current {
+    background: #064e3b !important;
+    border: 1px solid #34d399 !important;
+    color: #d1fae5 !important;
+}
+html[data-theme='night'] .admin-offices-page .office-badge--warning {
+    background: #78350f !important;
+    border: 1px solid #fbbf24 !important;
+    color: #fef3c7 !important;
+}
+html[data-theme='night'] .admin-offices-page .office-badge--inactive,
+html[data-theme='night'] .admin-offices-page .office-badge--code {
+    background: #25364d !important;
+    border: 1px solid #71839e !important;
+    color: #f1f5f9 !important;
+}
+@media (max-width: 767.98px) { .office-policy-options { grid-template-columns: 1fr; } }
+</style>
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <div>
         <h1 class="h3 mb-1"><i class="bi bi-buildings me-2 text-accent"></i><?= e(__('office_locations')) ?></h1>
-        <p class="text-muted mb-0">Manage company branches, coordinates, and attendance geofences.</p>
+        <p class="text-muted mb-0"><?= e(__('office_locations_intro')) ?></p>
     </div>
     <div>
         <a href="<?= e(url('/admin/office_form.php')) ?>" class="btn btn-accent">
@@ -115,8 +151,8 @@ require __DIR__ . '/../includes/layout_header.php';
     <div class="alert alert-info d-flex align-items-center gap-3 mb-4" role="alert">
         <i class="bi bi-info-circle-fill fs-3 text-info"></i>
         <div>
-            <div class="fw-semibold">No active offices configured</div>
-            <div class="small">Add your first office location to enable geofenced attendance verification.</div>
+            <div class="fw-semibold"><?= e(__('no_active_offices')) ?></div>
+            <div class="small"><?= e(__('add_first_office_hint')) ?></div>
         </div>
     </div>
 <?php elseif ($configuredActive === $totalActive): ?>
@@ -129,12 +165,12 @@ require __DIR__ . '/../includes/layout_header.php';
                 <div>
                     <h5 class="mb-0 fw-semibold text-success"><?= e(__('all_offices_configured')) ?></h5>
                     <p class="text-muted small mb-0">
-                        <?= e(strtr(__('active_offices_configured'), [':count' => (string) $configuredActive, ':total' => (string) $totalActive])) ?>. All active branches have valid GPS attendance locations.
+                        <?= e(strtr(__('active_offices_configured'), [':count' => (string) $configuredActive, ':total' => (string) $totalActive])) ?>. <?= e(__('all_offices_valid_locations')) ?>
                     </p>
                 </div>
             </div>
-            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 px-3 py-2 fs-6">
-                <i class="bi bi-shield-check me-1"></i> <?= $configuredActive ?> / <?= $totalActive ?> Ready
+            <span class="badge office-badge--success bg-success bg-opacity-25 text-success border border-success border-opacity-50 px-3 py-2 fs-6">
+                <i class="bi bi-shield-check me-1"></i> <?= $configuredActive ?> / <?= $totalActive ?> <?= e(__('ready')) ?>
             </span>
         </div>
     </div>
@@ -151,20 +187,20 @@ require __DIR__ . '/../includes/layout_header.php';
                             <?= e(strtr(__('active_offices_configured'), [':count' => (string) $configuredActive, ':total' => (string) $totalActive])) ?>
                         </h5>
                         <p class="text-muted small mb-0">
-                            <?= count($unconfiguredOffices) ?> active office(s) are missing GPS coordinates. Staff assigned to these branches will not be able to verify attendance locations.
+                            <?= e(strtr(__('offices_missing_gps'), [':count' => (string) count($unconfiguredOffices)])) ?>
                         </p>
                     </div>
                 </div>
-                <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50 px-3 py-2 fs-6">
-                    <i class="bi bi-exclamation-circle me-1"></i> Action Required
+                <span class="badge office-badge--warning bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50 px-3 py-2 fs-6">
+                    <i class="bi bi-exclamation-circle me-1"></i> <?= e(__('action_required')) ?>
                 </span>
             </div>
             <div class="mt-3 pt-2 border-top">
-                <div class="small fw-semibold text-muted mb-2">Offices requiring location setup:</div>
+                <div class="small fw-semibold text-muted mb-2"><?= e(__('offices_requiring_setup')) ?></div>
                 <div class="d-flex flex-wrap gap-2">
                     <?php foreach ($unconfiguredOffices as $uOff): ?>
                         <a href="<?= e(url('/admin/office_form.php?id=' . (int) $uOff['id'])) ?>" class="btn btn-sm btn-outline-warning">
-                            <i class="bi bi-geo-alt me-1"></i> Configure <?= e($uOff['name']) ?>
+                            <i class="bi bi-geo-alt me-1"></i> <?= e(__('configure')) ?> <?= e($uOff['name']) ?>
                         </a>
                     <?php endforeach; ?>
                 </div>
@@ -173,26 +209,28 @@ require __DIR__ . '/../includes/layout_header.php';
     </div>
 <?php endif; ?>
 
-<!-- Branch Attendance Policy Card -->
+<!-- Attendance location verification policy -->
 <div class="card-soft mb-4">
     <div class="card-body">
-        <form method="post" class="row g-3 align-items-center">
+        <form method="post">
             <?= csrf_field() ?>
             <input type="hidden" name="action" value="save_policy">
-            <div class="col-lg-8">
-                <h5 class="card-title mb-1"><i class="bi bi-shield-lock me-2 text-accent"></i><?= e(__('branch_attendance_policy')) ?></h5>
-                <p class="text-muted small mb-0">Choose whether employees may clock in strictly at their assigned office or at any active company branch.</p>
+            <h5 class="card-title mb-1"><i class="bi bi-geo-alt me-2 text-accent"></i><?= e(__('branch_attendance_policy')) ?></h5>
+            <p class="text-muted small mb-3"><?= e(__('office_policy_question')) ?></p>
+            <div class="office-policy-options">
+                <?php foreach (['assigned_only' => 'policy_assigned_only', 'any_branch' => 'policy_any_branch'] as $value => $labelKey): ?>
+                    <label class="office-policy-option">
+                        <input type="radio" name="office_attendance_policy" value="<?= e($value) ?>" <?= $currentPolicy === $value ? 'checked' : '' ?> required>
+                        <span class="office-policy-option__body">
+                            <strong><?= e(__($labelKey)) ?></strong>
+                            <small><?= e(__($labelKey . '_desc')) ?></small>
+                            <?php if ($currentPolicy === $value): ?><span class="office-policy-current"><?= e(__('office_policy_current')) ?></span><?php endif; ?>
+                        </span>
+                    </label>
+                <?php endforeach; ?>
             </div>
-            <div class="col-lg-4 d-flex flex-column flex-sm-row gap-2 justify-content-lg-end">
-                <select name="office_attendance_policy" class="form-select form-select-sm" onchange="this.form.submit()">
-                    <option value="assigned_only" <?= $currentPolicy === 'assigned_only' ? 'selected' : '' ?>>
-                        <?= e(__('policy_assigned_only')) ?>
-                    </option>
-                    <option value="any_branch" <?= $currentPolicy === 'any_branch' ? 'selected' : '' ?>>
-                        <?= e(__('policy_any_branch')) ?>
-                    </option>
-                </select>
-            </div>
+            <p class="text-muted small mt-3 mb-3"><?= e(__('office_policy_note')) ?></p>
+            <button type="submit" class="btn btn-accent"><?= e(__('office_policy_save')) ?></button>
         </form>
     </div>
 </div>
@@ -204,7 +242,7 @@ require __DIR__ . '/../includes/layout_header.php';
             <div class="card-soft text-center py-5">
                 <div class="text-muted fs-1 mb-2"><i class="bi bi-buildings"></i></div>
                 <h5><?= e(__('no_offices_found')) ?></h5>
-                <p class="text-muted mb-3">No branch office records have been created yet.</p>
+                <p class="text-muted mb-3"><?= e(__('no_branch_offices')) ?></p>
                 <div>
                     <a href="<?= e(url('/admin/office_form.php')) ?>" class="btn btn-accent">
                         <i class="bi bi-plus-lg me-1"></i> <?= e(__('add_office')) ?>
@@ -226,10 +264,10 @@ require __DIR__ . '/../includes/layout_header.php';
                             <div>
                                 <h5 class="fw-bold mb-1"><?= e($off['name']) ?></h5>
                                 <?php if (!empty($off['code'])): ?>
-                                    <span class="badge bg-light text-dark border"><?= e($off['code']) ?></span>
+                                    <span class="badge office-badge--code bg-light text-dark border"><?= e($off['code']) ?></span>
                                 <?php endif; ?>
                             </div>
-                            <span class="badge <?= $isActive ? 'bg-success bg-opacity-25 text-success border border-success border-opacity-50' : 'bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-50' ?>">
+                            <span class="badge <?= $isActive ? 'office-badge--success bg-success bg-opacity-25 text-success border border-success border-opacity-50' : 'office-badge--inactive bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-50' ?>">
                                 <?= $isActive ? strtoupper(e(__('active'))) : strtoupper(e(__('inactive'))) ?>
                             </span>
                         </div>
@@ -243,7 +281,7 @@ require __DIR__ . '/../includes/layout_header.php';
                         <?php endif; ?>
 
                         <!-- Attendance Location Status -->
-                        <div class="p-3 rounded bg-light bg-opacity-50 mb-3 border">
+                        <div class="office-location-status p-3 rounded mb-3">
                             <?php if ($hasCoords): ?>
                                 <div class="d-flex align-items-center justify-content-between mb-1">
                                     <span class="text-success small fw-semibold">
@@ -254,20 +292,20 @@ require __DIR__ . '/../includes/layout_header.php';
                                     </a>
                                 </div>
                                 <div class="small text-muted">
-                                    Radius: <strong><?= (int) ($off['radius_meters'] ?? 100) ?> m</strong>
+                                    <?= e(__('radius')) ?>: <strong><?= (int) ($off['radius_meters'] ?? 100) ?> m</strong>
                                 </div>
                             <?php else: ?>
                                 <div class="text-warning small fw-semibold">
                                     <i class="bi bi-exclamation-triangle-fill me-1"></i> <?= e(__('location_not_configured')) ?>
                                 </div>
-                                <div class="text-muted small">GPS coordinates needed for attendance validation.</div>
+                                <div class="text-muted small"><?= e(__('gps_coordinates_needed')) ?></div>
                             <?php endif; ?>
                         </div>
 
                         <!-- Staff Count Metric -->
                         <div class="d-flex align-items-center justify-content-between small text-muted mb-1">
-                            <span><i class="bi bi-people me-1"></i> Assigned staff:</span>
-                            <a href="<?= e(url('/admin/staff.php?office_id=' . (int) $off['id'])) ?>" class="fw-bold fs-6 text-decoration-none text-dark">
+                            <span><i class="bi bi-people me-1"></i> <?= e(__('assigned_staff')) ?>:</span>
+                            <a href="<?= e(url('/admin/staff.php?office_id=' . (int) $off['id'])) ?>" class="office-staff-count fw-bold fs-6 text-decoration-none">
                                 <?= number_format($staffCount) ?>
                             </a>
                         </div>
@@ -280,27 +318,27 @@ require __DIR__ . '/../includes/layout_header.php';
                                 <i class="bi bi-pencil me-1"></i> <?= e(__('edit')) ?>
                             </a>
                             <a href="<?= e(url('/admin/staff.php?office_id=' . (int) $off['id'])) ?>" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-people me-1"></i> Manage Staff
+                                <i class="bi bi-people me-1"></i> <?= e(__('manage_staff')) ?>
                             </a>
                         </div>
                         <div class="dropdown">
-                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="More options">
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="<?= e(__('more_options')) ?>">
                                 <i class="bi bi-three-dots-vertical"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                                 <li>
                                     <a class="dropdown-item" href="<?= e(url('/admin/office_form.php?id=' . (int) $off['id'])) ?>">
-                                        <i class="bi bi-pencil me-2 text-muted"></i> Edit office
+                                        <i class="bi bi-pencil me-2 text-muted"></i> <?= e(__('edit_office')) ?>
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item" href="<?= e(url('/admin/staff.php?office_id=' . (int) $off['id'])) ?>">
-                                        <i class="bi bi-people me-2 text-muted"></i> Manage staff
+                                        <i class="bi bi-people me-2 text-muted"></i> <?= e(__('manage_staff')) ?>
                                     </a>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
-                                    <form method="post" onsubmit="return confirm('<?= $isActive && $staffCount > 0 ? addslashes(strtr(__('deactivate_office_confirm'), [':name' => $off['name'], ':count' => (string) $staffCount])) : ($isActive ? 'Deactivate this office?' : 'Activate this office?') ?>');">
+                                    <form method="post" data-confirm="<?= e($isActive && $staffCount > 0 ? strtr(__('deactivate_office_confirm'), [':name' => $off['name'], ':count' => (string) $staffCount]) : ($isActive ? 'Deactivate this office?' : 'Activate this office?')) ?>">
                                         <?= csrf_field() ?>
                                         <input type="hidden" name="action" value="toggle_status">
                                         <input type="hidden" name="office_id" value="<?= (int) $off['id'] ?>">
@@ -310,7 +348,7 @@ require __DIR__ . '/../includes/layout_header.php';
                                     </form>
                                 </li>
                                 <li>
-                                    <form method="post" onsubmit="return confirm('Are you sure you want to delete this office? If staff or attendance records are attached, it will be safely deactivated instead.');">
+                                    <form method="post" data-confirm="Are you sure you want to delete this office? If staff or attendance records are attached, it will be safely deactivated instead.">
                                         <?= csrf_field() ?>
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="office_id" value="<?= (int) $off['id'] ?>">

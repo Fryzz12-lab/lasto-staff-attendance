@@ -215,6 +215,7 @@ require __DIR__ . '/../includes/layout_header.php';
             </button>
         </div>
     </div>
+</div>
 <div class="card-soft staff-profile-card mt-3">
     <div class="card-header"><i class="bi bi-sliders me-1"></i> <?= e(__('display_preferences')) ?></div>
     <div class="card-body">

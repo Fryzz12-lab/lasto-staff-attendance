@@ -27,6 +27,15 @@ if (!$att) {
     redirect('/admin/attendance.php');
 }
 
+function attendance_detail_duration(int $minutes): string
+{
+    if ($minutes === 0) return '0 min';
+    $hours = intdiv($minutes, 60);
+    $remaining = $minutes % 60;
+    if ($hours > 0) return $hours . ' hr' . ($remaining ? ' ' . $remaining . ' min' : '');
+    return $remaining . ' min';
+}
+
 function correction_time_value(?string $datetime): string
 {
     return $datetime ? substr($datetime, 11, 5) : '';
@@ -127,65 +136,6 @@ $formReason = is_post() ? $reason : '';
     <a href="<?= e($returnTo) ?>" class="btn btn-sm btn-outline-secondary">&larr; <?= e(__('back')) ?></a>
 </div>
 
-<div class="card-soft mb-3">
-    <div class="card-header">Attendance location</div>
-    <div class="card-body">
-        <?php if (!$locationRows): ?>
-            <p class="form-hint mb-0">Legacy record / location unavailable.</p>
-        <?php else: ?>
-            <div class="row g-3">
-                <?php foreach ($locationRows as $event): ?>
-                    <?php
-                    $locationView = attendance_location_admin_view($event);
-                    ?>
-                    <div class="col-md-6">
-                        <article class="attendance-location-event h-100">
-                            <header class="attendance-location-event__header">
-                                <div class="attendance-location-event__title"><?= e(strtoupper(str_replace('_', ' ', (string) $event['event_type']))) ?></div>
-                                <div class="attendance-location-event__time"><?= e(format_datetime($event['event_time'])) ?></div>
-                            </header>
-                            <div class="attendance-location-event__status">
-                                <span class="status-badge <?= e($locationView['status_badge']) ?>"><?= e($locationView['status_label']) ?></span>
-                                <?php if ($locationView['accuracy'] !== null): ?>
-                                    <span class="attendance-location-event__accuracy">Accuracy ±<?= e((string) $locationView['accuracy']) ?> m</span>
-                                <?php endif; ?>
-                            </div>
-                            <div class="attendance-location-event__fact">
-                                <span>Office area</span>
-                                <?php if ($locationView['office']['tone'] === 'positive'): ?>
-                                    <strong class="attendance-location-event__positive"><?= e($locationView['office']['label']) ?></strong>
-                                <?php elseif ($locationView['office']['tone'] === 'warning'): ?>
-                                    <strong class="attendance-location-event__warning"><?= e($locationView['office']['label']) ?></strong>
-                                <?php else: ?>
-                                    <div class="attendance-location-event__unavailable"><?= e($locationView['office']['label']) ?></div>
-                                    <small><?= e($locationView['office']['helper']) ?></small>
-                                <?php endif; ?>
-                            </div>
-                            <div class="attendance-location-event__fact">
-                                <span>Network</span><strong><?= e($locationView['network']) ?></strong>
-                            </div>
-                            <?php if ($locationView['map_url'] !== null): ?>
-                                <a class="btn btn-sm btn-outline-secondary attendance-location-event__map" target="_blank" rel="noopener noreferrer" href="<?= e($locationView['map_url']) ?>">View Map <i class="bi bi-box-arrow-up-right ms-1" aria-hidden="true"></i></a>
-                            <?php endif; ?>
-                            <details class="policy-disclosure attendance-location-event__technical">
-                                <summary><span class="attendance-location-event__show">Show technical details</span><span class="attendance-location-event__hide">Hide technical details</span></summary>
-                                <div class="policy-disclosure-body">
-                                    <dl class="attendance-location-event__technical-grid mb-0">
-                                        <div><dt>Latitude</dt><dd><?= e($locationView['has_coordinates'] ? (string) $event['latitude'] : 'Not recorded') ?></dd></div>
-                                        <div><dt>Longitude</dt><dd><?= e($locationView['has_coordinates'] ? (string) $event['longitude'] : 'Not recorded') ?></dd></div>
-                                        <div><dt>Recorded IP</dt><dd><?= e($locationView['client_ip'] !== '' ? $locationView['client_ip'] : 'Unknown') ?></dd></div>
-                                        <div><dt>Capture method</dt><dd><?= e($event['capture_method'] !== null ? ucwords(str_replace('_', ' ', (string) $event['capture_method'])) : 'Not recorded') ?></dd></div>
-                                    </dl>
-                                </div>
-                            </details>
-                        </article>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-    </div>
-</div>
-
 <div class="row g-3 align-items-stretch">
     <div class="col-lg-6">
         <div class="card-soft h-100">
@@ -193,11 +143,12 @@ $formReason = is_post() ? $reason : '';
             <div class="card-body">
                 <div class="meta-grid mb-3">
                     <div class="meta-item"><div class="label"><?= e(__('status')) ?></div><div class="value"><?= attendance_status_badge($att) ?></div></div>
-                    <div class="meta-item"><div class="label"><?= e(__('late')) ?></div><div class="value"><?= e(format_minutes((int)$att['late_minutes'])) ?></div></div>
-                    <div class="meta-item"><div class="label"><?= e(__('early_leave')) ?></div><div class="value"><?= e(format_minutes((int)$att['early_leave_minutes'])) ?></div></div>
-                    <div class="meta-item"><div class="label"><?= e(__('shift_duration')) ?></div><div class="value"><?= e(format_minutes((int)$att['shift_minutes'])) ?></div></div>
-                    <div class="meta-item"><div class="label"><?= e(__('actual_working_time')) ?></div><div class="value"><?= e(format_minutes((int)$att['work_minutes'])) ?></div></div>
+                    <div class="meta-item"><div class="label"><?= e(__('late')) ?></div><div class="value"><?= !empty($att['is_day_off']) ? 'N/A' : e(attendance_detail_duration((int)$att['late_minutes'])) ?></div></div>
+                    <div class="meta-item"><div class="label"><?= e(__('early_leave')) ?></div><div class="value"><?= !empty($att['is_day_off']) ? 'N/A' : e(attendance_detail_duration((int)$att['early_leave_minutes'])) ?></div></div>
+                    <div class="meta-item"><div class="label"><?= e(__('shift_duration')) ?></div><div class="value"><?= empty($att['clock_out']) && !empty($att['clock_in']) ? 'In progress' : e(attendance_detail_duration((int)$att['shift_minutes'])) ?></div></div>
+                    <div class="meta-item"><div class="label"><?= e(__('actual_working_time')) ?></div><div class="value"><?= empty($att['clock_out']) && !empty($att['clock_in']) ? 'In progress' : e(attendance_detail_duration((int)$att['work_minutes'])) ?></div></div>
                 </div>
+                <p class="attendance-detail-summary-note">Shift duration is the scheduled elapsed time. Working time excludes recorded breaks.</p>
 
                 <h3 class="h6"><?= e(__('breaks')) ?></h3>
                 <?php if (!$breakRows): ?>
@@ -229,16 +180,79 @@ $formReason = is_post() ? $reason : '';
     </div>
 
     <div class="col-lg-6">
+<div class="card-soft h-100">
+        <div class="card-header">Attendance location</div>
+        <div class="card-body">
+            <?php if (!$locationRows): ?>
+                <p class="form-hint mb-0">Legacy record / location unavailable.</p>
+            <?php else: ?>
+                <div class="row g-3">
+                    <?php foreach ($locationRows as $event): ?>
+                        <?php
+                        $locationView = attendance_location_admin_view($event);
+                        ?>
+                        <div class="col-12">
+                            <article class="attendance-location-event h-100">
+                                <header class="attendance-location-event__header">
+                                    <div class="attendance-location-event__title"><?= e(strtoupper(str_replace('_', ' ', (string) $event['event_type']))) ?></div>
+                                    <div class="attendance-location-event__time"><?= e(format_datetime($event['event_time'])) ?></div>
+                                </header>
+                                <div class="attendance-location-event__status">
+                                    <span class="status-badge <?= e($locationView['status_badge']) ?>"><?= e($locationView['status_label']) ?></span>
+                                    <?php if ($locationView['accuracy'] !== null): ?>
+                                        <span class="attendance-location-event__accuracy">GPS accuracy: &plusmn;<?= e((string) $locationView['accuracy']) ?> m</span>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="attendance-location-event__fact attendance-location-event__reported">
+                                    <span>Reported location</span>
+                                    <?php if ($locationView['office']['tone'] === 'positive' || $locationView['office']['tone'] === 'warning'): ?>
+                                        <strong class="attendance-location-event__proximity attendance-location-event__proximity--<?= e($locationView['office']['tone']) ?>">
+                                            <i class="bi bi-geo-alt-fill" aria-hidden="true"></i> <?= e($locationView['office']['label']) ?>
+                                        </strong>
+                                        <?php if ($locationView['office_name']): ?><div class="attendance-location-event__office-name"><?= e($locationView['office_name']) ?></div><?php endif; ?>
+                                        <?php if ($locationView['distance_metres'] !== null): ?>
+                                            <div class="attendance-location-event__distance">Estimated distance: <?= e($locationView['distance_metres'] < 1000 ? round($locationView['distance_metres']) . ' m' : round($locationView['distance_metres'] / 1000, 1) . ' km') ?><?php if ($locationView['allowed_radius']): ?> &middot; Allowed radius: <?= e((string) $locationView['allowed_radius']) ?> m<?php endif; ?></div>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <div class="attendance-location-event__unavailable"><?= e($locationView['office']['label']) ?></div>
+                                        <small><?= e($locationView['office']['helper']) ?></small>
+                                    <?php endif; ?>
+                                </div>
+                                <?php if ($locationView['map_url'] !== null): ?>
+                                    <a class="btn btn-sm btn-outline-secondary attendance-location-event__map" target="_blank" rel="noopener noreferrer" href="<?= e($locationView['map_url']) ?>">View Map <i class="bi bi-box-arrow-up-right ms-1" aria-hidden="true"></i></a>
+                                <?php endif; ?>
+                                <details class="policy-disclosure attendance-location-event__technical">
+                                    <summary><span class="attendance-location-event__show">Technical details</span><span class="attendance-location-event__hide">Hide technical details</span></summary>
+                                    <div class="policy-disclosure-body">
+                                        <dl class="attendance-location-event__technical-grid mb-0">
+                                            <div><dt>Latitude</dt><dd><?= e($locationView['has_coordinates'] ? (string) $event['latitude'] : 'Not recorded') ?></dd></div>
+                                            <div><dt>Longitude</dt><dd><?= e($locationView['has_coordinates'] ? (string) $event['longitude'] : 'Not recorded') ?></dd></div>
+                                            <div><dt>Recorded IP</dt><dd><?= e($locationView['client_ip'] !== '' ? $locationView['client_ip'] : 'Unknown') ?></dd></div>
+                                            <div><dt>Capture method</dt><dd><?= e($event['capture_method'] !== null ? ucwords(str_replace('_', ' ', (string) $event['capture_method'])) : 'Not recorded') ?></dd></div>
+                                        </dl>
+                                    </div>
+                                </details>
+                            </article>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+    
+        </div>
+
+    <div class="col-12">
         <div class="card-soft h-100">
             <div class="card-header"><?= e(__('manual_correction')) ?></div>
             <div class="card-body">
-                <p class="form-hint"><?= e(__('manual_correction_hint')) ?></p>
+                <p class="form-hint">Update missing or incorrect attendance times.</p><p class="form-hint">All corrections are recorded in Audit History.</p>
                 <div class="mb-3">
                     <div class="form-label"><?= e(__('date')) ?></div>
                     <div class="fw-semibold"><?= e(format_date($att['work_date'])) ?></div>
                     <div class="form-hint"><?= e(__('manual_correction_work_date_hint')) ?></div>
                 </div>
-                <form id="manualCorrectionForm" method="post" data-correction-form>
+                <form id="manualCorrectionForm" class="manual-correction-form" method="post" data-correction-form>
                     <?= csrf_field() ?>
                     <input type="hidden" name="record_version" value="<?= e((string) $att['updated_at']) ?>">
                     <div class="mb-3">

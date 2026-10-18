@@ -300,6 +300,19 @@
     });
   }
 
+  function alertAction(message) {
+    const modal = document.getElementById('appAlertModal') || (() => {
+      const el = document.createElement('div');
+      el.id = 'appAlertModal';
+      el.className = 'modal fade';
+      el.innerHTML = '<div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Notice</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"></div><div class="modal-footer"><button type="button" class="btn btn-accent" data-bs-dismiss="modal">OK</button></div></div></div>';
+      document.body.appendChild(el);
+      return el;
+    })();
+    modal.querySelector('.modal-body').textContent = message;
+    bootstrap.Modal.getOrCreateInstance(modal).show();
+  }
+
   function confirmDashboardAction(button, message) {
     const modal = document.getElementById('dashboardConfirmModal');
     if (!modal || !window.bootstrap?.Modal) return Promise.resolve(confirmAction(message));
@@ -335,7 +348,7 @@
 
   function askAttendanceLocation() {
     const modal = document.createElement('div');
-    modal.className = 'modal fade';
+    modal.className = 'modal fade attendance-location-choice-modal';
     modal.tabIndex = -1;
     modal.setAttribute('aria-labelledby', 'attendanceLocationChoiceTitle');
     modal.innerHTML = '<div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="attendanceLocationChoiceTitle">Share your location for attendance?</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body">Your location is requested only when you Clock In, Clock Out, or start/end approved work-from-home time. Your location is not continuously tracked.</div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-location-choice="disabled">Continue Without Location</button><button type="button" class="btn btn-accent" data-location-choice="enabled">Enable Location</button></div></div></div>';
@@ -574,15 +587,13 @@
     const toggle = card.querySelector('[data-attendance-location-toggle]');
     const state = card.querySelector('[data-attendance-location-state]');
     const browser = card.querySelector('[data-attendance-browser-permission]');
-    const locationLabel = card.querySelector('[data-attendance-location-label]');
     const help = card.querySelector('[data-attendance-location-help]');
     let browserPermission = 'checking';
 
     const render = () => {
       const preference = card.dataset.preference;
       toggle.checked = preference === 'enabled';
-      toggle.indeterminate = preference === 'undecided';
-      if (locationLabel) locationLabel.textContent = preference === 'enabled' ? 'On' : 'Off';
+      toggle.indeterminate = false;
       state.textContent = preference === 'undecided'
         ? 'Not decided yet — choose during your next Clock In or Clock Out, or enable it here.'
         : preference === 'disabled' ? 'Location will not be requested during attendance events.'
@@ -1002,6 +1013,46 @@
   // ——— Live sidebar badges (no full page refresh) ———
   let badgePrev = null;
   let badgeTimer = null;
+  let notificationAudioContext = null;
+  let notificationAudioUnlocked = false;
+
+  function unlockNotificationSound() {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      notificationAudioContext ||= new AudioContext();
+      if (notificationAudioContext.state === 'suspended') notificationAudioContext.resume();
+      notificationAudioUnlocked = true;
+    } catch (e) { }
+  }
+
+  function playNotificationSound() {
+    if (!notificationAudioUnlocked || !notificationAudioContext) return;
+    try {
+      const ctx = notificationAudioContext;
+      const now = ctx.currentTime;
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.12, now + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
+      gain.connect(ctx.destination);
+      const oscillator = ctx.createOscillator();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(660, now);
+      oscillator.frequency.setValueAtTime(880, now + 0.13);
+      oscillator.connect(gain);
+      oscillator.start(now);
+      oscillator.stop(now + 0.44);
+    } catch (e) { }
+  }
+
+  function initNotificationSound() {
+    if (window.__CHRONOS_NOTIFICATION_SOUND__) return;
+    window.__CHRONOS_NOTIFICATION_SOUND__ = true;
+    ['pointerdown', 'keydown', 'touchstart'].forEach((eventName) => {
+      document.addEventListener(eventName, unlockNotificationSound, { once: true, passive: true });
+    });
+  }
 
   function i18n(key, replace) {
     const dict = window.CHRONOS_I18N || {};
@@ -1042,6 +1093,7 @@
       const leaveNow = parseInt(map.leave, 10) || 0;
       const leaveWas = parseInt(badgePrev.leave, 10) || 0;
       if (leaveNow > leaveWas) {
+        playNotificationSound();
         const isAdminLeave = !!document.querySelector('.sidebar-nav a[href*="/admin/leave"]');
         if (isAdminLeave) {
           const added = leaveNow - leaveWas;
@@ -1078,6 +1130,7 @@
 
   function initBadgePoller() {
     if (!document.querySelector('.app-wrapper')) return;
+    initNotificationSound();
     if (window.__CHRONOS_BADGE_POLLER__) {
       fetchBadges(false);
       return;
@@ -1221,7 +1274,7 @@
         if (!key) return;
         prefs[key] = cb.checked;
         const update = { [key]: cb.checked };
-        await apiPost('/api/push_subscription.php', { action: 'update_preferences', preferences: update });
+        await apiPost('/api/push_subscription.php', { action: 'update_preferences', endpoint: subscription?.endpoint || '', preferences: update });
       });
     });
 
@@ -1413,6 +1466,7 @@
 
   window.SAS = {
     showToast,
+    alertAction,
     apiPost,
     showLoading,
     confirmAction,

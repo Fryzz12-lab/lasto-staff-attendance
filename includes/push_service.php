@@ -14,6 +14,27 @@ define('SAS_PUSH_SERVICE_LOADED', true);
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
 
+function push_is_valid_endpoint(string $endpoint): bool
+{
+    if (strlen($endpoint) > 4096 || !filter_var($endpoint, FILTER_VALIDATE_URL)) return false;
+    $p = parse_url($endpoint); if (($p['scheme'] ?? '') !== 'https' || empty($p['host']) || isset($p['user'], $p['pass'])) return false;
+    if (!empty($p['port']) && (int)$p['port'] !== 443) return false;
+    $host = strtolower(rtrim($p['host'], '.'));
+    foreach (['fcm.googleapis.com','push.services.mozilla.com','updates.push.services.mozilla.com','web.push.apple.com'] as $allowed) if ($host === $allowed || str_ends_with($host, '.' . $allowed)) return true;
+    return false;
+}
+
+function push_safe_destination(?string $url): ?string
+{
+    $url = trim((string)$url); if ($url === '') return BASE_PATH . '/';
+    if (str_starts_with($url, '/')) return BASE_PATH . '/' . ltrim($url, '/');
+    $origin = rtrim((string)(getenv('LASTO_PUBLIC_ORIGIN') ?: ''), '/'); if (!$origin || !filter_var($url, FILTER_VALIDATE_URL)) return null;
+    $a = parse_url($url); $b = parse_url($origin);
+    if (($a['scheme'] ?? '') !== ($b['scheme'] ?? '') || strtolower((string)($a['host'] ?? '')) !== strtolower((string)($b['host'] ?? '')) || ($a['port'] ?? null) !== ($b['port'] ?? null) || isset($a['user'], $a['pass'])) return null;
+    $path = (string)($a['path'] ?? '/'); if (BASE_PATH !== '' && !($path === BASE_PATH || str_starts_with($path, BASE_PATH . '/'))) return null;
+    return $path . (isset($a['query']) ? '?' . $a['query'] : '');
+}
+
 function push_base64url_encode(string $data): string
 {
     return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
@@ -226,6 +247,7 @@ function push_encrypt_payload(string $plaintext, string $clientPubBase64, string
  */
 function push_send_endpoint(string $endpoint, string $p256dh, string $auth, array $payloadData): array
 {
+    if (!push_is_valid_endpoint($endpoint)) return ['success' => false, 'status' => 0, 'error' => 'Invalid push endpoint'];
     $vapidKeys = push_get_vapid_keys();
     $vapidHeader = push_create_vapid_header($endpoint, $vapidKeys);
 
@@ -270,6 +292,7 @@ function push_send_endpoint(string $endpoint, string $p256dh, string $auth, arra
  */
 function push_subscribe_device(int $userId, string $endpoint, string $p256dh, string $auth, ?string $userAgent = null): bool
 {
+    if (!push_is_valid_endpoint($endpoint)) return false;
     $pdo = db();
     // Check if subscription for this endpoint already exists
     $stmt = $pdo->prepare('SELECT id FROM push_subscriptions WHERE endpoint = ? LIMIT 1');
@@ -306,7 +329,7 @@ function push_get_preferences(int $userId): array
     $raw = $stmt->fetchColumn();
 
     $defaults = [
-        'all' => true,
+        'all' => false,
         'break_ending' => true,
         'shift_ending' => true,
         'leave_decision' => true,
@@ -338,21 +361,22 @@ function push_update_preferences(int $userId, array $preferences): bool
     return $stmt->execute([json_encode($preferences), $userId]);
 }
 
+function push_get_device_preferences(array $sub, array $fallback): array
+{
+    $raw = $sub['notification_preferences'] ?? null;
+    if (is_string($raw) && $raw !== '') { $decoded = json_decode($raw, true); if (is_array($decoded)) return array_merge($fallback, $decoded); }
+    // Existing subscriptions predate per-device preferences and were enabled explicitly.
+    return array_merge($fallback, ['all' => true]);
+}
+
 /**
  * Dispatch a push notification to all subscribed devices of a user
  */
 function push_send_to_user(int $userId, string $title, string $body, ?string $url = null, ?string $tag = null, ?string $category = null): array
 {
     $prefs = push_get_preferences($userId);
-    if (!($prefs['all'] ?? true)) {
-        return ['sent' => 0, 'failed' => 0, 'skipped' => 'User disabled all notifications'];
-    }
-    if ($category && isset($prefs[$category]) && !$prefs[$category]) {
-        return ['sent' => 0, 'failed' => 0, 'skipped' => 'User disabled this category: ' . $category];
-    }
-
     $pdo = db();
-    $stmt = $pdo->prepare('SELECT id, endpoint, p256dh, auth FROM push_subscriptions WHERE user_id = ?');
+    $stmt = $pdo->prepare('SELECT id, endpoint, p256dh, auth, notification_preferences FROM push_subscriptions WHERE user_id = ?');
     $stmt->execute([$userId]);
     $subscriptions = $stmt->fetchAll();
 
@@ -365,16 +389,20 @@ function push_send_to_user(int $userId, string $title, string $body, ?string $ur
         'body' => $body,
         'icon' => (BASE_PATH ?: '') . '/assets/img/icon-192.png',
         'badge' => (BASE_PATH ?: '') . '/assets/img/icon-192.png',
-        'url' => $url ? (str_starts_with($url, 'http') ? $url : (BASE_PATH ?: '') . '/' . ltrim($url, '/')) : ((BASE_PATH ?: '') . '/'),
+        'url' => push_safe_destination($url) ?? ((BASE_PATH ?: '') . '/'),
         'tag' => $tag ?: ('sas-notice-' . time()),
         'timestamp' => time() * 1000,
     ];
+    $payload['data'] = ['url' => $payload['url']];
 
     $sent = 0;
     $failed = 0;
     $staleIds = [];
 
     foreach ($subscriptions as $sub) {
+        $devicePrefs = push_get_device_preferences($sub, $prefs);
+        if (!($devicePrefs['all'] ?? true) || ($category && isset($devicePrefs[$category]) && !$devicePrefs[$category])) continue;
+        if (!push_is_valid_endpoint((string)$sub['endpoint'])) { $staleIds[] = (int)$sub['id']; continue; }
         try {
             $result = push_send_endpoint($sub['endpoint'], $sub['p256dh'], $sub['auth'], $payload);
             if ($result['success']) {

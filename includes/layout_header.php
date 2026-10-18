@@ -167,6 +167,7 @@ $ogUrl = $ogUrl ?? current_url();
                 </div>
             </div>
             <div class="topbar-actions d-none d-lg-flex">
+                <?php require __DIR__ . '/notification_bell.php'; ?>
                 <button type="button" class="btn btn-sm btn-outline-secondary globe-toggle" id="globeToggle"
                         title="<?= e(__('globe_toggle')) ?>" aria-label="<?= e(__('globe_toggle')) ?>"
                         data-label-on="<?= e(__('globe_on')) ?>" data-label-off="<?= e(__('globe_off')) ?>">
@@ -185,7 +186,8 @@ $ogUrl = $ogUrl ?? current_url();
                     <i class="bi bi-box-arrow-right"></i> <?= e(__('logout')) ?>
                 </a>
             </div>
-            <button type="button" class="btn btn-link topbar-mobile-avatar d-lg-none ms-auto text-decoration-none" id="mobileUserBtn" aria-label="Menu">
+            <div class="d-lg-none ms-auto"><?php require __DIR__ . '/notification_bell.php'; ?></div>
+            <button type="button" class="btn btn-link topbar-mobile-avatar d-lg-none text-decoration-none" id="mobileUserBtn" aria-label="Menu">
                 <div class="user-avatar-sm">
                     <?php if (!empty($user['profile_photo'])): ?>
                         <img src="<?= e(UPLOAD_URL . '/' . $user['profile_photo']) ?>" alt="">

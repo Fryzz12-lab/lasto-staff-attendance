@@ -114,13 +114,14 @@ self.addEventListener('push', (event) => {
     body: 'You have a new update.',
     icon: './assets/img/icon-192.png',
     badge: './assets/img/icon-192.png',
-    data: { url: './' }
+    data: {}
   };
 
   if (event.data) {
     try {
       const json = event.data.json();
       payload = Object.assign(payload, json);
+      payload.data = Object.assign({}, json.data || {}, json.url ? { url: json.url } : {});
     } catch (e) {
       payload.body = event.data.text() || payload.body;
     }
@@ -131,20 +132,31 @@ self.addEventListener('push', (event) => {
     icon: payload.icon || './assets/img/icon-192.png',
     badge: payload.badge || './assets/img/icon-192.png',
     vibrate: [120, 60, 120],
-    data: payload.data || { url: payload.url || './' },
+    data: payload.data || {},
     tag: payload.tag || ('sas-' + Date.now()),
     renotify: true
   };
 
-  event.waitUntil(
-    self.registration.showNotification(payload.title, options)
-  );
+  event.waitUntil((async () => {
+    // The open page plays the in-site notification sound. Avoid a second
+    // native notification while that page is visible; keep native push for
+    // background tabs and closed browsers.
+    const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const hasVisibleClient = clients.some((client) => client.visibilityState === 'visible');
+    if (!hasVisibleClient) await self.registration.showNotification(payload.title, options);
+  })());
 });
 
 // Notification click event: focus existing tab or open new window to target URL
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const urlToOpen = event.notification.data?.url || './';
+  let urlToOpen = event.notification.data?.url || './';
+  try {
+    const target = new URL(urlToOpen, self.registration.scope);
+    const scope = new URL(self.registration.scope);
+    if (target.origin !== scope.origin || !target.pathname.startsWith(scope.pathname)) urlToOpen = './';
+    else urlToOpen = target.href;
+  } catch (e) { urlToOpen = './'; }
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {

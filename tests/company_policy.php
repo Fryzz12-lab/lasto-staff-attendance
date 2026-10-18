@@ -92,6 +92,19 @@ function rejected(callable $action, string $message): void
     }
     throw new RuntimeException($message);
 }
+function render_offday_review(string $database, int $adminId): string
+{
+    $pipes = [];
+    $process = proc_open([PHP_BINARY, __FILE__, 'render', $database, (string) $adminId, 'admin/offday_adjustments.php'],
+        [0 => ['pipe','r'], 1 => ['pipe','w'], 2 => ['pipe','w']], $pipes);
+    if (!is_resource($process)) throw new RuntimeException('Cannot render off-day review.');
+    fclose($pipes[0]);
+    $html = stream_get_contents($pipes[1]);
+    $errors = stream_get_contents($pipes[2]);
+    fclose($pipes[1]); fclose($pipes[2]);
+    if (proc_close($process) !== 0 || $errors !== '') throw new RuntimeException('Off-day review render failed: ' . $errors);
+    return $html;
+}
 check(password_policy_error('seven77') === 'password_minimum_8', 'Password policy rejects fewer than 8 characters');
 check(password_policy_error('Eight888') === null, 'Password policy accepts 8 characters');
 check(password_policy_error('password123456789') === 'password_too_common', 'Password policy rejects common passwords');
@@ -497,6 +510,26 @@ try {
         check(str_contains($html, '</html>'), 'Complete page: ' . $page);
         check(!str_contains($html, 'punch-geo') && !str_contains($html, 'clock_location_hint'), 'No location UI: ' . $page);
     }
+    $reviewId = (int) $offReview['id'];
+    foreach ([0, 1, 2] as $owedDays) {
+        if ($owedDays > 0) {
+            $pdo->prepare("INSERT INTO staff_balance_ledger (employee_id,balance_type,amount,source_type,admin_id,admin_note) VALUES (?,'cuti_perlu_ganti',1,'manual',?,'Review scenario')")
+                ->execute([$restUser, $admin]);
+        }
+        $html = render_offday_review($database, $admin);
+        check(preg_match('/<tr id="decision-row-' . $reviewId . '".*?<\/tr>/s', $html, $matches) === 1, 'Pending off-day review renders at ' . $owedDays . ' owed');
+        $reviewHtml = $matches[0];
+        $recommended = $owedDays > 0 ? 'Settle 1 day owed' : 'Grant 1 day of Replacement Leave';
+        check(str_contains($reviewHtml, 'Recommended: ' . $recommended), 'Recommendation follows ' . $owedDays . ' owed balance');
+        check(str_contains($reviewHtml, 'data-owed="' . $owedDays . '"'), 'Balance preview uses current owed balance');
+        check(str_contains($reviewHtml, 'Days to Replace: ' . $owedDays . ' to ' . ($owedDays - 1)) === ($owedDays > 0), 'Settlement option eligibility at ' . $owedDays . ' owed');
+        check(str_contains($reviewHtml, 'name="decision" value="no_adjustment"'), 'No adjustment remains available');
+        check(!preg_match('/name="decision" value="[^"]+" checked/', $reviewHtml), 'No adjustment is preselected');
+    }
+    rejected(fn() => decide_offday_adjustment($reviewId, 'no_adjustment', $admin, ''), 'No adjustment requires a reason');
+    decide_offday_adjustment($reviewId, 'no_adjustment', $admin, 'Reviewed attendance; no balance change applies.');
+    check(balance_total($restUser, 'cuti_perlu_ganti') === 2 && balance_total($restUser, 'replacement_off') === 0, 'No adjustment preserves both balances');
+    check((string) $pdo->query('SELECT status FROM offday_adjustment_reviews WHERE id=' . $reviewId)->fetchColumn() === 'decided', 'No adjustment records admin decision');
     echo "PASS: {$checks} policy, integrity and concurrency checks.\n";
 } finally {
     if ($pdo->inTransaction()) $pdo->rollBack();

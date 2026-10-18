@@ -8,6 +8,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/adjustment_service.php';
 require_once __DIR__ . '/push_service.php';
+require_once __DIR__ . '/notification_service.php';
 require_once __DIR__ . '/attendance_location.php';
 
 /** The company schedule is provisioned by setup/migration, never by a staff form. */
@@ -243,7 +244,7 @@ function submit_leave_request(int $userId, string $date, string $type, string $r
         || !in_array($type, ['medical','wfh','day_off','annual','emergency','other'], true) || trim($reason) === '') {
         throw new InvalidArgumentException(__('msg_leave_invalid'));
     }
-    with_employee_lock($userId, function () use ($userId, $date, $type, $reason): void {
+    $notification = with_employee_lock($userId, function () use ($userId, $date, $type, $reason): array {
         if (!employment_date_eligible($userId, $date)) {
             throw new InvalidArgumentException('Requests are not available for this employment date.');
         }
@@ -258,22 +259,30 @@ function submit_leave_request(int $userId, string $date, string $type, string $r
         }
         db()->prepare('INSERT INTO leave_requests (user_id,leave_date,leave_type,reason) VALUES (?,?,?,?)')
             ->execute([$userId, $date, $type, trim($reason)]);
-        try {
-            $uStmt = db()->prepare('SELECT full_name FROM users WHERE id = ? LIMIT 1');
-            $uStmt->execute([$userId]);
-            $uName = $uStmt->fetchColumn() ?: 'Staff member';
-            $tUpper = strtoupper($type);
-            push_send_to_admins(
-                "New {$tUpper} Request",
-                "{$uName} submitted a {$tUpper} request for {$date}.",
-                '/admin/leave_requests.php',
-                'admin-leave-' . $date . '-' . $userId,
-                ($type === 'wfh' ? 'new_wfh_request' : 'new_leave_request')
-            );
-        } catch (Throwable $pe) {
-            error_log('[Push] ' . $pe->getMessage());
+        $requestId = (int) db()->lastInsertId();
+        $uStmt = db()->prepare('SELECT full_name FROM users WHERE id = ? LIMIT 1');
+        $uStmt->execute([$userId]);
+        $name = (string) ($uStmt->fetchColumn() ?: 'Staff member');
+        $typeLabel = strtoupper($type);
+        $admins = db()->query("SELECT id FROM users WHERE role='admin' AND is_active=1")->fetchAll(PDO::FETCH_COLUMN);
+        foreach ($admins as $adminId) {
+            notification_create((int)$adminId, 'leave_request', 'leave-submitted-' . $requestId,
+                "New {$typeLabel} request", "A staff member submitted a {$typeLabel} request for {$date}.", '/admin/leave_requests.php');
         }
+        return ['id' => $requestId, 'name' => $name];
     });
+    try {
+        $tUpper = strtoupper($type);
+        push_send_to_admins(
+            "New {$tUpper} Request",
+            "{$notification['name']} submitted a {$tUpper} request for {$date}.",
+            '/admin/leave_requests.php',
+            'admin-leave-' . $notification['id'],
+            ($type === 'wfh' ? 'new_wfh_request' : 'new_leave_request')
+        );
+    } catch (Throwable $pe) {
+        error_log('[Push] ' . $pe->getMessage());
+    }
 }
 
 function review_leave_request(int $requestId, string $decision, int $reviewerId, ?string $note, bool $requiresReplacement = false): void
@@ -290,7 +299,7 @@ function review_leave_request(int $requestId, string $decision, int $reviewerId,
     $stmt->execute([$requestId]);
     $userId = (int) $stmt->fetchColumn();
     if (!$userId) throw new InvalidArgumentException(__('msg_request_not_found'));
-    with_employee_lock($userId, function () use ($requestId, $decision, $reviewerId, $note, $userId, $requiresReplacement): void {
+    $notification = with_employee_lock($userId, function () use ($requestId, $decision, $reviewerId, $note, $userId, $requiresReplacement): array {
         $stmt = db()->prepare('SELECT * FROM leave_requests WHERE id=? FOR UPDATE');
         $stmt->execute([$requestId]);
         $request = $stmt->fetch();
@@ -322,24 +331,30 @@ function review_leave_request(int $requestId, string $decision, int $reviewerId,
             $att = ensure_attendance_row($userId, $request['leave_date']);
             write_audit((int) $att['id'], $userId, $reviewerId, 'request_approved', 'work_arrangement', null, $request['leave_type'], $note);
         }
-        try {
-            $tUpper = strtoupper($request['leave_type']);
-            $sText = ($decision === 'approved') ? 'Approved' : 'Declined';
-            $body = ($decision === 'approved')
-                ? "Your {$tUpper} request for {$request['leave_date']} has been approved."
-                : "Your {$tUpper} request for {$request['leave_date']} was declined.";
-            push_send_to_user(
-                $userId,
-                "{$tUpper} Request {$sText}",
-                $body,
-                '/staff/leave.php',
-                'staff-leave-' . $requestId,
-                'leave_decision'
-            );
-        } catch (Throwable $pe) {
-            error_log('[Push] ' . $pe->getMessage());
-        }
+        $typeLabel = strtoupper((string)$request['leave_type']);
+        notification_create($userId, 'leave_decision', 'leave-reviewed-' . $requestId,
+            "{$typeLabel} request " . ($decision === 'approved' ? 'approved' : 'declined'),
+            "Your {$typeLabel} request for {$request['leave_date']} was " . ($decision === 'approved' ? 'approved.' : 'declined.'),
+            '/staff/leave.php');
+        return ['type' => (string) $request['leave_type'], 'date' => (string) $request['leave_date']];
     });
+    try {
+        $tUpper = strtoupper($notification['type']);
+        $sText = ($decision === 'approved') ? 'Approved' : 'Declined';
+        $body = ($decision === 'approved')
+            ? "Your {$tUpper} request for {$notification['date']} has been approved."
+            : "Your {$tUpper} request for {$notification['date']} was declined.";
+        push_send_to_user(
+            $userId,
+            "{$tUpper} Request {$sText}",
+            $body,
+            '/staff/leave.php',
+            'staff-leave-' . $requestId,
+            'leave_decision'
+        );
+    } catch (Throwable $pe) {
+        error_log('[Push] ' . $pe->getMessage());
+    }
 }
 
 function get_attendance(int $userId, string $date): ?array

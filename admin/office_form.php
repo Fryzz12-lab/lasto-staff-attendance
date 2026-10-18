@@ -31,7 +31,6 @@ if (is_post()) {
     $rawLat = trim((string) post('latitude', ''));
     $rawLon = trim((string) post('longitude', ''));
     $rawRadius = trim((string) post('radius_meters', '100'));
-    $publicIp = trim((string) post('public_ip', ''));
     $isActive = (int) post('is_active', 1) === 1 ? 1 : 0;
 
     $lat = null;
@@ -70,15 +69,11 @@ if (is_post()) {
         $errors[] = 'Allowed radius must be between 10 and 10,000 metres.';
     }
 
-    if ($publicIp !== '' && !filter_var($publicIp, FILTER_VALIDATE_IP)) {
-        $errors[] = 'Office public IP must be a valid IPv4 or IPv6 address.';
-    }
-
     if (!empty($errors)) {
         flash_set('danger', implode('<br>', $errors));
     } else {
         if ($office) {
-            $updateSql = 'UPDATE offices SET name = ?, code = ?, address = ?, latitude = ?, longitude = ?, radius_meters = ?, public_ip = ?, is_active = ? WHERE id = ?';
+            $updateSql = 'UPDATE offices SET name = ?, code = ?, address = ?, latitude = ?, longitude = ?, radius_meters = ?, is_active = ? WHERE id = ?';
             db()->prepare($updateSql)->execute([
                 $name,
                 $code !== '' ? $code : null,
@@ -86,14 +81,13 @@ if (is_post()) {
                 $lat,
                 $lon,
                 $radius,
-                $publicIp !== '' ? $publicIp : null,
                 $isActive,
                 $id,
             ]);
             $officeId = $id;
             flash_set('success', __('msg_office_saved'));
         } else {
-            $insertSql = 'INSERT INTO offices (name, code, address, latitude, longitude, radius_meters, public_ip, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+            $insertSql = 'INSERT INTO offices (name, code, address, latitude, longitude, radius_meters, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)';
             db()->prepare($insertSql)->execute([
                 $name,
                 $code !== '' ? $code : null,
@@ -101,7 +95,6 @@ if (is_post()) {
                 $lat,
                 $lon,
                 $radius,
-                $publicIp !== '' ? $publicIp : null,
                 $isActive,
             ]);
             $officeId = (int) db()->lastInsertId();
@@ -116,9 +109,6 @@ if (is_post()) {
             }
             set_setting('office_name', $name);
             set_setting('office_radius_metres', (string) $radius);
-            if ($publicIp !== '') {
-                set_setting('office_public_ip', $publicIp);
-            }
         }
 
         redirect('/admin/offices.php');
@@ -154,7 +144,7 @@ require __DIR__ . '/../includes/layout_header.php';
 
 <div class="mb-3">
     <a href="<?= e(url('/admin/offices.php')) ?>" class="text-muted text-decoration-none small">
-        <i class="bi bi-arrow-left me-1"></i> Back to Office Locations
+        <i class="bi bi-arrow-left me-1"></i> <?= e(__('back_to_office_locations')) ?>
     </a>
 </div>
 
@@ -163,9 +153,6 @@ require __DIR__ . '/../includes/layout_header.php';
         <div class="card-soft">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0 fw-bold"><?= e($pageTitle) ?></h5>
-                <?php if ($office): ?>
-                    <span class="badge bg-light text-dark border">Office ID: #<?= (int) $office['id'] ?></span>
-                <?php endif; ?>
             </div>
             <div class="card-body">
                 <form method="post" id="office-form">
@@ -174,32 +161,32 @@ require __DIR__ . '/../includes/layout_header.php';
                     <div class="row g-3 mb-3">
                         <div class="col-md-8">
                             <label class="form-label" for="office_name"><?= e(__('office_name')) ?> *</label>
-                            <input id="office_name" name="name" class="form-control" value="<?= e((string) $v('name')) ?>" placeholder="e.g. LASTO Sungai Petani" required>
+                            <input id="office_name" name="name" class="form-control" value="<?= e((string) $v('name')) ?>" placeholder="<?= e(__('office_name_placeholder')) ?>" required>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label" for="office_code"><?= e(__('office_code')) ?> <span class="text-muted small">(<?= e(__('optional')) ?>)</span></label>
-                            <input id="office_code" name="code" class="form-control" value="<?= e((string) $v('code')) ?>" placeholder="e.g. HQ, SP, KL01" maxlength="32">
+                            <input id="office_code" name="code" class="form-control" value="<?= e((string) $v('code')) ?>" placeholder="<?= e(__('office_code_placeholder')) ?>" maxlength="32">
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label" for="office_address"><?= e(__('office_address')) ?></label>
-                        <textarea id="office_address" name="address" class="form-control" rows="2" placeholder="Full street address of this branch"><?= e((string) $v('address')) ?></textarea>
+                        <textarea id="office_address" name="address" class="form-control" rows="2" placeholder="<?= e(__('branch_address_placeholder')) ?>"><?= e((string) $v('address')) ?></textarea>
                     </div>
 
                     <!-- Attendance Location Section -->
-                    <div class="card border rounded p-3 mb-3 bg-light bg-opacity-25">
+                    <div class="card border rounded p-3 mb-3 bg-light bg-opacity-25 office-form-location-card">
                         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
                             <div>
-                                <h6 class="fw-bold mb-0"><i class="bi bi-geo-alt-fill text-accent me-1"></i> Attendance Location</h6>
-                                <p class="text-muted small mb-0">Set the physical location used to verify attendance at this branch.</p>
+                                <h6 class="fw-bold mb-0"><i class="bi bi-geo-alt-fill text-accent me-1"></i> <?= e(__('attendance_location')) ?></h6>
+                                <p class="text-muted small mb-0"><?= e(__('attendance_location_hint')) ?></p>
                             </div>
                             <div class="d-flex flex-wrap gap-2">
                                 <button type="button" id="btn_use_current_location" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1">
                                     <i class="bi bi-geo-alt"></i> <?= e(__('use_current_location')) ?>
                                 </button>
                                 <button type="button" id="btn_clear_coords" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1" style="display:none;">
-                                    <i class="bi bi-x-circle"></i> Clear
+                                    <i class="bi bi-x-circle"></i> <?= e(__('clear')) ?>
                                 </button>
                             </div>
                         </div>
@@ -207,17 +194,17 @@ require __DIR__ . '/../includes/layout_header.php';
                         <div class="row g-3 mb-2">
                             <div class="col-md-6">
                                 <label class="form-label" for="office_latitude"><?= e(__('office_latitude')) ?></label>
-                                <input id="office_latitude" name="latitude" type="text" inputmode="decimal" class="form-control font-monospace" value="<?= e((string) $v('latitude')) ?>" placeholder="e.g. 5.663015">
+                                <input id="office_latitude" name="latitude" type="text" inputmode="decimal" class="form-control font-monospace" value="<?= e((string) $v('latitude')) ?>" placeholder="<?= e(__('latitude_placeholder')) ?>">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label" for="office_longitude"><?= e(__('office_longitude')) ?></label>
-                                <input id="office_longitude" name="longitude" type="text" inputmode="decimal" class="form-control font-monospace" value="<?= e((string) $v('longitude')) ?>" placeholder="e.g. 100.502389">
+                                <input id="office_longitude" name="longitude" type="text" inputmode="decimal" class="form-control font-monospace" value="<?= e((string) $v('longitude')) ?>" placeholder="<?= e(__('longitude_placeholder')) ?>">
                             </div>
                         </div>
 
                         <!-- Feedback, Accuracy, and Reassurance Panel -->
                         <div id="office_location_feedback_wrapper" class="mb-3" style="display:none;">
-                            <div class="p-3 rounded bg-white border">
+                            <div class="p-3 rounded bg-white border office-location-feedback-panel">
                                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
                                     <div class="d-flex align-items-center gap-2">
                                         <i class="bi bi-check-circle-fill text-success fs-5"></i>
@@ -251,31 +238,19 @@ require __DIR__ . '/../includes/layout_header.php';
                         </div>
                     </div>
 
-                    <!-- Collapsible Advanced Settings (Public IP) -->
-                    <details class="border rounded p-3 mb-3 bg-light bg-opacity-25" <?= !empty($v('public_ip')) ? 'open' : '' ?>>
-                        <summary class="fw-semibold text-muted small cursor-pointer">
-                            <i class="bi bi-gear me-1"></i> <?= e(__('advanced_network_settings')) ?>
-                        </summary>
-                        <div class="pt-3">
-                            <label class="form-label" for="office_public_ip"><?= e(__('office_public_ip')) ?> <span class="text-muted small">(<?= e(__('optional')) ?>)</span></label>
-                            <input id="office_public_ip" name="public_ip" class="form-control" value="<?= e((string) $v('public_ip')) ?>" placeholder="e.g. 203.106.12.34">
-                            <div class="form-hint mt-1">Branch Wi-Fi public IP for supporting network check.</div>
-                        </div>
-                    </details>
-
                     <!-- Office Status -->
                     <div class="mb-3">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1" <?= (int) $v('is_active', 1) === 1 ? 'checked' : '' ?>>
                             <label class="form-check-label fw-semibold" for="is_active">
-                                Office Active
+                                <?= e(__('office_active')) ?>
                             </label>
                             <div class="form-hint"><?= e(__('office_active_hint')) ?></div>
                         </div>
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center gap-3 pt-3 border-top">
-                        <a href="<?= e(url('/admin/offices.php')) ?>" class="btn btn-outline-secondary">Cancel</a>
+                        <a href="<?= e(url('/admin/offices.php')) ?>" class="btn btn-outline-secondary"><?= e(__('cancel')) ?></a>
                         <button type="submit" id="btn_save_office" class="btn btn-accent px-4">
                             <span id="btn_save_text"><?= e(__('save_office')) ?></span>
                         </button>
@@ -287,25 +262,24 @@ require __DIR__ . '/../includes/layout_header.php';
 
     <!-- Assigned Staff Summary Sidebar -->
     <div class="col-lg-4">
-        <div class="card-soft mb-3">
+        <div class="card-soft mb-3 office-assigned-staff">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="mb-0 fw-bold"><i class="bi bi-people me-1"></i> Assigned Staff</h6>
-                <span class="badge bg-secondary"><?= number_format($assignedCount) ?></span>
+                <h6 class="mb-0 fw-bold"><i class="bi bi-people me-1"></i> <?= e(__('assigned_staff')) ?></h6>
             </div>
             <div class="card-body">
                 <?php if (!$office || $assignedCount === 0): ?>
                     <div class="text-center py-3 text-muted">
                         <i class="bi bi-people text-muted opacity-50 fs-2 d-block mb-1"></i>
-                        <p class="small mb-3">No employees currently assigned to this branch.</p>
+                        <p class="small mb-3"><?= e(__('no_employees_assigned')) ?></p>
                         <?php if ($office): ?>
                             <a href="<?= e(url('/admin/staff.php')) ?>" class="btn btn-sm btn-outline-secondary">
-                                Assign in Staff Directory <i class="bi bi-arrow-right ms-1"></i>
+                                <?= e(__('assign_in_staff_directory')) ?> <i class="bi bi-arrow-right ms-1"></i>
                             </a>
                         <?php endif; ?>
                     </div>
                 <?php else: ?>
                     <div class="text-center py-2 mb-3">
-                        <div class="display-6 fw-bold text-dark mb-0"><?= number_format($assignedCount) ?></div>
+                        <div class="display-6 fw-bold mb-0 office-assigned-staff__count"><?= number_format($assignedCount) ?></div>
                         <div class="small text-muted">employees assigned to this branch</div>
                     </div>
 
@@ -337,7 +311,7 @@ require __DIR__ . '/../includes/layout_header.php';
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+window.initOfficeForm = function() {
     const btnUseLocation = document.getElementById('btn_use_current_location');
     const btnClearCoords = document.getElementById('btn_clear_coords');
     const btnPreviewMaps = document.getElementById('btn_preview_maps');
@@ -365,10 +339,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Deactivation safeguard confirmation
     if (activeSwitch && assignedStaffCount > 0) {
-        activeSwitch.addEventListener('change', function() {
+        activeSwitch.addEventListener('change', async function() {
             if (!activeSwitch.checked) {
                 const msg = `Deactivate ${officeName}?\n\n${assignedStaffCount} employee(s) are currently assigned to this office. They will no longer be able to use this office for attendance verification.`;
-                if (!confirm(msg)) {
+                if (!await window.SAS.confirmAction(msg)) {
                     activeSwitch.checked = true;
                 }
             }
@@ -425,10 +399,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    if (btnUseLocation) {
+    if (btnUseLocation && !btnUseLocation.dataset.locationBound) {
+        btnUseLocation.dataset.locationBound = '1';
         btnUseLocation.addEventListener('click', function() {
             if (!navigator.geolocation) {
-                alert('Geolocation is not supported by your browser.');
+                window.SAS.alertAction('Geolocation is not supported by your browser.');
                 return;
             }
 
@@ -470,7 +445,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     } else if (err.code === 3) {
                         msg = 'Location request timed out. Please try again or enter coordinates manually.';
                     }
-                    alert(msg);
+                    window.SAS.alertAction(msg);
                 },
                 {
                     enableHighAccuracy: true,
@@ -480,7 +455,9 @@ document.addEventListener('DOMContentLoaded', function() {
             );
         });
     }
-});
+};
+document.addEventListener('DOMContentLoaded', window.initOfficeForm);
+window.initOfficeForm();
 </script>
 
 <?php require __DIR__ . '/../includes/layout_footer.php'; ?>

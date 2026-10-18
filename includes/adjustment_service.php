@@ -62,7 +62,7 @@ function employee_balances(int $employeeId): array
 function decide_offday_adjustment(int $reviewId, string $decision, int $adminId, string $note, bool $overrideNegative = false): void
 {
     if (!in_array($decision, ['replacement_off','settle_cuti_ganti','no_adjustment'], true)) throw new InvalidArgumentException('Invalid adjustment decision.');
-    if ($note === '' && $decision !== 'no_adjustment') throw new InvalidArgumentException('An admin note is required for balance adjustments.');
+    if ($note === '') throw new InvalidArgumentException('A reason is required for every adjustment decision.');
     adjustment_transaction(function () use ($reviewId,$decision,$adminId,$note,$overrideNegative): void {
         $stmt = db()->prepare('SELECT r.*, a.clock_in, a.clock_out, a.user_id FROM offday_adjustment_reviews r JOIN attendance a ON a.id=r.attendance_id WHERE r.id=? FOR UPDATE');
         $stmt->execute([$reviewId]); $review = $stmt->fetch();

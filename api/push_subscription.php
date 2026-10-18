@@ -53,13 +53,16 @@ try {
         if (!$endpoint || !$p256dh || !$auth) {
             json_response(['success' => false, 'message' => 'Invalid subscription payload.'], 400);
         }
+        if (!push_is_valid_endpoint($endpoint)) {
+            json_response(['success' => false, 'message' => 'Unsupported push service endpoint.'], 400);
+        }
 
         $userAgent = substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255);
         push_subscribe_device($userId, $endpoint, $p256dh, $auth, $userAgent);
 
         $curPrefs = push_get_preferences($userId);
         $curPrefs['all'] = true;
-        push_update_preferences($userId, $curPrefs);
+        db()->prepare('UPDATE push_subscriptions SET notification_preferences=? WHERE user_id=? AND endpoint=?')->execute([json_encode(array_merge($curPrefs, ['all' => true])), $userId, $endpoint]);
 
         json_response([
             'success' => true,
@@ -76,7 +79,7 @@ try {
 
         $curPrefs = push_get_preferences($userId);
         $curPrefs['all'] = false;
-        push_update_preferences($userId, $curPrefs);
+        if ($endpoint) db()->prepare('UPDATE push_subscriptions SET notification_preferences=? WHERE user_id=? AND endpoint=?')->execute([json_encode(array_merge($curPrefs, ['all' => false])), $userId, $endpoint]);
 
         json_response([
             'success' => true,
@@ -93,7 +96,9 @@ try {
 
         $current = push_get_preferences($userId);
         $merged = array_merge($current, $preferences);
-        push_update_preferences($userId, $merged);
+        $endpoint = trim((string)($input['endpoint'] ?? ''));
+        if ($endpoint) db()->prepare('UPDATE push_subscriptions SET notification_preferences=? WHERE user_id=? AND endpoint=?')->execute([json_encode($merged), $userId, $endpoint]);
+        else push_update_preferences($userId, $merged);
 
         json_response([
             'success' => true,
@@ -103,7 +108,10 @@ try {
     }
 
     if ($action === 'test') {
-        $targetUrl = ($user['role'] === 'admin') ? '/admin/profile.php' : '/staff/profile.php';
+        if (!is_admin()) {
+            json_response(['success' => false, 'message' => __('msg_no_permission')], 403);
+        }
+        $targetUrl = '/admin/profile.php';
         $res = push_send_to_user(
             $userId,
             'Staff Attendance Alert',

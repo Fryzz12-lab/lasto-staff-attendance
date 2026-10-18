@@ -45,6 +45,12 @@ $stmt = db()->prepare($sql);
 $stmt->execute($params);
 $rows = $stmt->fetchAll();
 
+$hasActiveOffice = ($officeFilter !== null && $officeFilter !== '' && $officeFilter !== 'all');
+$hasActiveStatus = ($status !== 'all');
+$hasActiveAdvanced = $hasActiveOffice || $hasActiveStatus;
+$activeFilterCount = ($hasActiveOffice ? 1 : 0) + ($hasActiveStatus ? 1 : 0);
+$isFiltered = $q !== '' || $hasActiveAdvanced;
+
 $pageTitle = __('staff_management');
 $bodyClass = 'admin-staff-management';
 $activeMenu = 'staff';
@@ -52,15 +58,16 @@ $isAdminArea = true;
 require __DIR__ . '/../includes/layout_header.php';
 ?>
 
-<div class="d-flex flex-wrap justify-content-end align-items-center gap-2 mb-3">
-    <a data-spa="0" href="<?= e(url('/admin/staff_form.php?' . http_build_query(['return_to' => $_SERVER['REQUEST_URI'] ?? '/admin/staff.php']))) ?>" class="btn btn-accent"><i class="bi bi-plus-lg"></i> Add New Staff</a>
+<div class="staff-page-header d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0"><?= e($pageTitle) ?></h1>
+    <a data-spa="0" href="<?= e(url('/admin/staff_form.php?' . http_build_query(['return_to' => $_SERVER['REQUEST_URI'] ?? '/admin/staff.php']))) ?>" class="btn btn-accent"><i class="bi bi-plus-lg" aria-hidden="true"></i> <span class="d-none d-sm-inline">Add New Staff</span><span class="d-sm-none">Add Staff</span></a>
 </div>
 
-<div class="card-soft mb-3">
+<div class="card-soft mb-3 staff-filter-card">
     <div class="card-body">
         <form class="row g-2" method="get">
-            <div class="col-md-6">
-                <label class="form-label" for="filter-q">Search by Name, Username or Email</label>
+            <div class="col-md-6 col-12">
+                <label class="form-label d-none d-md-block" for="filter-q">Search by Name, Username or Email</label>
                 <div class="search-bar-combo">
                     <input id="filter-q" type="search" name="q" class="form-control search-bar-combo__input" placeholder="Name, username or email…" value="<?= e($q) ?>">
                     <button type="submit" class="search-bar-combo__btn" data-keep-visible="1" title="<?= e(__('search')) ?>" aria-label="<?= e(__('search')) ?>">
@@ -69,28 +76,53 @@ require __DIR__ . '/../includes/layout_header.php';
                     </button>
                 </div>
             </div>
-            <div class="col-md-3">
-                <label class="form-label" for="filter-office"><?= e(__('assigned_office')) ?></label>
-                <select id="filter-office" name="office_id" class="form-select">
-                    <option value="all" <?= ($officeFilter === null || $officeFilter === 'all' || $officeFilter === '') ? 'selected' : '' ?>>All Offices</option>
-                    <?php foreach ($offices as $off): ?>
-                        <option value="<?= (int) $off['id'] ?>" <?= ((string) $officeFilter === (string) $off['id']) ? 'selected' : '' ?>>
-                            <?= e($off['name']) ?><?= !empty($off['code']) ? ' (' . e($off['code']) . ')' : '' ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+
+            <!-- Mobile quick filter toolbar -->
+            <div class="col-12 d-md-none staff-filter-mobile-toolbar d-flex align-items-center justify-content-between pt-1">
+                <button type="button" class="btn btn-sm btn-outline-secondary staff-filter-toggle-btn d-inline-flex align-items-center gap-1" data-bs-toggle="collapse" data-bs-target="#advancedStaffFilters" aria-expanded="<?= $hasActiveAdvanced ? 'true' : 'false' ?>">
+                    <i class="bi bi-funnel" aria-hidden="true"></i>
+                    <span><?= e(__('filters')) ?></span>
+                    <?php if ($activeFilterCount > 0): ?>
+                        <span class="badge bg-accent text-dark ms-1"><?= $activeFilterCount ?></span>
+                    <?php endif; ?>
+                </button>
+                <?php if ($isFiltered): ?>
+                    <a href="<?= e(url('/admin/staff.php')) ?>" class="staff-filter-reset-link small text-muted"><?= e(__('filters_reset')) ?></a>
+                <?php endif; ?>
             </div>
-            <div class="col-md-3">
-                <label class="form-label" for="filter-status"><?= e(__('filter_account_status')) ?></label>
-                <select id="filter-status" name="status" class="form-select">
-                    <option value="all" <?= $status === 'all' ? 'selected' : '' ?>><?= e(__('all_statuses')) ?></option>
-                    <option value="active" <?= $status === 'active' ? 'selected' : '' ?>><?= e(__('active')) ?></option>
-                    <option value="inactive" <?= $status === 'inactive' ? 'selected' : '' ?>><?= e(__('inactive')) ?></option>
-                </select>
+
+            <!-- Advanced Filters: Collapsible on mobile, direct grid columns on desktop -->
+            <div class="collapse d-md-contents <?= $hasActiveAdvanced ? 'show' : '' ?>" id="advancedStaffFilters">
+                <div class="col-md-3 col-6">
+                    <label class="form-label" for="filter-office"><?= e(__('assigned_office')) ?></label>
+                    <select id="filter-office" name="office_id" class="form-select">
+                        <option value="all" <?= ($officeFilter === null || $officeFilter === 'all' || $officeFilter === '') ? 'selected' : '' ?>>All Offices</option>
+                        <?php foreach ($offices as $off): ?>
+                            <option value="<?= (int) $off['id'] ?>" <?= ((string) $officeFilter === (string) $off['id']) ? 'selected' : '' ?>>
+                                <?= e($off['name']) ?><?= !empty($off['code']) ? ' (' . e($off['code']) . ')' : '' ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-3 col-6">
+                    <label class="form-label" for="filter-status"><?= e(__('filter_account_status')) ?></label>
+                    <select id="filter-status" name="status" class="form-select">
+                        <option value="all" <?= $status === 'all' ? 'selected' : '' ?>><?= e(__('all_statuses')) ?></option>
+                        <option value="active" <?= $status === 'active' ? 'selected' : '' ?>><?= e(__('active')) ?></option>
+                        <option value="inactive" <?= $status === 'inactive' ? 'selected' : '' ?>><?= e(__('inactive')) ?></option>
+                    </select>
+                </div>
+                <div class="col-12 d-md-none mt-2">
+                    <button type="submit" class="btn btn-sm btn-accent w-100">
+                        <i class="bi bi-check2 me-1"></i>Apply Filters
+                    </button>
+                </div>
             </div>
-            <div class="col-12 d-flex flex-wrap align-items-center gap-3" style="flex-basis:100%">
+
+            <!-- Desktop reset/hint row -->
+            <div class="col-12 d-none d-md-flex flex-wrap align-items-center gap-3" style="flex-basis:100%">
                 <span class="form-hint" data-auto-filter-hint hidden><?= e(__('filters_auto_hint')) ?></span>
-                <a href="<?= e(url('/admin/staff.php')) ?>" class="small"><?= e(__('filters_reset')) ?></a>
+                <a href="<?= e(url('/admin/staff.php')) ?>" class="small staff-filter-reset-link"><?= e(__('filters_reset')) ?></a>
             </div>
         </form>
     </div>
@@ -159,16 +191,62 @@ require __DIR__ . '/../includes/layout_header.php';
             </div>
             <div class="staff-management-mobile">
                 <?php foreach ($rows as $r): ?>
-                    <article class="staff-management-card">
-                        <div class="staff-management-card__head"><div class="staff-management-card__name fw-semibold"><?= e($r['full_name']) ?></div><div><?= (int)$r['is_active'] ? '<span class="status-badge badge-completed">' . e(__('active')) . '</span>' : '<span class="status-badge badge-absent">' . e(__('inactive')) . '</span>' ?></div></div>
-                        <?php if (!empty($r['email'])): ?><div class="staff-management-card__email"><?= e($r['email']) ?></div><?php endif; ?>
-                        <div class="staff-management-card__details">
-                            <div><span><?= e(__('username')) ?></span><code class="username-badge"><?= e($r['username']) ?></code></div>
-                            <div><span><?= e(__('position')) ?></span><strong><?= e((string) $r['job_position']) ?></strong></div>
-                            <div><span><?= e(__('assigned_office')) ?></span><strong><?= e($r['office_name'] ?? '—') ?></strong></div>
-                            <div><span><?= e(__('off_day')) ?></span><strong><?= e(weekday_name((int) $r['weekly_off_day'], lang_current())) ?></strong></div>
+                    <article class="staff-card">
+                        <div class="staff-card__head">
+                            <div class="staff-card__identity">
+                                <div class="staff-card__name fw-semibold"><?= e($r['full_name']) ?></div>
+                                <div class="staff-card__meta-sub">
+                                    <code class="username-badge"><?= e($r['username']) ?></code>
+                                    <?php if (!empty($r['email'])): ?>
+                                        <span class="staff-card__email"><?= e($r['email']) ?></span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <div class="staff-card__status">
+                                <?= (int)$r['is_active']
+                                    ? '<span class="status-badge badge-completed">' . e(__('active')) . '</span>'
+                                    : '<span class="status-badge badge-absent">' . e(__('inactive')) . '</span>' ?>
+                            </div>
                         </div>
-                        <div class="staff-management-card__actions"><a data-spa="0" class="btn btn-sm btn-outline-secondary" href="<?= e(url('/admin/staff_form.php?' . http_build_query(['id' => (int)$r['id'], 'return_to' => $_SERVER['REQUEST_URI'] ?? '/admin/staff.php']))) ?>"><?= e(__('edit')) ?></a><button type="button" class="btn btn-sm btn-outline-danger" data-delete-staff data-staff-id="<?= (int)$r['id'] ?>" data-staff-name="<?= e($r['full_name']) ?>" data-csrf="<?= e(csrf_token()) ?>"><?= e(__('delete')) ?></button></div>
+
+                        <div class="staff-card__body">
+                            <?php if (!empty($r['job_position'])): ?>
+                                <div class="staff-card__pos-row">
+                                    <span class="staff-card__label"><?= e(__('position')) ?></span>
+                                    <span class="staff-card__pos-val"><?= e($r['job_position']) ?></span>
+                                </div>
+                            <?php endif; ?>
+                            <div class="staff-card__meta-grid">
+                                <div class="staff-card__meta-cell">
+                                    <span class="staff-card__label"><?= e(__('assigned_office')) ?></span>
+                                    <span class="staff-card__meta-val">
+                                        <?php if (!empty($r['office_name'])): ?>
+                                            <i class="bi bi-buildings text-accent me-1" aria-hidden="true"></i><?= e($r['office_name']) ?>
+                                        <?php else: ?>
+                                            <span class="text-muted">—</span>
+                                        <?php endif; ?>
+                                    </span>
+                                </div>
+                                <div class="staff-card__meta-cell">
+                                    <span class="staff-card__label"><?= e(__('off_day')) ?></span>
+                                    <span class="staff-card__meta-val"><?= e(weekday_name((int) $r['weekly_off_day'], lang_current())) ?></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="staff-card__actions">
+                            <a data-spa="0" class="btn btn-sm btn-outline-secondary staff-card__btn-edit" href="<?= e(url('/admin/staff_form.php?' . http_build_query(['id' => (int)$r['id'], 'return_to' => $_SERVER['REQUEST_URI'] ?? '/admin/staff.php']))) ?>">
+                                <i class="bi bi-pencil-square me-1" aria-hidden="true"></i><?= e(__('edit')) ?>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger staff-card__btn-delete"
+                                    data-delete-staff
+                                    data-staff-id="<?= (int)$r['id'] ?>"
+                                    data-staff-name="<?= e($r['full_name']) ?>"
+                                    data-csrf="<?= e(csrf_token()) ?>"
+                            >
+                                <i class="bi bi-trash3 me-1" aria-hidden="true"></i><?= e(__('delete')) ?>
+                            </button>
+                        </div>
                     </article>
                 <?php endforeach; ?>
             </div>

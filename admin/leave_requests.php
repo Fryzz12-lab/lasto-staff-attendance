@@ -100,7 +100,7 @@ require __DIR__ . '/../includes/layout_header.php';
             </div>
             <div class="col-12 d-flex flex-wrap align-items-center gap-3" style="flex-basis:100%">
                 <span class="form-hint" data-auto-filter-hint hidden><?= e(__('filters_auto_hint')) ?></span>
-                <a href="<?= e(url('/admin/leave_requests.php')) ?>" class="small"><?= e(__('filters_reset')) ?></a>
+                <a href="<?= e(url('/admin/leave_requests.php')) ?>" class="small staff-filter-reset-link"><?= e(__('filters_reset')) ?></a>
             </div>
         </form>
     </div>

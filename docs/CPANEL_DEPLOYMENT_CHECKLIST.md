@@ -47,7 +47,7 @@ Do not commit `config/local.php`. Do not use the MySQL `root` account.
 3. Keep both import files on your computer; they do not belong in the public document root. Check that the selected database has zero tables before importing. The cPanel schema now fails if tables already exist.
 4. Do **not** import `database/schema.sql` (it issues `CREATE DATABASE staff_attendance`) or `database/seed.sql` (demo accounts).
 5. On the server, run `php cli/create_admin.php --username=... --name='...' --email=...` and enter the password when prompted. Do not put a password in the command line. Use a private terminal, since input masking depends on the terminal's `stty` support.
-6. Sign in and set security questions.
+6. Sign in and complete password setup. Security questions are retained only as legacy data and are not required for new setup.
 
 ## Cron
 
@@ -64,3 +64,7 @@ Confirm the PHP binary path in cPanel. `config/local.php` must exist so Cron use
 - No `Admin@123` / `Staff@123` / `uat_` accounts.
 - Login, logout, clock in/out, leave, corrections, PDF/CSV, and mobile layout checked.
 - Login rate limiting is configured at the server/proxy (the app has no persistent brute-force lock).
+
+## Web Push keys
+
+`config/vapid.json` is generated once and must remain stable. Preserve the existing file during deployments; do not regenerate it or include it in a replacement artifact. The `config/.htaccess` rule denies direct access to JSON files, and the entire `config/` directory should return HTTP 403. Set file permissions so the PHP process can read the file while visitors cannot access it.

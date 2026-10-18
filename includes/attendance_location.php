@@ -163,7 +163,7 @@ function attendance_location_finalize(int $eventId, int $userId, array $input): 
 
 function attendance_location_label(?array $event): string
 {
-    if (!$event) return 'Legacy / unavailable';
+    if (!$event) return 'Not recorded';
     $labels = [
         'captured' => 'Captured', 'low_accuracy' => 'Low accuracy',
         'permission_denied' => 'Permission denied', 'timed_out' => 'Timed out',
