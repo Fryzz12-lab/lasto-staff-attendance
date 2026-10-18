@@ -26,6 +26,9 @@ if ($id > 0) {
     }
 }
 
+$offices = db()->query('SELECT id, name, code, latitude, longitude, radius_meters, is_active FROM offices ORDER BY is_active DESC, name ASC')->fetchAll();
+$defaultOfficeId = !empty($offices) ? (int) $offices[0]['id'] : null;
+
 $pageTitle = $staff ? __('edit_staff') : __('add_staff');
 $activeMenu = 'staff';
 $bodyClass = 'admin-staff-form-page';
@@ -101,6 +104,8 @@ if (is_post()) {
     $email        = strtolower(trim((string) post('email')));
     $phone        = normalize_account_phone((string) post('phone'));
     $position     = trim((string) post('job_position'));
+    $officeId     = post('office_id');
+    $officeId     = ($officeId !== null && $officeId !== '' && is_numeric($officeId)) ? (int) $officeId : null;
     $joining      = trim((string) post('joining_date'));
     $endDate      = trim((string) post('employment_end_date'));
     $offDay       = (int) post('weekly_off_day', 0);
@@ -148,10 +153,20 @@ if (is_post()) {
             flash_set('danger', __('msg_email_required'));
         } elseif (!valid_account_email($email)) {
             flash_set('danger', 'Enter a valid email ending in .com, for example username@example.com.');
+        } elseif ($officeId === null) {
+            flash_set('danger', __('assigned_office') . ' is required.');
         } elseif ($endDate !== '' && $joining !== '' && $endDate < $joining) {
             flash_set('danger', 'Employment end date cannot be before the joining date.');
         } else {
             try {
+                // Inactive offices may remain assigned during edits, but cannot receive new assignments.
+                $officeCheck = db()->prepare('SELECT is_active FROM offices WHERE id = ? LIMIT 1');
+                $officeCheck->execute([$officeId]);
+                $selectedOffice = $officeCheck->fetch();
+                $currentOfficeId = $staff ? (int) ($staff['office_id'] ?? 0) : 0;
+                if (!$selectedOffice || (!(int) $selectedOffice['is_active'] && (int) $officeId !== $currentOfficeId)) {
+                    throw new InvalidArgumentException('Select an active office for this staff member.');
+                }
                 db()->beginTransaction();
                 $scheduleId = standard_schedule_id();
 
@@ -159,10 +174,10 @@ if (is_post()) {
                     $lock = db()->prepare('SELECT id FROM users WHERE id=? FOR UPDATE');
                     $lock->execute([$id]);
                     $emailChanged = strcasecmp((string) ($staff['email'] ?? ''), $email) !== 0;
-                    $sql = 'UPDATE users SET username=?, full_name=?, email=?, email_verified_at=CASE WHEN ?=1 THEN NULL ELSE email_verified_at END, phone=?, job_position=?, joining_date=?, employment_end_date=?, weekly_off_day=?, is_active=? WHERE id=?';
+                    $sql = 'UPDATE users SET username=?, full_name=?, email=?, email_verified_at=CASE WHEN ?=1 THEN NULL ELSE email_verified_at END, phone=?, job_position=?, office_id=?, joining_date=?, employment_end_date=?, weekly_off_day=?, is_active=? WHERE id=?';
                     db()->prepare($sql)->execute([
                         $username, $fullName, $email ?: null, $emailChanged ? 1 : 0,
-                        $phone ?: null, $position ?: null,
+                        $phone ?: null, $position ?: null, $officeId,
                         $joining ?: null, $endDate ?: null, $offDay, $isActive, $id,
                     ]);
                     if ($emailChanged) {
@@ -175,11 +190,11 @@ if (is_post()) {
                         $tempPassword = 'Temp@' . rand(1000, 9999);
                     }
                     $hash = password_hash($tempPassword, PASSWORD_DEFAULT);
-                    $sql = 'INSERT INTO users (employee_id, username, password_hash, full_name, email, phone, job_position, role, joining_date, employment_end_date, weekly_off_day, is_active, must_change_password)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, \'staff\', ?, ?, ?, ?, 1)';
+                    $sql = 'INSERT INTO users (employee_id, username, password_hash, full_name, email, phone, job_position, office_id, role, joining_date, employment_end_date, weekly_off_day, is_active, must_change_password)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, \'staff\', ?, ?, ?, ?, 1)';
                     db()->prepare($sql)->execute([
                         $employeeId, $username, $hash, $fullName, $email ?: null,
-                        $phone ?: null, $position ?: null,
+                        $phone ?: null, $position ?: null, $officeId,
                         $joining ?: today_str(), $endDate ?: null, $offDay, $isActive,
                     ]);
                     $userId = (int) db()->lastInsertId();
@@ -254,7 +269,7 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
             <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-check-circle-fill text-success fs-5"></i>
-                <h6 class="mb-0 fw-bold">Account ready — share login details</h6>
+                <h6 class="mb-0 fw-bold"><?= e(__('account_ready')) ?></h6>
             </div>
             <button type="button" class="btn btn-sm btn-accent d-inline-flex align-items-center gap-1"
                     onclick="copyCredsText(this, <?= e(json_encode($templateText)) ?>)">
@@ -265,7 +280,7 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
         
         <div class="row g-2 mb-2">
             <div class="col-sm-6">
-                <div class="p-2 rounded border bg-dark bg-opacity-50 d-flex justify-content-between align-items-center">
+                <div class="credential-value-panel p-2 rounded border d-flex justify-content-between align-items-center">
                     <div>
                         <span class="small text-muted d-block"><?= e(__('username')) ?>:</span>
                         <code class="fs-6 user-select-all text-accent fw-bold"><?= e($c['username']) ?></code>
@@ -277,7 +292,7 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
                 </div>
             </div>
             <div class="col-sm-6">
-                <div class="p-2 rounded border bg-dark bg-opacity-50 d-flex justify-content-between align-items-center">
+                <div class="credential-value-panel p-2 rounded border d-flex justify-content-between align-items-center">
                     <div>
                         <span class="small text-muted d-block"><?= e(__('temporary_password')) ?>:</span>
                         <code class="fs-6 user-select-all text-warning fw-bold"><?= e($c['temp_password']) ?></code>
@@ -290,8 +305,8 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
             </div>
         </div>
 
-        <details class="mt-3">
-            <summary class="small text-muted" style="cursor: pointer;"><?= e(__('preview_employee_message')) ?></summary>
+        <details class="preview-message-disclosure mt-3">
+            <summary class="small"><?= e(__('preview_employee_message')) ?></summary>
             <div class="mt-2 p-3 rounded border small user-select-all" style="white-space: pre-wrap; overflow-wrap: anywhere;"><?= e($templateText) ?></div>
         </details>
         <div class="d-flex flex-wrap justify-content-between gap-2 mt-3"><span class="small text-muted"><?= e(__('employee_message_hint')) ?></span><a class="btn btn-sm btn-outline-secondary" href="<?= e(url('/admin/staff.php')) ?>">Done — back to staff</a></div>
@@ -314,18 +329,18 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
             <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-shield-exclamation text-warning fs-5"></i>
-                <h6 class="mb-0 fw-bold text-warning">Temporary Password Issued!</h6>
+                <h6 class="mb-0 fw-bold text-warning"><?= e(__('temporary_password_issued')) ?></h6>
             </div>
             <button type="button" class="btn btn-sm btn-outline-warning d-inline-flex align-items-center gap-1 shadow-sm"
                     data-is-warning="1" onclick="copyCredsText(this, <?= e(json_encode($templateText)) ?>)">
-                <i class="bi bi-clipboard"></i> <span>Copy Credentials</span>
+                    <i class="bi bi-clipboard"></i> <span><?= e(__('copy_credentials')) ?></span>
             </button>
         </div>
         <p class="small text-muted mb-2">Provide this temporary password to <strong><?= e($c['full_name']) ?></strong>. The employee will be forced to change their password and re-verify security questions upon logging in.</p>
         
         <div class="row g-2 mb-2">
             <div class="col-sm-6">
-                <div class="p-2 rounded border bg-dark bg-opacity-50 d-flex justify-content-between align-items-center">
+                <div class="credential-value-panel p-2 rounded border d-flex justify-content-between align-items-center">
                     <div>
                         <span class="small text-muted d-block"><?= e(__('username')) ?>:</span>
                         <code class="fs-6 user-select-all text-accent fw-bold"><?= e($c['username']) ?></code>
@@ -337,7 +352,7 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
                 </div>
             </div>
             <div class="col-sm-6">
-                <div class="p-2 rounded border bg-dark bg-opacity-50 d-flex justify-content-between align-items-center">
+                <div class="credential-value-panel p-2 rounded border d-flex justify-content-between align-items-center">
                     <div>
                         <span class="small text-muted d-block"><?= e(__('temporary_password')) ?>:</span>
                         <code class="fs-6 user-select-all text-warning fw-bold"><?= e($c['temp_password']) ?></code>
@@ -350,7 +365,7 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
             </div>
         </div>
 
-        <div class="mt-2 p-2 rounded border bg-dark bg-opacity-35 small font-monospace text-muted user-select-all" style="white-space: pre-line; line-height: 1.5;"><?= e($templateText) ?></div>
+        <div class="credential-template mt-2 p-2 rounded border small font-monospace user-select-all" style="white-space: pre-line; line-height: 1.5;"><?= e($templateText) ?></div>
     </div>
 <?php endif; ?>
 
@@ -405,7 +420,10 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
                 <form method="post" id="staff-form" class="d-flex flex-column flex-grow-1 justify-content-between">
                     <?= csrf_field() ?>
                     <input type="hidden" name="form_action" value="save">
-                    <div class="row g-3">
+                    <?php if (!$staff): ?>
+                    <div class="staff-form-section">
+                        <h2 class="staff-form-section-title">ACCOUNT DETAILS</h2>
+                        <div class="staff-form-grid">
                         <div class="col-md-6">
                             <label class="form-label" for="input_full_name"><?= e(__('full_name')) ?> *</label>
                             <input id="input_full_name" name="full_name" class="form-control" value="<?= e((string)$v('full_name')) ?>" required autocomplete="name">
@@ -415,11 +433,10 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
                             <label class="form-label" for="input_username"><?= e(__('username')) ?> *</label>
                             <input id="input_username" name="username" class="form-control font-monospace" required value="<?= e((string)$v('username')) ?>" autocomplete="username">
                             <?php if (!$staff): ?>
-                                <div class="form-hint">Auto-suggested from full name. You can manually edit it.</div>
+                                <div class="form-hint"><?= e(__('auto_suggest_username')) ?></div>
                             <?php endif; ?>
                         </div>
 
-                        <?php if (!$staff): ?>
                         <div class="col-md-6">
                             <label class="form-label" for="input_temp_password"><?= e(__('temporary_password')) ?> *</label>
                             <div class="input-group">
@@ -430,22 +447,48 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
                             </div>
                             <div class="form-hint mb-2"><?= e(__('temporary_password_hint')) ?></div>
                         </div>
-                        <?php endif; ?>
-
                         <div class="col-md-6">
                             <div class="admin-email-label-row">
                                 <label class="form-label mb-0" for="staff-email"><?= e(__('email')) ?> *</label>
                                 <?php if ($staff): ?>
-                                    <?php if (!empty($staff['email_verified_at'])): ?><span class="email-status email-status--verified">Verified</span>
-                                    <?php else: ?><span class="email-status email-status--pending">Not verified</span><?php endif; ?>
+                                    <?php if (!empty($staff['email_verified_at'])): ?><span class="email-status email-status--verified"><?= e(__('verified')) ?></span>
+                                    <?php else: ?><span class="email-status email-status--pending"><?= e(__('not_verified')) ?></span><?php endif; ?>
                                 <?php endif; ?>
                             </div>
                             <input id="staff-email" type="email" name="email" class="form-control" value="<?= e((string) $v('email')) ?>" autocomplete="email" required>
                         </div>
 
+                        </div>
+                    </div>
+
+                    <div class="staff-form-section">
+                        <h2 class="staff-form-section-title">EMPLOYMENT DETAILS</h2>
+                        <div class="staff-form-grid">
                         <div class="col-md-6">
                             <label class="form-label"><?= e(__('job_position')) ?></label>
                             <input name="job_position" class="form-control" value="<?= e((string)$v('job_position')) ?>">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="staff_office_id"><?= e(__('assigned_office')) ?> *</label>
+                            <select id="staff_office_id" name="office_id" class="form-select" required>
+                                <option value="">-- <?= e(__('select_office')) ?> --</option>
+                                <?php foreach ($offices as $off): ?>
+                                    <?php
+                                        $isConfigured = $off['latitude'] !== null && $off['longitude'] !== null && is_numeric($off['latitude']) && is_numeric($off['longitude']);
+                                        $isSelected = (int) $v('office_id', $defaultOfficeId) === (int) $off['id'];
+                                        $isInactive = !(int) $off['is_active'];
+                                    ?>
+                                    <option value="<?= (int) $off['id'] ?>"
+                                            data-configured="<?= $isConfigured ? '1' : '0' ?>"
+                                            <?= $isInactive && !$isSelected ? 'disabled' : '' ?>
+                                            <?= $isSelected ? 'selected' : '' ?>>
+                                        <?= e($off['name']) ?><?= !empty($off['code']) ? ' (' . e($off['code']) . ')' : '' ?><?= $isInactive ? ' Inactive' : '' ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <div id="office_unconfigured_warn" class="form-hint text-warning mt-1" style="display:none;">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i> <?= e(__('office_unconfigured_warning')) ?>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label"><?= e(__('phone')) ?></label>
@@ -454,6 +497,52 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
                                 <input type="tel" name="phone" inputmode="numeric" maxlength="10" pattern="[1-9][0-9]{8,9}" aria-label="<?= e(__('phone')) ?>" aria-describedby="edit-phone-prefix" class="form-control" value="<?= e((string)$v('phone')) ?>" placeholder="123456789">
                             </div>
                         </div>
+                        <div class="col-md-6">
+                            <label class="form-label"><?= e(__('weekly_off_day')) ?></label>
+                            <select name="weekly_off_day" class="form-select">
+                                <?php for ($d = 0; $d <= 6; $d++): ?>
+                                    <option value="<?= $d ?>" <?= (int)$v('weekly_off_day', 0) === $d ? 'selected' : '' ?>><?= e(weekday_name($d, lang_current())) ?></option>
+                                <?php endfor; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label"><?= e(__('joining_date')) ?></label>
+                            <input type="date" name="joining_date" class="form-control" value="<?= e((string)$v('joining_date', today_str())) ?>">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label"><?= e(__('employment_end_date')) ?></label>
+                            <input type="date" name="employment_end_date" class="form-control" value="<?= e((string)$v('employment_end_date')) ?>">
+                            <div class="form-hint"><?= e(__('leave_blank_employed')) ?></div>
+                        </div>
+                        </div>
+                    </div>
+                    <input type="hidden" name="is_active" value="1">
+                    <?php else: ?>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="input_full_name"><?= e(__('full_name')) ?> *</label>
+                            <input id="input_full_name" name="full_name" class="form-control" value="<?= e((string)$v('full_name')) ?>" required autocomplete="name">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="input_username"><?= e(__('username')) ?> *</label>
+                            <input id="input_username" name="username" class="form-control font-monospace" required value="<?= e((string)$v('username')) ?>" autocomplete="username">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="admin-email-label-row"><label class="form-label mb-0" for="staff-email"><?= e(__('email')) ?> *</label></div>
+                            <input id="staff-email" type="email" name="email" class="form-control" value="<?= e((string) $v('email')) ?>" autocomplete="email" required>
+                        </div>
+                        <div class="col-md-6"><label class="form-label"><?= e(__('job_position')) ?></label><input name="job_position" class="form-control" value="<?= e((string)$v('job_position')) ?>"></div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="staff_office_id"><?= e(__('assigned_office')) ?> *</label>
+                            <select id="staff_office_id" name="office_id" class="form-select" required>
+                                <option value="">-- <?= e(__('select_office')) ?> --</option>
+                                <?php foreach ($offices as $off): $isConfigured = $off['latitude'] !== null && $off['longitude'] !== null && is_numeric($off['latitude']) && is_numeric($off['longitude']); ?><option value="<?= (int) $off['id'] ?>" data-configured="<?= $isConfigured ? '1' : '0' ?>" <?= (int) $v('office_id', $defaultOfficeId) === (int) $off['id'] ? 'selected' : '' ?>><?= e($off['name']) ?><?= !empty($off['code']) ? ' (' . e($off['code']) . ')' : '' ?></option><?php endforeach; ?>
+                            </select>
+                            <div id="office_unconfigured_warn" class="form-hint text-warning mt-1" style="display:none;"><i class="bi bi-exclamation-triangle-fill me-1"></i> <?= e(__('office_unconfigured_warning')) ?></div>
+                        </div>
+                        <div class="col-md-6"><label class="form-label"><?= e(__('phone')) ?></label><div class="input-group"><span class="input-group-text" id="edit-phone-prefix">+60</span><input type="tel" name="phone" inputmode="numeric" maxlength="10" pattern="[1-9][0-9]{8,9}" aria-label="<?= e(__('phone')) ?>" aria-describedby="edit-phone-prefix" class="form-control" value="<?= e((string)$v('phone')) ?>" placeholder="123456789"></div></div>
+                    </div>
+                    <div class="row g-3 staff-account-fields">
                         <?php if ($staff): ?>
                         <div class="col-md-6">
                             <label class="form-label"><?= e(__('account_status')) ?></label>
@@ -465,16 +554,7 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
                         <?php else: ?>
                             <input type="hidden" name="is_active" value="1">
                         <?php endif; ?>
-                        <div class="col-md-4">
-                            <label class="form-label"><?= e(__('joining_date')) ?></label>
-                            <input type="date" name="joining_date" class="form-control" value="<?= e((string)$v('joining_date', today_str())) ?>">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Employment End Date</label>
-                            <input type="date" name="employment_end_date" class="form-control" value="<?= e((string)$v('employment_end_date')) ?>">
-                            <div class="form-hint">Leave blank if still employed.</div>
-                        </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label"><?= e(__('weekly_off_day')) ?></label>
                             <select name="weekly_off_day" class="form-select">
                                 <?php for ($d = 0; $d <= 6; $d++): ?>
@@ -484,7 +564,17 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
                                 <?php endfor; ?>
                             </select>
                         </div>
+                        <div class="col-md-6">
+                            <label class="form-label"><?= e(__('joining_date')) ?></label>
+                            <input type="date" name="joining_date" class="form-control" value="<?= e((string)$v('joining_date', today_str())) ?>">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label"><?= e(__('employment_end_date')) ?></label>
+                            <input type="date" name="employment_end_date" class="form-control" value="<?= e((string)$v('employment_end_date')) ?>">
+                            <div class="form-hint"><?= e(__('leave_blank_employed')) ?></div>
+                        </div>
                     </div>
+                    <?php endif; ?>
 
                     <div class="d-flex flex-wrap gap-2 mt-4 pt-1">
                         <button class="btn btn-accent"><?= e(__('save')) ?></button>
@@ -505,8 +595,8 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
 
     <?php if ($staff): ?>
     <div class="col-lg-4 d-flex">
-        <details open class="card-soft staff-advanced-recovery w-100 d-flex flex-column mb-0">
-            <summary class="card-header"><i class="bi bi-key-fill text-warning me-1"></i> Temporary Password Override <i class="bi bi-chevron-down staff-recovery-chevron ms-auto"></i></summary>
+        <div class="card-soft staff-advanced-recovery w-100 d-flex flex-column mb-0">
+            <div class="card-header"><i class="bi bi-key-fill text-warning me-1"></i> Temporary Password Override</div>
             <div class="card-body d-flex flex-column justify-content-between flex-grow-1">
                 <div>
                     <p class="form-hint mb-3"><?= e(__('direct_override_hint')) ?></p>
@@ -533,17 +623,17 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
                             'password' => $suggestedTempPassword,
                         ]);
                         ?>
-                        <div class="mb-3">
+                        <div class="mb-3 template-send-section">
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <label class="form-label mb-0 small text-warning fw-semibold"><i class="bi bi-card-text me-1"></i> Template to Send:</label>
-                                <button type="button" class="btn btn-xs btn-outline-warning py-0 px-2" style="font-size: 0.75rem;" onclick="copySidebarTemplate(this)">
+                                <label class="form-label mb-0 small template-send-label fw-semibold"><i class="bi bi-card-text me-1"></i> Template to Send:</label>
+                                <button type="button" class="btn btn-xs btn-accent py-0 px-2" style="font-size: 0.75rem;" onclick="copySidebarTemplate(this)">
                                     <i class="bi bi-clipboard"></i> <span>Copy Template</span>
                                 </button>
                             </div>
                             <span id="sidebar_welcome_template" hidden><?= e(__('staff_password_reset_message')) ?></span>
                             <span id="sidebar_login_url" hidden><?= e($loginUrl) ?></span>
                             <span id="sidebar_company_name" hidden><?= e(company_name()) ?></span>
-                            <div id="sidebar_template_preview" class="p-2 rounded border bg-dark bg-opacity-50 small font-monospace text-light user-select-all" style="white-space: pre-line; line-height: 1.45; font-size: 0.82rem;"><?= e($sidebarInitText) ?></div>
+                            <div id="sidebar_template_preview" class="p-2 rounded border small font-monospace user-select-all" style="white-space: pre-line; line-height: 1.45; font-size: 0.82rem;"><?= e($sidebarInitText) ?></div>
                             <div class="form-hint mt-1">Preview only. Set the temporary password before sharing this message.</div>
                         </div>
                     </form>
@@ -553,7 +643,7 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
                     <button form="override-password-form" class="btn btn-warning w-100" id="btn_submit_temp_pw"><?= e(__('set_temp_password_btn')) ?></button>
                 </div>
             </div>
-        </details>
+        </div>
     </div>
     <?php endif; ?>
 </div>
@@ -570,7 +660,7 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
                     <form method="post" data-confirm="Issue a one-time reset link for this staff member?" class="mt-auto">
                         <?= csrf_field() ?>
                         <input type="hidden" name="form_action" value="reset_password">
-                        <button class="btn btn-outline-secondary w-100">Issue reset link</button>
+                        <button class="btn staff-account-action w-100">Issue reset link</button>
                     </form>
                 </div>
             </div>
@@ -582,15 +672,15 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
                     <div class="form-hint mb-3 d-flex align-items-center gap-2">
                         <span class="staff-status-label">Current status:</span>
                         <?php if (!empty($staff['email_verified_at'])): ?>
-                            <span class="email-status email-status--verified">Verified</span>
+                            <span class="email-status email-status--verified"><?= e(__('verified')) ?></span>
                         <?php else: ?>
-                            <span class="email-status email-status--pending">Not verified</span>
+                            <span class="email-status email-status--pending"><?= e(__('not_verified')) ?></span>
                         <?php endif; ?>
                     </div>
                     <form method="post" data-confirm="Send an email verification link to this staff member?" class="mt-auto">
                         <?= csrf_field() ?>
                         <input type="hidden" name="form_action" value="verify_email">
-                        <button class="btn btn-outline-info w-100" <?= empty($staff['email']) ? 'disabled' : '' ?>>Send verification email</button>
+                        <button class="btn staff-account-action w-100" <?= empty($staff['email']) ? 'disabled' : '' ?>>Send verification email</button>
                     </form>
                 </div>
             </div>
@@ -602,8 +692,6 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
 <script>
 (function() {
     function initStaffFormScript() {
-        const recoveryPanel = document.querySelector('.staff-advanced-recovery');
-        if (recoveryPanel && window.matchMedia('(max-width: 767.98px)').matches) recoveryPanel.removeAttribute('open');
         const fullNameInput = document.getElementById('input_full_name');
         const usernameInput = document.getElementById('input_username');
         const isEditMode = <?= $staff ? 'true' : 'false' ?>;
@@ -663,6 +751,21 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
                 tempPwInput.value = 'Temp@' + Math.floor(1000 + Math.random() * 9000);
             });
         }
+
+        const officeSelect = document.getElementById('staff_office_id');
+        const officeWarn = document.getElementById('office_unconfigured_warn');
+        if (officeSelect && officeWarn) {
+            const checkOfficeConfig = () => {
+                const opt = officeSelect.options[officeSelect.selectedIndex];
+                if (opt && opt.getAttribute('data-configured') === '0') {
+                    officeWarn.style.display = 'block';
+                } else {
+                    officeWarn.style.display = 'none';
+                }
+            };
+            officeSelect.addEventListener('change', checkOfficeConfig);
+            checkOfficeConfig();
+        }
     }
 
     if (document.readyState === 'loading') {
@@ -676,3 +779,4 @@ $loginUrl = getenv('LASTO_PUBLIC_ORIGIN')
 </script>
 
 <?php require __DIR__ . '/../includes/layout_footer.php'; ?>
+

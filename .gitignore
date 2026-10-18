@@ -3,10 +3,13 @@ uploads/profiles/*
 !uploads/profiles/.htaccess
 .env
 config/local.php
+config/vapid.json
 *.log
 .DS_Store
 deployment-artifacts/
 storage/*
 !storage/.htaccess
+tests/uat/*
+!tests/uat/.htaccess
 scratch/*
 !scratch/.htaccess

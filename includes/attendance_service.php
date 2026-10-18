@@ -7,6 +7,9 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/adjustment_service.php';
+require_once __DIR__ . '/push_service.php';
+require_once __DIR__ . '/notification_service.php';
+require_once __DIR__ . '/attendance_location.php';
 
 /** The company schedule is provisioned by setup/migration, never by a staff form. */
 function standard_schedule_id(): int
@@ -152,7 +155,7 @@ function assign_employee_schedule(int $userId, int $scheduleId, int $offDay): vo
         db()->prepare('INSERT INTO schedule_assignments (user_id,schedule_id,effective_from,weekly_off_day) VALUES (?,?,?,?)')
             ->execute([$userId, $scheduleId, $today, $offDay]);
         $att = get_attendance($userId, $today);
-        if ($att && !$att['clock_in']) {
+        if ($att) {
             reconcile_attendance_day_status($userId, $today, $att);
         }
     });
@@ -241,7 +244,7 @@ function submit_leave_request(int $userId, string $date, string $type, string $r
         || !in_array($type, ['medical','wfh','day_off','annual','emergency','other'], true) || trim($reason) === '') {
         throw new InvalidArgumentException(__('msg_leave_invalid'));
     }
-    with_employee_lock($userId, function () use ($userId, $date, $type, $reason): void {
+    $notification = with_employee_lock($userId, function () use ($userId, $date, $type, $reason): array {
         if (!employment_date_eligible($userId, $date)) {
             throw new InvalidArgumentException('Requests are not available for this employment date.');
         }
@@ -256,7 +259,30 @@ function submit_leave_request(int $userId, string $date, string $type, string $r
         }
         db()->prepare('INSERT INTO leave_requests (user_id,leave_date,leave_type,reason) VALUES (?,?,?,?)')
             ->execute([$userId, $date, $type, trim($reason)]);
+        $requestId = (int) db()->lastInsertId();
+        $uStmt = db()->prepare('SELECT full_name FROM users WHERE id = ? LIMIT 1');
+        $uStmt->execute([$userId]);
+        $name = (string) ($uStmt->fetchColumn() ?: 'Staff member');
+        $typeLabel = strtoupper($type);
+        $admins = db()->query("SELECT id FROM users WHERE role='admin' AND is_active=1")->fetchAll(PDO::FETCH_COLUMN);
+        foreach ($admins as $adminId) {
+            notification_create((int)$adminId, 'leave_request', 'leave-submitted-' . $requestId,
+                "New {$typeLabel} request", "A staff member submitted a {$typeLabel} request for {$date}.", '/admin/leave_requests.php');
+        }
+        return ['id' => $requestId, 'name' => $name];
     });
+    try {
+        $tUpper = strtoupper($type);
+        push_send_to_admins(
+            "New {$tUpper} Request",
+            "{$notification['name']} submitted a {$tUpper} request for {$date}.",
+            '/admin/leave_requests.php',
+            'admin-leave-' . $notification['id'],
+            ($type === 'wfh' ? 'new_wfh_request' : 'new_leave_request')
+        );
+    } catch (Throwable $pe) {
+        error_log('[Push] ' . $pe->getMessage());
+    }
 }
 
 function review_leave_request(int $requestId, string $decision, int $reviewerId, ?string $note, bool $requiresReplacement = false): void
@@ -273,7 +299,7 @@ function review_leave_request(int $requestId, string $decision, int $reviewerId,
     $stmt->execute([$requestId]);
     $userId = (int) $stmt->fetchColumn();
     if (!$userId) throw new InvalidArgumentException(__('msg_request_not_found'));
-    with_employee_lock($userId, function () use ($requestId, $decision, $reviewerId, $note, $userId): void {
+    $notification = with_employee_lock($userId, function () use ($requestId, $decision, $reviewerId, $note, $userId, $requiresReplacement): array {
         $stmt = db()->prepare('SELECT * FROM leave_requests WHERE id=? FOR UPDATE');
         $stmt->execute([$requestId]);
         $request = $stmt->fetch();
@@ -305,7 +331,30 @@ function review_leave_request(int $requestId, string $decision, int $reviewerId,
             $att = ensure_attendance_row($userId, $request['leave_date']);
             write_audit((int) $att['id'], $userId, $reviewerId, 'request_approved', 'work_arrangement', null, $request['leave_type'], $note);
         }
+        $typeLabel = strtoupper((string)$request['leave_type']);
+        notification_create($userId, 'leave_decision', 'leave-reviewed-' . $requestId,
+            "{$typeLabel} request " . ($decision === 'approved' ? 'approved' : 'declined'),
+            "Your {$typeLabel} request for {$request['leave_date']} was " . ($decision === 'approved' ? 'approved.' : 'declined.'),
+            '/staff/leave.php');
+        return ['type' => (string) $request['leave_type'], 'date' => (string) $request['leave_date']];
     });
+    try {
+        $tUpper = strtoupper($notification['type']);
+        $sText = ($decision === 'approved') ? 'Approved' : 'Declined';
+        $body = ($decision === 'approved')
+            ? "Your {$tUpper} request for {$notification['date']} has been approved."
+            : "Your {$tUpper} request for {$notification['date']} was declined.";
+        push_send_to_user(
+            $userId,
+            "{$tUpper} Request {$sText}",
+            $body,
+            '/staff/leave.php',
+            'staff-leave-' . $requestId,
+            'leave_decision'
+        );
+    } catch (Throwable $pe) {
+        error_log('[Push] ' . $pe->getMessage());
+    }
 }
 
 function get_attendance(int $userId, string $date): ?array
@@ -365,6 +414,18 @@ function ensure_attendance_rows_for_date(string $date): int
 {
     $parsed = DateTimeImmutable::createFromFormat('!Y-m-d', $date);
     if (!$parsed || $parsed->format('Y-m-d') !== $date || $date > today_str()) {
+        return 0;
+    }
+    // Most report views revisit dates whose staff rows already exist. Avoid the
+    // schedule and leave lookups in the INSERT when there is nothing to add.
+    $missingStmt = db()->prepare("SELECT 1 FROM users u
+        LEFT JOIN attendance a ON a.user_id = u.id AND a.work_date = ?
+        WHERE u.role = 'staff' AND u.is_active = 1
+          AND (u.joining_date IS NULL OR u.joining_date <= ?)
+          AND (u.employment_end_date IS NULL OR u.employment_end_date >= ?)
+          AND a.id IS NULL LIMIT 1");
+    $missingStmt->execute([$date, $date, $date]);
+    if (!$missingStmt->fetchColumn()) {
         return 0;
     }
     // A report may need thousands of missing staff-days. Insert them in one
@@ -430,9 +491,33 @@ function ensure_attendance_rows_for_range(string $from, string $to): int
     if ($start > $effectiveEnd) {
         return 0;
     }
-    $created = 0;
+    $dates = [];
     for ($date = $start; $date <= $effectiveEnd; $date = $date->modify('+1 day')) {
-        $created += ensure_attendance_rows_for_date($date->format('Y-m-d'));
+        $dates[] = $date->format('Y-m-d');
+    }
+    // One check per small date batch avoids a database round trip for every
+    // day when an admin revisits a report whose attendance rows already exist.
+    $hasMissingRows = false;
+    foreach (array_chunk($dates, 30) as $batch) {
+        $dateSelects = implode(' UNION ALL ', array_fill(0, count($batch), 'SELECT ? AS work_date'));
+        $missingStmt = db()->prepare("SELECT 1 FROM ({$dateSelects}) dates
+            JOIN users u ON u.role = 'staff' AND u.is_active = 1
+              AND (u.joining_date IS NULL OR u.joining_date <= dates.work_date)
+              AND (u.employment_end_date IS NULL OR u.employment_end_date >= dates.work_date)
+            LEFT JOIN attendance a ON a.user_id = u.id AND a.work_date = dates.work_date
+            WHERE a.id IS NULL LIMIT 1");
+        $missingStmt->execute($batch);
+        if ($missingStmt->fetchColumn()) {
+            $hasMissingRows = true;
+            break;
+        }
+    }
+    if (!$hasMissingRows) {
+        return 0;
+    }
+    $created = 0;
+    foreach ($dates as $date) {
+        $created += ensure_attendance_rows_for_date($date);
     }
     return $created;
 }
@@ -503,7 +588,7 @@ function reconcile_attendance_day_status(int $userId, string $date, ?array $att 
     if (!empty($att['clock_in'])) {
         // Preserve punches and their status; WFH remains visible throughout the shift.
         db()->prepare('UPDATE attendance SET is_wfh=?, is_day_off=?, was_scheduled_off_day=?, scheduled_off_weekday=? WHERE id=?')
-            ->execute([(int) $isWfh, $isWfh ? 0 : (int) $att['is_day_off'], $scheduledOff ? 1 : (int)($att['was_scheduled_off_day'] ?? 0), $schedule['weekly_off_day'] ?? ($att['scheduled_off_weekday'] ?? null), $att['id']]);
+            ->execute([(int) $isWfh, $isWfh ? 0 : (int) $shouldOff, $scheduledOff ? 1 : (int)($att['was_scheduled_off_day'] ?? 0), $schedule['weekly_off_day'] ?? ($att['scheduled_off_weekday'] ?? null), $att['id']]);
         if ($att['status'] === 'wfh') recalculate_attendance((int) $att['id']);
         return get_attendance($userId, $date);
     }
@@ -715,6 +800,9 @@ function clock_in(int $userId): array
 {
     return with_employee_lock($userId, function () use ($userId): array {
         $date = today_str();
+        if (has_approved_leave($userId, $date)) {
+            return ['success' => false, 'message' => __('msg_leave_today')];
+        }
         $att = ensure_attendance_row($userId, $date);
         if ($att['clock_in']) {
             return ['success' => false, 'message' => __('msg_already_clocked_in')];
@@ -724,9 +812,10 @@ function clock_in(int $userId): array
         db()->prepare('UPDATE attendance SET clock_in=?, late_minutes=?, status=? WHERE id=?')
             ->execute([$clockIn, $late, $late > 0 ? 'late' : 'present', $att['id']]);
         write_audit((int) $att['id'], $userId, $userId, 'clock_in', 'clock_in', null, $clockIn, 'Staff clock in');
+        $locationEventId = attendance_location_start((int) $att['id'], $userId, 'clock_in', $clockIn);
         $message = __('msg_clocked_in', ['time' => format_time($clockIn)]);
         $message .= $late > 0 ? __('msg_status_late', ['time' => format_minutes($late)]) : __('msg_status_ontime');
-        return ['success' => true, 'message' => $message, 'attendance_id' => (int) $att['id']];
+        return ['success' => true, 'message' => $message, 'attendance_id' => (int) $att['id'], 'location_event_id' => $locationEventId];
     });
 }
 
@@ -748,8 +837,9 @@ function clock_out(int $userId): array
         recalculate_attendance((int) $att['id']);
         ensure_offday_adjustment_review((int)$att['id']);
         write_audit((int) $att['id'], $userId, $userId, 'clock_out', 'clock_out', null, $clockOut, 'Staff clock out');
+        $locationEventId = attendance_location_start((int) $att['id'], $userId, 'clock_out', $clockOut);
         $att = get_attendance($userId, today_str());
-        return ['success' => true, 'message' => __('msg_clocked_out', [
+        return ['success' => true, 'location_event_id' => $locationEventId, 'message' => __('msg_clocked_out', [
             'time' => format_time($clockOut), 'work' => format_minutes((int) $att['work_minutes']),
         ])];
     });

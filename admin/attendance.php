@@ -24,22 +24,54 @@ $params = [$from, $to];
 if ($userId > 0) { $where .= ' AND a.user_id = ?'; $params[] = $userId; }
 if ($status !== '') { $where .= ' AND a.status = ?'; $params[] = $status; }
 
-// Total count (for pagination)
-$countStmt = db()->prepare("SELECT COUNT(*)" . $where);
+// Count by day so the page query only sorts dates that can appear on this page.
+$countStarted = microtime(true);
+$countStmt = db()->prepare("SELECT a.work_date, COUNT(*) AS row_count" . $where . " GROUP BY a.work_date ORDER BY a.work_date DESC");
 $countStmt->execute($params);
-$total = (int) $countStmt->fetchColumn();
+$dailyCounts = $countStmt->fetchAll();
+$total = 0;
+$pageStartDate = null;
+$pageEndDate = null;
+$pageOffset = 0;
+foreach ($dailyCounts as $dailyCount) {
+    $nextTotal = $total + (int) $dailyCount['row_count'];
+    if ($offset < $nextTotal && $offset + $perPage > $total) {
+        if ($pageStartDate === null) {
+            $pageStartDate = $dailyCount['work_date'];
+            $pageOffset = $offset - $total;
+        }
+        $pageEndDate = $dailyCount['work_date'];
+    }
+    $total = $nextTotal;
+}
+$countMs = (microtime(true) - $countStarted) * 1000;
 
 // Paginated rows
-$sql  = "SELECT a.*, u.full_name, u.employee_id" . $where;
-$sql .= " ORDER BY a.work_date DESC, u.full_name LIMIT {$perPage} OFFSET {$offset}";
-$stmt = db()->prepare($sql);
-$stmt->execute($params);
-$rows = $stmt->fetchAll();
+$rows = [];
+$rowsStarted = microtime(true);
+if ($pageStartDate !== null && $pageEndDate !== null) {
+    $sql  = "SELECT page.*,
+    li.location_status AS in_location_status, li.accuracy_metres AS in_location_accuracy,
+    lo.location_status AS out_location_status, lo.accuracy_metres AS out_location_accuracy
+    FROM (SELECT a.*, u.full_name, u.employee_id" . $where . " AND a.work_date BETWEEN ? AND ?
+        ORDER BY a.work_date DESC, u.full_name, a.id LIMIT {$perPage} OFFSET {$pageOffset}) page
+    LEFT JOIN attendance_location_events li ON li.attendance_id=page.id AND li.event_type='clock_in'
+    LEFT JOIN attendance_location_events lo ON lo.attendance_id=page.id AND lo.event_type='clock_out'
+    ORDER BY page.work_date DESC, page.full_name, page.id";
+    $stmt = db()->prepare($sql);
+    $stmt->execute([...$params, $pageEndDate, $pageStartDate]);
+    $rows = $stmt->fetchAll();
+}
+$rowsMs = (microtime(true) - $rowsStarted) * 1000;
 
 $pageTitle  = __('attendance_records');
 $activeMenu = 'attendance';
 $isAdminArea = true;
 $bodyClass = 'admin-attendance-records';
+if (!headers_sent()) {
+    header(sprintf('Server-Timing: day-counts;dur=%.1f, rows;dur=%.1f, page-data;dur=%.1f',
+        $countMs, $rowsMs, (microtime(true) - (float) ($_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true))) * 1000));
+}
 require __DIR__ . '/../includes/layout_header.php';
 ?>
 
@@ -72,7 +104,7 @@ require __DIR__ . '/../includes/layout_header.php';
             <div class="col-md-2"><button class="btn btn-accent w-100"><?= e(__('filter')) ?></button></div>
         <div class="col-12 d-flex flex-wrap align-items-center gap-3" style="flex-basis:100%">
                 <span class="form-hint" data-auto-filter-hint hidden><?= e(__('filters_auto_hint')) ?></span>
-                <a href="<?= e(url('/admin/attendance.php')) ?>" class="small"><?= e(__('filters_reset')) ?></a>
+                <a href="<?= e(url('/admin/attendance.php')) ?>" class="small staff-filter-reset-link"><?= e(__('filters_reset')) ?></a>
             </div>
         </form>
     </div>
@@ -88,11 +120,11 @@ require __DIR__ . '/../includes/layout_header.php';
                     <colgroup>
                         <col style="width: 12%;">
                         <col style="width: 20%;">
-                        <col style="width: 10%;">
-                        <col style="width: 10%;">
-                        <col style="width: 19%;">
-                        <col style="width: 9%;">
-                        <col style="width: 9%;">
+                        <col style="width: 12%;">
+                        <col style="width: 12%;">
+                        <col style="width: 17%;">
+                        <col style="width: 8%;">
+                        <col style="width: 8%;">
                         <col style="width: 11%;">
                     </colgroup>
                     <thead>
@@ -114,8 +146,9 @@ require __DIR__ . '/../includes/layout_header.php';
                             <td><?= e($r['full_name']) ?></td>
                             <td>
                                 <?= e(format_time($r['clock_in'])) ?>
+                                <?php if ($r['clock_in']): ?><small class="d-block text-muted"><?= e(attendance_location_label($r['in_location_status'] === null ? null : ['location_status' => $r['in_location_status'], 'accuracy_metres' => $r['in_location_accuracy']])) ?></small><?php endif; ?>
                             </td>
-                            <td><?= e(format_time($r['clock_out'])) ?></td>
+                            <td><?= e(format_time($r['clock_out'])) ?><?php if ($r['clock_out']): ?><small class="d-block text-muted"><?= e(attendance_location_label($r['out_location_status'] === null ? null : ['location_status' => $r['out_location_status'], 'accuracy_metres' => $r['out_location_accuracy']])) ?></small><?php endif; ?></td>
                             <td><?= attendance_status_badge($r) ?></td>
                             <td><?= e(format_minutes((int)$r['total_break_minutes'])) ?></td>
                             <td><?= e(format_minutes((int)$r['work_minutes'])) ?></td>
@@ -136,8 +169,8 @@ require __DIR__ . '/../includes/layout_header.php';
                             <div class="attendance-record-mobile__status"><?= attendance_status_badge($r) ?></div>
                         </div>
                         <div class="attendance-record-mobile__grid">
-                            <div><span>Clock In</span><strong><?= e(format_time($r['clock_in'])) ?></strong></div>
-                            <div><span>Clock Out</span><strong><?= e(format_time($r['clock_out'])) ?></strong></div>
+                            <div><span>Clock In</span><strong><?= e(format_time($r['clock_in'])) ?></strong><small><?= $r['clock_in'] ? e(attendance_location_label($r['in_location_status'] === null ? null : ['location_status' => $r['in_location_status'], 'accuracy_metres' => $r['in_location_accuracy']])) : '' ?></small></div>
+                            <div><span>Clock Out</span><strong><?= e(format_time($r['clock_out'])) ?></strong><small><?= $r['clock_out'] ? e(attendance_location_label($r['out_location_status'] === null ? null : ['location_status' => $r['out_location_status'], 'accuracy_metres' => $r['out_location_accuracy']])) : '' ?></small></div>
                             <div><span>Break Time</span><strong><?= e(format_minutes((int)$r['total_break_minutes'])) ?></strong></div>
                             <div><span>Working Time</span><strong><?= e(format_minutes((int)$r['work_minutes'])) ?></strong></div>
                         </div>

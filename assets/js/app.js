@@ -136,14 +136,17 @@
     form.querySelector('[data-password-error]')?.classList.add('d-none');
   });
   const overlay = document.getElementById('loadingOverlay');
+  const loadingLabel = overlay?.querySelector('[data-loading-label]');
+  const defaultLoadingLabel = loadingLabel?.textContent || 'Loading...';
   let toastContainer = document.getElementById('toastContainer');
 
-  function showLoading(show) {
+  function showLoading(show, message) {
     if (!overlay) return;
+    if (loadingLabel) loadingLabel.textContent = show && message ? message : defaultLoadingLabel;
     overlay.classList.toggle('d-none', !show);
   }
 
-  function showToast(message, type) {
+  function showToast(message, type, key) {
     type = type || 'success';
     if (!toastContainer) {
       const fallback = document.createElement('div');
@@ -151,7 +154,25 @@
       fallback.className = 'toast-container position-fixed top-0 end-0 p-3';
       document.body.appendChild(fallback);
       toastContainer = fallback;
-      return showToast(message, type);
+      return showToast(message, type, key);
+    }
+    if (key) {
+      toastContainer.querySelectorAll('[data-toast-key]').forEach((existing) => {
+        if (existing.dataset.toastKey !== key) return;
+        try { bootstrap.Toast.getInstance(existing)?.dispose(); } catch (e) { }
+        existing.remove();
+      });
+    }
+    // Remove duplicate messages and limit stack to max 2 items
+    toastContainer.querySelectorAll('.toast').forEach((existing) => {
+      if (existing.querySelector('.toast-body')?.textContent === message) {
+        try { bootstrap.Toast.getInstance(existing)?.dispose(); } catch (e) { }
+        existing.remove();
+      }
+    });
+    const currentToasts = toastContainer.querySelectorAll('.toast');
+    if (currentToasts.length >= 2) {
+      currentToasts[0].remove();
     }
     const id = 't' + Date.now();
     const el = document.createElement('div');
@@ -160,13 +181,14 @@
       (type === 'danger' ? 'danger' : type === 'warning' ? 'warning' : 'success') +
       ' border-0';
     el.id = id;
+    if (key) el.dataset.toastKey = key;
     el.setAttribute('role', 'alert');
     el.innerHTML =
       '<div class="d-flex"><div class="toast-body"></div>' +
       '<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Dismiss notification"></button></div>';
     el.querySelector('.toast-body').textContent = message;
     toastContainer.appendChild(el);
-    const toast = new bootstrap.Toast(el, { delay: 15000 });
+    const toast = new bootstrap.Toast(el, { delay: 4000 });
     toast.show();
     el.addEventListener('hidden.bs.toast', () => el.remove());
   }
@@ -273,9 +295,22 @@
       let accepted = false;
       const onHidden = () => { yes.onclick = null; modal.removeEventListener('hidden.bs.modal', onHidden); resolve(accepted); };
       yes.onclick = () => { accepted = true; instance.hide(); };
-      modal.addEventListener('hidden.bs.modal', onHidden, {once:true});
+      modal.addEventListener('hidden.bs.modal', onHidden, { once: true });
       instance.show();
     });
+  }
+
+  function alertAction(message) {
+    const modal = document.getElementById('appAlertModal') || (() => {
+      const el = document.createElement('div');
+      el.id = 'appAlertModal';
+      el.className = 'modal fade';
+      el.innerHTML = '<div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Notice</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"></div><div class="modal-footer"><button type="button" class="btn btn-accent" data-bs-dismiss="modal">OK</button></div></div></div>';
+      document.body.appendChild(el);
+      return el;
+    })();
+    modal.querySelector('.modal-body').textContent = message;
+    bootstrap.Modal.getOrCreateInstance(modal).show();
   }
 
   function confirmDashboardAction(button, message) {
@@ -307,6 +342,31 @@
       confirmButton.addEventListener('click', onConfirm);
       modal.addEventListener('hidden.bs.modal', onHidden);
       modal.addEventListener('shown.bs.modal', () => cancelButton.focus(), { once: true });
+      instance.show();
+    });
+  }
+
+  function askAttendanceLocation() {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade attendance-location-choice-modal';
+    modal.tabIndex = -1;
+    modal.setAttribute('aria-labelledby', 'attendanceLocationChoiceTitle');
+    modal.innerHTML = '<div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="attendanceLocationChoiceTitle">Share your location for attendance?</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body">Your location is requested only when you Clock In, Clock Out, or start/end approved work-from-home time. Your location is not continuously tracked.</div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-location-choice="disabled">Continue Without Location</button><button type="button" class="btn btn-accent" data-location-choice="enabled">Enable Location</button></div></div></div>';
+    document.body.appendChild(modal);
+    return new Promise((resolve) => {
+      const instance = bootstrap.Modal.getOrCreateInstance(modal);
+      let choice = null;
+      modal.querySelectorAll('[data-location-choice]').forEach((button) => {
+        button.addEventListener('click', () => {
+          choice = button.dataset.locationChoice;
+          instance.hide();
+        });
+      });
+      modal.addEventListener('hidden.bs.modal', () => {
+        instance.dispose();
+        modal.remove();
+        resolve(choice);
+      }, { once: true });
       instance.show();
     });
   }
@@ -520,7 +580,62 @@
     }, { passive: true });
   }
 
+  function initAttendanceLocationCard() {
+    const card = document.querySelector('[data-attendance-location-card]');
+    if (!card || card.dataset.locationInitialized === '1') return;
+    card.dataset.locationInitialized = '1';
+    const toggle = card.querySelector('[data-attendance-location-toggle]');
+    const state = card.querySelector('[data-attendance-location-state]');
+    const browser = card.querySelector('[data-attendance-browser-permission]');
+    const help = card.querySelector('[data-attendance-location-help]');
+    let browserPermission = 'checking';
+
+    const render = () => {
+      const preference = card.dataset.preference;
+      toggle.checked = preference === 'enabled';
+      toggle.indeterminate = false;
+      state.textContent = preference === 'undecided'
+        ? 'Not decided yet — choose during your next Clock In or Clock Out, or enable it here.'
+        : preference === 'disabled' ? 'Location will not be requested during attendance events.'
+          : browserPermission === 'denied' ? 'Location sharing is on, but your browser is blocking access.'
+            : 'Location will be requested during attendance events.';
+      browser.textContent = ({ granted: 'Allowed', prompt: 'Not requested', denied: 'Blocked', checking: 'Checking...', unknown: 'Unknown' })[browserPermission] || 'Unknown';
+      const badgeState = ({ granted: 'allowed', prompt: 'pending', denied: 'blocked' })[browserPermission] || 'unknown';
+      browser.className = 'attendance-permission-badge is-' + badgeState;
+      help.classList.toggle('is-blocked', browserPermission === 'denied');
+    };
+
+    render();
+    toggle.addEventListener('change', async () => {
+      const next = toggle.checked ? 'enabled' : 'disabled';
+      toggle.disabled = true;
+      const result = await apiPost('/api/clock.php', { action: 'location_preference', preference: next });
+      toggle.disabled = false;
+      if (!result.success) {
+        render();
+        showToast(result.message || 'Could not save Attendance Location. Please try again.', 'danger');
+        return;
+      }
+      card.dataset.preference = next;
+      document.querySelectorAll('[data-location-preference]').forEach((button) => { button.dataset.locationPreference = next; });
+      render();
+      showToast('Attendance Location ' + (next === 'enabled' ? 'enabled.' : 'disabled.'), 'success', 'attendance-location');
+    });
+
+    if (!navigator.geolocation || !window.isSecureContext || !navigator.permissions?.query) {
+      browserPermission = 'unknown'; render(); return;
+    }
+    navigator.permissions.query({ name: 'geolocation' }).then((permission) => {
+      if (!card.isConnected) return;
+      const update = () => { browserPermission = permission.state; render(); };
+      update();
+      permission.addEventListener?.('change', update);
+    }).catch(() => { browserPermission = 'unknown'; render(); });
+  }
+
   function bindPageActions() {
+    initAttendanceLocationCard();
+    initPushNotificationManager();
     document.querySelectorAll('.app-content [data-action]').forEach((btn) => {
       if (btn.dataset.actionBound === '1') return;
       btn.dataset.actionBound = '1';
@@ -546,7 +661,48 @@
         btn.disabled = true;
         let result;
         if (action === 'clock_in' || action === 'clock_out') {
+          if (btn.dataset.locationPreference === 'undecided') {
+            const choice = await askAttendanceLocation();
+            if (!choice) { btn.disabled = false; return; }
+            const savedChoice = await apiPost('/api/clock.php', { action: 'location_preference', preference: choice });
+            if (!savedChoice.success) {
+              showToast(savedChoice.message || 'Could not save your location choice. Please try again.', 'danger');
+              btn.disabled = false;
+              return;
+            }
+            document.querySelectorAll('[data-location-preference]').forEach((button) => {
+              button.dataset.locationPreference = choice;
+            });
+          }
           result = await apiPost('/api/clock.php', { action });
+          if (result?.success && result.location_event_id && btn.dataset.locationPreference === 'enabled') {
+            showLoading(true, (action === 'clock_in' ? 'Clock-in time' : 'Clock-out time') + ' recorded. Getting your location…');
+            let location;
+            try {
+              location = await new Promise((resolve) => {
+                if (!navigator.geolocation || !window.isSecureContext) {
+                  resolve({ location_status: 'unsupported' }); return;
+                }
+                try {
+                  navigator.geolocation.getCurrentPosition(
+                    (position) => resolve({
+                      location_status: 'captured', latitude: position.coords.latitude,
+                      longitude: position.coords.longitude, accuracy_metres: position.coords.accuracy
+                    }),
+                    (error) => resolve({ location_status: error.code === 1 ? 'permission_denied' : error.code === 3 ? 'timed_out' : 'unavailable' }),
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                  );
+                } catch (_) { resolve({ location_status: 'unavailable' }); }
+              });
+            } finally {
+              showLoading(false);
+            }
+            const saved = await apiPost('/api/clock.php', { action: 'location_result', event_id: result.location_event_id, ...location });
+            if (!saved.success) result.location_notice = 'Location could not be saved.';
+            if (location.location_status === 'permission_denied') {
+              result.location_notice = 'Location is blocked in your browser. See Attendance Location in your profile to enable it.';
+            }
+          }
         } else if (action === 'start_break') {
           result = await apiPost('/api/break.php', { action: 'start', type });
         } else if (action === 'end_break') {
@@ -556,7 +712,7 @@
         if (result && result.success) {
           if (action === 'clock_in') earthPulse('in');
           else if (action === 'clock_out') earthPulse('out');
-          showToast(result.message || 'Done', result.exceeded ? 'warning' : 'success');
+          showToast((result.message || 'Done') + (result.location_notice ? ' ' + result.location_notice : ''), result.location_notice || result.exceeded ? 'warning' : 'success');
           setTimeout(() => window.location.reload(), 500);
         } else {
           showToast((result && result.message) || 'Action failed', 'danger');
@@ -661,7 +817,7 @@
     if (persist !== false) {
       try {
         localStorage.setItem('chrono_theme', t);
-      } catch (e) {}
+      } catch (e) { }
     }
     const meta = document.getElementById('metaThemeColor');
     if (meta) meta.setAttribute('content', t === 'day' ? '#e8eef6' : '#06090f');
@@ -713,7 +869,7 @@
     if (persist !== false) {
       try {
         localStorage.setItem('chrono_globe', val);
-      } catch (e) {}
+      } catch (e) { }
     }
     const host = document.getElementById('chronoAmbient');
     if (host) {
@@ -747,14 +903,6 @@
 
     document.querySelectorAll('.globe-profile-toggle').forEach((input) => {
       input.checked = on;
-    });
-    document.querySelectorAll('.globe-profile-label').forEach((span) => {
-      const parent = span.closest('.notification-preference');
-      const onLabel = parent ? parent.getAttribute('data-label-on') : null;
-      const offLabel = parent ? parent.getAttribute('data-label-off') : null;
-      if (onLabel && offLabel) {
-        span.textContent = on ? onLabel : offLabel;
-      }
     });
   }
 
@@ -840,7 +988,7 @@
             track.classList.add(parts.length > 8 ? 'is-scrolling-fast' : 'is-scrolling');
           }
         });
-      } catch (e) {}
+      } catch (e) { }
     }
 
     tickerRefreshFn = refresh;
@@ -865,6 +1013,46 @@
   // ——— Live sidebar badges (no full page refresh) ———
   let badgePrev = null;
   let badgeTimer = null;
+  let notificationAudioContext = null;
+  let notificationAudioUnlocked = false;
+
+  function unlockNotificationSound() {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      notificationAudioContext ||= new AudioContext();
+      if (notificationAudioContext.state === 'suspended') notificationAudioContext.resume();
+      notificationAudioUnlocked = true;
+    } catch (e) { }
+  }
+
+  function playNotificationSound() {
+    if (!notificationAudioUnlocked || !notificationAudioContext) return;
+    try {
+      const ctx = notificationAudioContext;
+      const now = ctx.currentTime;
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.12, now + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
+      gain.connect(ctx.destination);
+      const oscillator = ctx.createOscillator();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(660, now);
+      oscillator.frequency.setValueAtTime(880, now + 0.13);
+      oscillator.connect(gain);
+      oscillator.start(now);
+      oscillator.stop(now + 0.44);
+    } catch (e) { }
+  }
+
+  function initNotificationSound() {
+    if (window.__CHRONOS_NOTIFICATION_SOUND__) return;
+    window.__CHRONOS_NOTIFICATION_SOUND__ = true;
+    ['pointerdown', 'keydown', 'touchstart'].forEach((eventName) => {
+      document.addEventListener(eventName, unlockNotificationSound, { once: true, passive: true });
+    });
+  }
 
   function i18n(key, replace) {
     const dict = window.CHRONOS_I18N || {};
@@ -905,6 +1093,7 @@
       const leaveNow = parseInt(map.leave, 10) || 0;
       const leaveWas = parseInt(badgePrev.leave, 10) || 0;
       if (leaveNow > leaveWas) {
+        playNotificationSound();
         const isAdminLeave = !!document.querySelector('.sidebar-nav a[href*="/admin/leave"]');
         if (isAdminLeave) {
           const added = leaveNow - leaveWas;
@@ -936,11 +1125,12 @@
       const json = await res.json();
       if (!json || !json.success || !json.badges) return;
       applyBadges(json.badges, { notify: !!notify });
-    } catch (e) {}
+    } catch (e) { }
   }
 
   function initBadgePoller() {
     if (!document.querySelector('.app-wrapper')) return;
+    initNotificationSound();
     if (window.__CHRONOS_BADGE_POLLER__) {
       fetchBadges(false);
       return;
@@ -999,6 +1189,214 @@
       e.stopPropagation();
       printPage();
     });
+  }
+
+  function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  }
+
+  async function initPushNotificationManager() {
+    const allowToggle = document.getElementById('allowAllNotifications');
+    const statusHint = document.getElementById('notificationStatus');
+    const testBtn = document.getElementById('btnTestPushNotification');
+    const optionCheckboxes = document.querySelectorAll('.notification-option');
+
+    if (!allowToggle && !statusHint && !testBtn && optionCheckboxes.length === 0) {
+      return;
+    }
+
+    const setStatus = (key, text) => {
+      if (!statusHint) return;
+      const str = text || statusHint.getAttribute('data-' + key) || key;
+      statusHint.textContent = str;
+    };
+
+    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+      if (allowToggle) allowToggle.disabled = true;
+      setStatus('unsupported', 'Notifications unsupported');
+      return;
+    }
+
+    let reg;
+    try {
+      reg = await navigator.serviceWorker.ready;
+    } catch (e) {
+      return;
+    }
+
+    let serverConfig = null;
+    try {
+      const res = await fetch((window.APP_BASE || '') + '/api/push_subscription.php', {
+        headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'same-origin',
+        cache: 'no-store',
+      });
+      serverConfig = await res.json();
+    } catch (e) { }
+
+    const prefs = serverConfig?.preferences || {};
+
+    const syncCategoryUi = (isEnabled) => {
+      const container = document.querySelector('.notification-preferences');
+      if (container) {
+        container.style.transition = 'opacity 0.25s ease, filter 0.25s ease';
+        container.style.opacity = isEnabled ? '1' : '0.45';
+        container.style.pointerEvents = isEnabled ? 'auto' : 'none';
+        container.style.filter = isEnabled ? 'none' : 'grayscale(0.8)';
+      }
+      optionCheckboxes.forEach((cb) => {
+        cb.disabled = !isEnabled;
+        if (!isEnabled) {
+          cb.checked = false;
+        } else {
+          const key = cb.dataset.notificationKey;
+          cb.checked = prefs[key] !== false;
+        }
+      });
+      if (testBtn) {
+        testBtn.disabled = !isEnabled;
+        testBtn.style.opacity = isEnabled ? '1' : '0.5';
+        testBtn.style.pointerEvents = isEnabled ? 'auto' : 'none';
+      }
+    };
+
+    optionCheckboxes.forEach((cb) => {
+      cb.addEventListener('change', async () => {
+        if (!allowToggle?.checked) return;
+        const key = cb.dataset.notificationKey;
+        if (!key) return;
+        prefs[key] = cb.checked;
+        const update = { [key]: cb.checked };
+        await apiPost('/api/push_subscription.php', { action: 'update_preferences', endpoint: subscription?.endpoint || '', preferences: update });
+      });
+    });
+
+    let subscription = await reg.pushManager.getSubscription();
+
+    if (Notification.permission === 'denied') {
+      if (allowToggle) {
+        allowToggle.checked = false;
+        allowToggle.disabled = true;
+      }
+      setStatus('blocked', 'Blocked in browser settings');
+      syncCategoryUi(false);
+    } else if (subscription && prefs.all !== false) {
+      if (allowToggle) allowToggle.checked = true;
+      setStatus('enabled', 'Enabled on this device');
+      syncCategoryUi(true);
+    } else {
+      if (allowToggle) allowToggle.checked = false;
+      setStatus('off', 'Disabled on this device');
+      syncCategoryUi(false);
+    }
+
+    if (allowToggle && !allowToggle.dataset.pushBound) {
+      allowToggle.dataset.pushBound = '1';
+      allowToggle.addEventListener('change', async () => {
+        if (allowToggle.checked) {
+          try {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+              allowToggle.checked = false;
+              syncCategoryUi(false);
+              setStatus('blocked', 'Blocked in browser settings');
+              showToast('Notification permission was not granted.', 'warning', 'push-toggle');
+              return;
+            }
+
+            const vapidKey = serverConfig?.vapid_public_key;
+            if (!vapidKey) {
+              throw new Error('VAPID public key unavailable from server.');
+            }
+
+            subscription = await reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: urlBase64ToUint8Array(vapidKey),
+            });
+
+            const subJson = subscription.toJSON();
+            const res = await apiPost('/api/push_subscription.php', {
+              action: 'subscribe',
+              subscription: subJson,
+            });
+
+            if (res?.success) {
+              prefs.all = true;
+              syncCategoryUi(true);
+              setStatus('enabled', 'Enabled on this device');
+              showToast('Push notifications enabled for this device!', 'success', 'push-toggle');
+            } else {
+              throw new Error(res?.message || 'Server failed to save subscription.');
+            }
+          } catch (err) {
+            console.error('[WebPush] Subscribe error:', err);
+            allowToggle.checked = false;
+            syncCategoryUi(false);
+            setStatus('off', 'Disabled on this device');
+            showToast(err.message || 'Failed to enable notifications.', 'danger');
+          }
+        } else {
+          // Immediately update UI to disabled state and untick child options
+          syncCategoryUi(false);
+          setStatus('off', 'Disabled on this device');
+          showToast('Push notifications disabled on this device.', 'info', 'push-toggle');
+          prefs.all = false;
+
+          try {
+            if (subscription) {
+              const endpoint = subscription.endpoint;
+              await subscription.unsubscribe();
+              subscription = null;
+              await apiPost('/api/push_subscription.php', {
+                action: 'unsubscribe',
+                endpoint: endpoint,
+              });
+            } else {
+              await apiPost('/api/push_subscription.php', {
+                action: 'unsubscribe',
+                endpoint: '',
+              });
+            }
+          } catch (err) {
+            console.error('[WebPush] Unsubscribe error:', err);
+          }
+        }
+      });
+    }
+
+    if (testBtn && !testBtn.dataset.pushBound) {
+      testBtn.dataset.pushBound = '1';
+      testBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        testBtn.disabled = true;
+        const origHtml = testBtn.innerHTML;
+        testBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Sending…';
+        try {
+          if (!subscription && Notification.permission !== 'granted') {
+            showToast('Please enable notifications first using the toggle above.', 'warning');
+            return;
+          }
+          const res = await apiPost('/api/push_subscription.php', { action: 'test' });
+          if (res?.success) {
+            showToast('Test notification sent! Check your device notification tray.', 'success');
+          } else {
+            showToast(res?.message || 'Could not send test notification.', 'warning');
+          }
+        } catch (err) {
+          showToast('Failed to trigger test notification.', 'danger');
+        } finally {
+          testBtn.disabled = false;
+          testBtn.innerHTML = origHtml;
+        }
+      });
+    }
   }
 
   function initServiceWorker() {
@@ -1068,6 +1466,7 @@
 
   window.SAS = {
     showToast,
+    alertAction,
     apiPost,
     showLoading,
     confirmAction,

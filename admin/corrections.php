@@ -100,7 +100,7 @@ $fieldLabels = [
             <button class="btn btn-outline-secondary"><?= e(__('filter')) ?></button>
         <div class="col-12 d-flex flex-wrap align-items-center gap-3" style="flex-basis:100%">
                 <span class="form-hint" data-auto-filter-hint hidden><?= e(__('filters_auto_hint')) ?></span>
-                <a href="<?= e(url('/admin/corrections.php')) ?>" class="small"><?= e(__('filters_reset')) ?></a>
+                <a href="<?= e(url('/admin/corrections.php')) ?>" class="small staff-filter-reset-link"><?= e(__('filters_reset')) ?></a>
             </div>
         </form>
     </div>

@@ -139,6 +139,11 @@
     });
 
     // Logout button
+    const curBells = document.querySelectorAll('.notification-bell');
+    const nextBells = doc.querySelectorAll('.notification-bell');
+    curBells.forEach((cur, idx) => {
+      if (nextBells[idx]) replaceOuter(cur, nextBells[idx]);
+    });
     const curLogout = document.querySelector('.topbar-actions a[href*="logout"]');
     const nextLogout = doc.querySelector('.topbar-actions a[href*="logout"]');
     if (curLogout && nextLogout) curLogout.innerHTML = nextLogout.innerHTML;
@@ -175,6 +180,7 @@
   }
 
   function refreshUiAfterSwap() {
+    if (window.initOfficeForm) window.initOfficeForm();
     // Page-local inline scripts are not re-executed when .app-content is
     // swapped. Keep the staff form's required username field functional after
     // soft navigation as well as after a full refresh.
@@ -301,6 +307,13 @@
         window.location.href = url;
         return;
       }
+
+      // Scripts inserted via innerHTML do not execute automatically.
+      doc.querySelectorAll('script:not([src])').forEach((script) => {
+        if (script.textContent.trim()) {
+          try { (0, eval)(script.textContent); } catch (error) { console.error('Page script error', error); }
+        }
+      });
 
       if (doc.title) document.title = doc.title;
 

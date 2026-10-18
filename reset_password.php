@@ -29,6 +29,7 @@ if (is_post()) {
     }
 }
 $pageTitle = $record && $record['purpose'] === 'verify_email' ? __('recovery_verify_email') : __('reset_password');
+$bodyClass = trim(($bodyClass ?? '') . ' recovery-page');
 require __DIR__ . '/includes/layout_header.php';
 ?>
 <div class="auth-card">

@@ -29,7 +29,9 @@ if ($userId > 0) {
     $userParams[] = $userId;
 }
 
+$attendanceFillStarted = microtime(true);
 ensure_attendance_rows_for_range($from, $to);
+$attendanceFillMs = (microtime(true) - $attendanceFillStarted) * 1000;
 $reportCondition = match ($report) {
     'late' => " AND (a.late_minutes > 0 OR a.status = 'late')",
     'incomplete' => " AND (a.status = 'incomplete' OR (a.clock_in IS NOT NULL AND a.clock_out IS NULL AND a.work_date < CURDATE()))",
@@ -42,12 +44,7 @@ $baseWhere = "a.work_date BETWEEN ? AND ? AND u.role='staff'
     AND (u.joining_date IS NULL OR u.joining_date <= a.work_date)
     AND (u.is_active = 1 OR a.work_date < CURDATE()) {$userFilter}{$reportCondition}";
 
-$countStmt = db()->prepare("SELECT COUNT(*) FROM attendance a JOIN users u ON u.id=a.user_id WHERE {$baseWhere}");
-$countStmt->execute($baseParams);
-$totalRows = (int) $countStmt->fetchColumn();
-$totalPages = max(1, (int) ceil($totalRows / $pageSize));
-$page = min($page, $totalPages);
-
+$summaryStarted = microtime(true);
 if ($report === 'late') {
     $lateStmt = db()->prepare("SELECT
         COUNT(*) AS total_late,
@@ -57,6 +54,7 @@ if ($report === 'late') {
         FROM attendance a JOIN users u ON u.id=a.user_id WHERE {$baseWhere}");
     $lateStmt->execute($baseParams);
     $lateData = $lateStmt->fetch() ?: [];
+    $totalRows = (int) ($lateData['total_late'] ?? 0);
     $summaryCardsList = [
         ['label' => __('late_incidents'), 'value' => number_format((int)($lateData['total_late'] ?? 0)), 'mod' => 'report-summary-card--late'],
         ['label' => __('total_late_time'), 'value' => format_minutes((int)($lateData['total_late_minutes'] ?? 0)), 'mod' => 'report-summary-card--hours'],
@@ -72,6 +70,7 @@ if ($report === 'late') {
         FROM attendance a JOIN users u ON u.id=a.user_id WHERE {$baseWhere}");
     $incompStmt->execute($baseParams);
     $incompData = $incompStmt->fetch() ?: [];
+    $totalRows = (int) ($incompData['total_incomp'] ?? 0);
     $summaryCardsList = [
         ['label' => __('incomplete_records'), 'value' => number_format((int)($incompData['total_incomp'] ?? 0)), 'mod' => 'report-summary-card--records'],
         ['label' => __('missing_clockout_count'), 'value' => number_format((int)($incompData['missing_out'] ?? 0)), 'mod' => 'report-summary-card--late'],
@@ -89,6 +88,7 @@ if ($report === 'late') {
         FROM attendance a JOIN users u ON u.id=a.user_id WHERE {$baseWhere}");
     $leaveStmt->execute($baseParams);
     $leaveData = $leaveStmt->fetch() ?: [];
+    $totalRows = (int) ($leaveData['total_leave'] ?? 0);
     $summaryCardsList = [
         ['label' => __('total_leave_days'), 'value' => number_format((int)($leaveData['total_leave'] ?? 0)), 'mod' => 'report-summary-card--records'],
         ['label' => __('scheduled_days_off'), 'value' => number_format((int)($leaveData['days_off'] ?? 0)), 'mod' => 'report-summary-card--present'],
@@ -104,6 +104,7 @@ if ($report === 'late') {
         FROM attendance a JOIN users u ON u.id=a.user_id WHERE {$baseWhere}");
     $wfhStmt->execute($baseParams);
     $wfhData = $wfhStmt->fetch() ?: [];
+    $totalRows = (int) ($wfhData['total_wfh'] ?? 0);
     $summaryCardsList = [
         ['label' => __('wfh_days'), 'value' => number_format((int)($wfhData['total_wfh'] ?? 0)), 'mod' => 'report-summary-card--records'],
         ['label' => __('wfh_worked_days'), 'value' => number_format((int)($wfhData['worked'] ?? 0)), 'mod' => 'report-summary-card--present'],
@@ -120,6 +121,7 @@ if ($report === 'late') {
         FROM attendance a JOIN users u ON u.id=a.user_id WHERE {$baseWhere}");
     $summaryStmt->execute($baseParams);
     $summaryRow = $summaryStmt->fetch() ?: [];
+    $totalRows = (int) ($summaryRow['scheduled_days'] ?? 0);
     $summaryCardsList = [
         ['label' => __('total_attendance_records'), 'value' => number_format((int)($summaryRow['scheduled_days'] ?? 0)), 'mod' => 'report-summary-card--records'],
         ['label' => __('report_clocked_records'), 'value' => number_format((int)($summaryRow['present_days'] ?? 0)), 'mod' => 'report-summary-card--present'],
@@ -128,8 +130,13 @@ if ($report === 'late') {
     ];
 }
 
+$totalPages = max(1, (int) ceil($totalRows / $pageSize));
+$page = min($page, $totalPages);
+$summaryMs = (microtime(true) - $summaryStarted) * 1000;
+
 $rows = [];
 $filtered = [];
+$rowsStarted = microtime(true);
 if ($export !== '') {
     $rowsStmt = db()->prepare("SELECT a.*, u.full_name, u.employee_id FROM attendance a JOIN users u ON u.id=a.user_id WHERE {$baseWhere} ORDER BY a.work_date, u.full_name");
     $rowsStmt->execute($baseParams);
@@ -137,14 +144,35 @@ if ($export !== '') {
     $filtered = $rows;
 } else {
     $offset = ($page - 1) * $pageSize;
-    $rowsStmt = db()->prepare("SELECT a.*, u.full_name, u.employee_id FROM attendance a JOIN users u ON u.id=a.user_id WHERE {$baseWhere} ORDER BY a.work_date, u.full_name LIMIT {$pageSize} OFFSET {$offset}");
-    $rowsStmt->execute($baseParams);
-    $rows = $rowsStmt->fetchAll();
+    $dateCountStmt = db()->prepare("SELECT a.work_date, COUNT(*) AS row_count FROM attendance a JOIN users u ON u.id=a.user_id WHERE {$baseWhere} GROUP BY a.work_date ORDER BY a.work_date");
+    $dateCountStmt->execute($baseParams);
+    $pageStartDate = null;
+    $pageEndDate = null;
+    $pageOffset = 0;
+    $rowsBefore = 0;
+    foreach ($dateCountStmt->fetchAll() as $dailyCount) {
+        $nextTotal = $rowsBefore + (int) $dailyCount['row_count'];
+        if ($offset < $nextTotal && $offset + $pageSize > $rowsBefore) {
+            if ($pageStartDate === null) {
+                $pageStartDate = $dailyCount['work_date'];
+                $pageOffset = $offset - $rowsBefore;
+            }
+            $pageEndDate = $dailyCount['work_date'];
+        }
+        $rowsBefore = $nextTotal;
+    }
+    if ($pageStartDate !== null && $pageEndDate !== null) {
+        $rowsStmt = db()->prepare("SELECT a.*, u.full_name, u.employee_id FROM attendance a JOIN users u ON u.id=a.user_id WHERE {$baseWhere} AND a.work_date BETWEEN ? AND ? ORDER BY a.work_date, u.full_name, a.id LIMIT {$pageSize} OFFSET {$pageOffset}");
+        $rowsStmt->execute([...$baseParams, $pageStartDate, $pageEndDate]);
+        $rows = $rowsStmt->fetchAll();
+    }
     $filtered = $rows;
 }
+$rowsMs = (microtime(true) - $rowsStarted) * 1000;
 
 // Break usage summary (only needed when viewing break report)
 $breakSummary = [];
+$breakSummaryStarted = microtime(true);
 if ($report === 'breaks') {
     $breakSql = "SELECT b.break_type, COUNT(*) AS cnt, SUM(b.duration_minutes) AS mins, SUM(b.exceeded) AS exceeded
                  FROM break_records b
@@ -156,6 +184,7 @@ if ($report === 'breaks') {
     $breakStmt->execute($baseParams);
     $breakSummary = $breakStmt->fetchAll();
 }
+$breakSummaryMs = (microtime(true) - $breakSummaryStarted) * 1000;
 
 $reportTitles = [
     'late' => __('report_late_summary'),
@@ -329,6 +358,11 @@ $pageTitle = __('reports');
 $activeMenu = 'reports';
 $isAdminArea = true;
 $bodyClass = 'reports-page';
+if (!headers_sent()) {
+    header(sprintf('Server-Timing: attendance-fill;dur=%.1f, summary;dur=%.1f, rows;dur=%.1f, break-summary;dur=%.1f, page-data;dur=%.1f',
+        $attendanceFillMs, $summaryMs, $rowsMs, $breakSummaryMs,
+        (microtime(true) - (float) ($_SERVER['REQUEST_TIME_FLOAT'] ?? $attendanceFillStarted)) * 1000));
+}
 require __DIR__ . '/../includes/layout_header.php';
 
 $qs = http_build_query(['report' => $report, 'from' => $from, 'to' => $to, 'user_id' => $userId]);
@@ -399,7 +433,7 @@ $pageQs = ['report' => $report, 'from' => $from, 'to' => $to, 'user_id' => $user
             </div>
         <div class="col-12 d-flex flex-wrap align-items-center gap-3" style="flex-basis:100%">
                 <span class="form-hint" data-auto-filter-hint hidden><?= e(__('filters_auto_hint')) ?></span>
-                <a href="<?= e(url('/admin/reports.php')) ?>" class="small"><?= e(__('filters_reset')) ?></a>
+                <a href="<?= e(url('/admin/reports.php')) ?>" class="small staff-filter-reset-link"><?= e(__('filters_reset')) ?></a>
             </div>
         </form>
     </div>

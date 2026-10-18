@@ -12,34 +12,36 @@ $badgeCounts = chrono_badge_counts($user);
 /**
  * @param string|null $badgeKey Key used by live poller (leave, incomplete, …)
  */
-function nav_item(
-    string $key,
-    string $href,
-    string $icon,
-    string $label,
-    string $activeMenu,
-    ?string $badgeKey = null,
-    int $badgeCount = 0
-): string {
-    $active = $activeMenu === $key ? ' active' : '';
-    $badgeAttr = $badgeKey !== null ? ' data-badge-key="' . e($badgeKey) . '"' : '';
-    $badgeHtml = '';
-    if ($badgeKey !== null) {
-        $on = $badgeCount > 0;
-        $badgeHtml =
-            '<span class="nav-badge' . ($on ? ' is-on' : '') . '"' .
-            ' data-badge="' . e($badgeKey) . '"' .
-            ($on ? '' : ' hidden') .
-            ' aria-label="' . e((string) $badgeCount) . '">' .
-            ($on ? e(chrono_format_badge_n($badgeCount)) : '') .
-            '</span>';
-    }
+if (!function_exists('nav_item')) {
+    function nav_item(
+        string $key,
+        string $href,
+        string $icon,
+        string $label,
+        string $activeMenu,
+        ?string $badgeKey = null,
+        int $badgeCount = 0
+    ): string {
+        $active = $activeMenu === $key ? ' active' : '';
+        $badgeAttr = $badgeKey !== null ? ' data-badge-key="' . e($badgeKey) . '"' : '';
+        $badgeHtml = '';
+        if ($badgeKey !== null) {
+            $on = $badgeCount > 0;
+            $badgeHtml =
+                '<span class="nav-badge' . ($on ? ' is-on' : '') . '"' .
+                ' data-badge="' . e($badgeKey) . '"' .
+                ($on ? '' : ' hidden') .
+                ' aria-label="' . e((string) $badgeCount) . '">' .
+                ($on ? e(chrono_format_badge_n($badgeCount)) : '') .
+                '</span>';
+        }
 
-    return '<a class="nav-link' . $active . '" href="' . e(url($href)) . '"' . $badgeAttr . '>' .
-        '<i class="bi ' . e($icon) . '"></i>' .
-        '<span class="nav-link__label">' . e($label) . '</span>' .
-        $badgeHtml .
-        '</a>';
+        return '<a class="nav-link' . $active . '" href="' . e(url($href)) . '"' . $badgeAttr . '>' .
+            '<i class="bi ' . e($icon) . '"></i>' .
+            '<span class="nav-link__label">' . e($label) . '</span>' .
+            $badgeHtml .
+            '</a>';
+    }
 }
 
 $b = static function (string $key) use ($badgeCounts): int {
@@ -74,6 +76,7 @@ if ($user && $user['role'] === 'admin' && ($isAdminArea ?? true)):
         );
     }
     echo nav_item('reports', '/admin/reports.php', 'bi-file-earmark-bar-graph', __('reports'), $activeMenu);
+    echo nav_item('offices', '/admin/offices.php', 'bi-buildings', __('office_locations'), $activeMenu);
     echo nav_item('settings', '/admin/settings.php', 'bi-gear', __('settings'), $activeMenu);
     echo nav_item('profile', '/admin/profile.php', 'bi-person', __('my_profile'), $activeMenu);
 else:

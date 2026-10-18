@@ -1,6 +1,6 @@
 <?php
 /**
- * Staff Dashboard — Streamlined Operational View
+ * Staff Dashboard  Streamlined Operational View
  */
 
 declare(strict_types=1);
@@ -30,6 +30,12 @@ if ($scheduledOffDay && $att) {
 }
 $offdayAttendanceLabel = !$att || !$att['clock_in'] ? __('offday_not_clocked_in') : ($att['clock_out'] ? __('offday_completed') : __('offday_working'));
 $offdayReviewLabel = !$att || !$att['clock_out'] ? __('offday_review_after_clockout') : ($offdayReview ? __('offday_review_' . $offdayReview['status']) : __('offday_review_pending'));
+$locationEvents = [];
+if ($att) {
+    $locationStmt = db()->prepare('SELECT event_type,location_status,accuracy_metres FROM attendance_location_events WHERE attendance_id=?');
+    $locationStmt->execute([(int) $att['id']]);
+    foreach ($locationStmt->fetchAll() as $event) $locationEvents[$event['event_type']] = $event;
+}
 
 $pageTitle = __('dashboard');
 $activeMenu = 'dashboard';
@@ -67,7 +73,7 @@ if (!empty($att['clock_in'])) {
         'activity' => __('clock_in'),
         'icon' => 'bi-box-arrow-in-right',
         'icon_type' => 'in',
-        'duration' => '—',
+        'duration' => '',
         'badge' => $isLate ? __('badge_late_arrival') : __('badge_on_time'),
         'badge_color' => $isLate ? 'red' : 'green',
         'sub' => $isLate ? '+' . format_minutes((int) $att['late_minutes']) : null,
@@ -90,14 +96,14 @@ foreach ($breaks as $b) {
     $startTimeStr = format_time($b['start_time']);
 
     if ($isActive) {
-        $timeDisplay = "{$startTimeStr} – Present";
+        $timeDisplay = "{$startTimeStr}  Present";
         $durText = format_minutes(elapsed_minutes_since($b['start_time']));
         $badge = __('badge_in_progress');
         $badgeColor = 'amber';
         $sub = null;
     } else {
         $endTimeStr = format_time($b['end_time']);
-        $timeDisplay = "{$startTimeStr} – {$endTimeStr}";
+        $timeDisplay = "{$startTimeStr}  {$endTimeStr}";
         $dur = (int) $b['duration_minutes'];
         $durText = format_minutes($dur);
         $isExceeded = !empty($b['exceeded']);
@@ -150,13 +156,20 @@ usort($activities, fn($a, $b) => $a['ts'] <=> $b['ts']);
 require __DIR__ . '/../includes/layout_header.php';
 ?>
 
+<?php if (!empty($att['clock_in'])): ?>
+<div class="small text-muted mb-2 d-none d-md-block">Attendance Location:
+    Clock In: <?= e(attendance_location_label($locationEvents['clock_in'] ?? null)) ?>
+    <?php if (!empty($att['clock_out'])): ?> &middot; Clock Out: <?= e(attendance_location_label($locationEvents['clock_out'] ?? null)) ?><?php endif; ?>
+</div>
+<?php endif; ?>
+
 <!-- Compact Header: Greeting & Integrated Status Strip -->
 <div class="dash-compact-header mb-3">
     <div class="dash-greeting-block">
         <h2 class="dash-greeting-title mb-1"><?= e(greeting_text()) ?>, <?= e(greeting_display_name($user['full_name'])) ?></h2>
         <div class="dash-date-line text-muted">
             <strong class="text-white-emphasis fw-bold"><?= e(format_date($data['date'])) ?></strong>
-            <span class="opacity-75"> · <?= e(weekday_name((int) now()->format('w'), lang_current())) ?></span>
+            <span class="opacity-75"> &middot; <?= e(weekday_name((int) now()->format('w'), lang_current())) ?></span>
         </div>
     </div>
     <!-- Desktop 3-pill meta strip -->
@@ -167,7 +180,7 @@ require __DIR__ . '/../includes/layout_header.php';
                 <?php if ($data['is_day_off']): ?>
                     <?= e(__('st_day_off')) ?>
                 <?php elseif ($schedule): ?>
-                    <?= e(format_time($data['date'] . ' ' . $schedule['start_time'])) ?> – <?= e(format_time($data['date'] . ' ' . $schedule['end_time'])) ?>
+                    <?= e(format_time($data['date'] . ' ' . $schedule['start_time'])) ?>  <?= e(format_time($data['date'] . ' ' . $schedule['end_time'])) ?>
                 <?php else: ?>
                     <?= e(__('not_assigned')) ?>
                 <?php endif; ?>
@@ -188,28 +201,6 @@ require __DIR__ . '/../includes/layout_header.php';
                 <span class="meta-pill-val font-monospace"><?= e(format_minutes((int) ($schedule['target_work_minutes'] ?? 450))) ?> total</span>
             </div>
         <?php endif; ?>
-    </div>
-    <!-- Mobile Integrated Context Strip (Item 1: Schedule, Target & Current Status grouped together) -->
-    <div class="dash-mobile-context-strip d-md-none mt-2 p-2 px-3 rounded">
-        <div class="d-flex align-items-center justify-content-between">
-            <div class="mobile-context-info">
-                <?php if ($data['is_day_off']): ?>
-                    <span class="text-muted small"><i class="bi bi-calendar-x me-1"></i><?= e(__('st_day_off')) ?></span>
-                <?php elseif ($schedule): ?>
-                    <div class="context-sched font-monospace fw-semibold text-white-emphasis small">
-                        <?= e(format_time($data['date'] . ' ' . $schedule['start_time'])) ?> – <?= e(format_time($data['date'] . ' ' . $schedule['end_time'])) ?>
-                    </div>
-                    <div class="context-target text-muted small">
-                        <?= e(format_minutes((int) ($schedule['target_work_minutes'] ?? 450))) ?> target
-                    </div>
-                <?php else: ?>
-                    <span class="text-muted small"><?= e(__('not_assigned')) ?></span>
-                <?php endif; ?>
-            </div>
-            <div class="mobile-context-status">
-                <?= attendance_status_badge($att) ?>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -254,6 +245,7 @@ require __DIR__ . '/../includes/layout_header.php';
         <?php endif; ?>
         <button type="button" class="btn btn-accent btn-action-lg px-5 py-3 fw-bold fs-5 shadow-sm"
                 data-action="clock_in"
+                data-location-preference="<?= $user['attendance_location_enabled'] === null ? 'undecided' : ((int)$user['attendance_location_enabled'] === 1 ? 'enabled' : 'disabled') ?>"
                 data-confirm="<?= e(__('confirm_clock_in')) ?>"
                 data-confirm-title="<?= e(__('clock_in')) ?>"
                 data-confirm-label="<?= e(__('clock_in')) ?>">
@@ -354,7 +346,7 @@ require __DIR__ . '/../includes/layout_header.php';
         <!-- Mobile Optimized Summary: Time span -> Late warning directly under time -> Actual work -->
         <div class="dash-hero-mobile-summary d-md-none py-1">
             <div class="mobile-summary-span font-monospace fs-5 fw-bold text-white-emphasis mb-3">
-                <?= e(format_time($att['clock_in'])) ?> <span class="text-muted fs-6">→</span> <?= e(format_time($att['clock_out'])) ?>
+                <?= e(format_time($att['clock_in'])) ?> <span class="text-muted fs-6"></span> <?= e(format_time($att['clock_out'])) ?>
             </div>
             <div class="dash-mobile-metrics-grid">
                 <div class="mobile-metric-col">
@@ -492,9 +484,9 @@ require __DIR__ . '/../includes/layout_header.php';
                             $estMinutes = (int) $rule['suggest_session'];
                             $estTime = now()->modify("+{$estMinutes} minutes")->format('g:i A');
                             $icon = match($type) {
-                                'lunch' => '🍱',
-                                'solat' => '🕌',
-                                default => '☕',
+                                'lunch' => 'bi-egg-fried',
+                                'solat' => 'bi-moon-stars',
+                                default => 'bi-cup-hot',
                             };
                         ?>
                         <button type="button"
@@ -506,10 +498,10 @@ require __DIR__ . '/../includes/layout_header.php';
                             data-confirm-label="<?= e(__('start_break_button') . ' ' . $label) ?>"
                             <?= $canStart ? '' : 'disabled' ?>
                             title="<?= $canStart ? e(__('est_break_end')) . ' ~' . e($estTime) : 'Session limit reached' ?>">
-                            <span class="break-btn-icon"><?= $icon ?></span>
+                            <span class="break-btn-icon"><i class="bi <?= e($icon) ?>" aria-hidden="true"></i></span>
                             <span class="break-btn-content">
-                                <span class="break-btn-title"><?= e(__('start_break_button')) ?> <?= e($label) ?> · <?= e($duration) ?></span>
-                                <span class="break-btn-sub"><?= $remaining ?> remaining</span>
+                                <span class="break-btn-title"><?= e(__('start_break_button')) ?> <?= e($label) ?> &middot; <?= e($duration) ?></span>
+                                <span class="break-btn-sub"><?= $remaining ?> <?= e(__('break_remaining_short')) ?></span>
                             </span>
                         </button>
                     <?php endforeach; ?>
@@ -522,6 +514,7 @@ require __DIR__ . '/../includes/layout_header.php';
                 </div>
                 <button type="button" class="btn btn-clock-out"
                         data-action="clock_out"
+                        data-location-preference="<?= $user['attendance_location_enabled'] === null ? 'undecided' : ((int)$user['attendance_location_enabled'] === 1 ? 'enabled' : 'disabled') ?>"
                         data-confirm="<?= e(__('confirm_clock_out')) ?>"
                         data-confirm-title="<?= e(__('clock_out')) ?>"
                         data-confirm-label="<?= e(__('clock_out')) ?>">
@@ -565,7 +558,7 @@ require __DIR__ . '/../includes/layout_header.php';
                             <div class="activity-strip-name fw-semibold"><?= e($act['activity']) ?></div>
                             <div class="activity-strip-meta text-muted small mt-1">
                                 <span class="activity-strip-time"><?= e($act['time_display']) ?></span>
-                                <?php if ($act['duration'] !== '—'): ?>
+                                <?php if ($act['duration'] !== ''): ?>
                                     <span class="activity-strip-dur ms-2">
                                         <i class="bi bi-stopwatch me-1" aria-hidden="true"></i><?= e($act['duration']) ?>
                                     </span>
@@ -621,3 +614,5 @@ require __DIR__ . '/../includes/layout_header.php';
 </div>
 
 <?php require __DIR__ . '/../includes/layout_footer.php'; ?>
+
+

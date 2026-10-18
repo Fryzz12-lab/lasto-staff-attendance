@@ -138,7 +138,7 @@ function format_datetime(?string $datetime): string
     }
     try {
         $dt = new DateTimeImmutable($datetime, new DateTimeZone('Asia/Kuala_Lumpur'));
-        return $dt->format('d/m/Y, g:i A');
+        return $dt->format('d M Y, g:i A');
     } catch (Exception $e) {
         return '—';
     }
@@ -374,9 +374,12 @@ function generate_employee_id(): string
     return 'EMP' . str_pad((string) $next, 3, '0', STR_PAD_LEFT);
 }
 
-function get_setting(string $key, ?string $default = null): ?string
+function get_setting(string $key, ?string $default = null, bool $fresh = false): ?string
 {
     static $cache = null;
+    if ($fresh) {
+        $cache = null;
+    }
     if ($cache === null) {
         $cache = [];
         try {
@@ -389,6 +392,13 @@ function get_setting(string $key, ?string $default = null): ?string
         }
     }
     return $cache[$key] ?? $default;
+}
+
+function set_setting(string $key, string $value): void
+{
+    $stmt = db()->prepare('INSERT INTO system_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)');
+    $stmt->execute([$key, $value]);
+    get_setting('', null, true);
 }
 
 function setting_bool(string $key, bool $default = false): bool

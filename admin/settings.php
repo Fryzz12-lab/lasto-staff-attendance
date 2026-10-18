@@ -113,10 +113,10 @@ require __DIR__ . '/../includes/layout_header.php';
         </div>
 
     </div>
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3">
-        <a href="<?= e(url('/admin/schedules.php')) ?>"><?= e(__('schedules')) ?> <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+    <div class="d-flex justify-content-end align-items-center gap-3 mt-3">
         <button class="btn btn-accent"><?= e(__('save_settings')) ?></button>
     </div>
 </form>
+
 
 <?php require __DIR__ . '/../includes/layout_footer.php'; ?>

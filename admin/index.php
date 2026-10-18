@@ -111,7 +111,7 @@ $rings = [
             </div>
             <div class="dash-admin-filter-footer">
                 <span class="form-hint"><?= e(__('filters_auto_hint')) ?></span>
-                <a href="<?= e(url('/admin/index.php')) ?>"><?= e(__('filters_reset')) ?></a>
+                <a href="<?= e(url('/admin/index.php')) ?>" class="staff-filter-reset-link"><?= e(__('filters_reset')) ?></a>
             </div>
         </form>
     </div>
