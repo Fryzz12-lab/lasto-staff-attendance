@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en" data-theme="night">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phase 3E.1 local Bootstrap smoke test</title>
+  <style>#testResult{display:none}</style>
+  <link rel="stylesheet" href="../assets/vendor/bootstrap-5.3.3/css/bootstrap.min.css">
+  <link rel="stylesheet" href="../assets/css/app.css">
+</head>
+<body class="app-body staff-area">
+  <div class="app-wrapper">
+    <aside class="app-sidebar" id="appSidebar">
+      <nav class="sidebar-nav"><a href="#attendance-actions">Attendance actions</a></nav>
+    </aside>
+    <main class="app-content container-fluid" id="attendance-actions">
+      <h1>Attendance dashboard asset check</h1>
+      <div class="dash-hero-panel dash-hero-working mb-4">
+        <div class="dash-hero-status-row d-flex flex-wrap justify-content-between align-items-center mb-3"><h2 class="h5">Attendance actions</h2></div>
+        <div class="dash-action-row d-flex flex-wrap gap-2">
+        <button class="btn btn-accent btn-action-lg px-4 py-3" data-action="clock_in" data-confirm="Confirm clock in?" data-confirm-title="Clock in" data-confirm-label="Clock in">Clock in</button>
+        <button class="btn btn-clock-out" data-action="clock_out" data-confirm="Confirm clock out?" data-confirm-title="Clock out" data-confirm-label="Clock out">Clock out</button>
+        <button class="btn dash-btn-break" data-action="start_break" data-type="lunch" data-confirm="Confirm break start?" data-confirm-title="Start break" data-confirm-label="Start break">Start break</button>
+        <button class="btn dash-btn-break" data-action="end_break" data-type="lunch" data-confirm="Confirm break end?" data-confirm-title="End break" data-confirm-label="End break">End break</button>
+        </div>
+      </div>
+      <output id="testResult" role="status" aria-live="polite">RUNNING</output>
+    </main>
+  </div>
+  <div class="modal fade dashboard-confirm-modal" id="dashboardConfirmModal" tabindex="-1" aria-labelledby="dashboardConfirmTitle" aria-describedby="dashboardConfirmMessage">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+      <div class="modal-header"><h2 class="modal-title h5" id="dashboardConfirmTitle"></h2><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cancel"></button></div>
+      <div class="modal-body"><p id="dashboardConfirmMessage" class="mb-0"></p></div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" data-action-cancel>Cancel</button><button type="button" class="btn btn-primary" data-action-confirm></button></div>
+    </div></div>
+  </div>
+  <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
+  <div id="loadingOverlay" class="loading-overlay d-none"><div data-loading-label>Loading...</div></div>
+  <script>window.APP_BASE='';window.SAS_USER_ID=9001;window.CSRF_TOKEN='asset-test';window.CHRONOS_I18N={};</script>
+  <script src="../assets/vendor/bootstrap-5.3.3/js/bootstrap.bundle.min.js"></script>
+  <script>
+    window.__testErrors=[];window.__testRequests=[];
+    window.addEventListener('error',e=>window.__testErrors.push(e.message));
+    window.addEventListener('unhandledrejection',e=>window.__testErrors.push(String(e.reason)));
+    window.fetch=async (url,options={})=>{window.__testRequests.push({url:String(url),method:options.method||'GET'});return new Response(JSON.stringify({success:true,contract_version:1,outcome:'ready',idempotency_supported:true}),{status:200,headers:{'Content-Type':'application/json'}})};
+    window.AttendanceReliability={checkCapability:async()=>({ready:true}),getPending:()=>null};
+  </script>
+  <script src="../assets/js/app.js"></script>
+  <script>
+    (async function(){
+      const checks=[];const verify=(ok,label)=>{if(!ok)throw new Error(label);checks.push(label)};
+      const wait=(ms=80)=>new Promise(resolve=>setTimeout(resolve,ms));
+      try{
+        const css=Array.from(document.styleSheets).some(sheet=>sheet.href&&sheet.href.includes('bootstrap-5.3.3/css/bootstrap.min.css'));
+        verify(css,'local Bootstrap CSS linked');
+        verify(typeof window.bootstrap?.Modal==='function','local Bootstrap Modal available');
+        verify(getComputedStyle(document.querySelector('.modal')).position==='fixed','Bootstrap modal CSS applied');
+        verify(document.documentElement.scrollWidth<=window.innerWidth,'no horizontal overflow at '+window.innerWidth+'px');
+        const modal=document.getElementById('dashboardConfirmModal');
+        const cancel=modal.querySelector('[data-action-cancel]');
+        const instance=bootstrap.Modal.getOrCreateInstance(modal);
+        verify(bootstrap.Modal.getInstance(modal)===instance,'single modal instance created');
+        for(const [i,button] of Array.from(document.querySelectorAll('.app-content [data-action]')).entries()){
+          button.click();
+          await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(new Error('confirmation did not open for '+button.dataset.action)),1500);modal.addEventListener('shown.bs.modal',()=>{clearTimeout(timeout);resolve()},{once:true})});
+          verify(modal.classList.contains('show'),'confirmation opens for '+button.dataset.action);
+          const dialogRect=modal.querySelector('.modal-dialog').getBoundingClientRect();
+          verify(dialogRect.left>=0&&dialogRect.right<=window.innerWidth+1,'modal fits viewport for '+button.dataset.action);
+          verify(document.activeElement===cancel,'confirmation focus is usable for '+button.dataset.action);
+          if(i===1) modal.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+          else cancel.click();
+          await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(new Error('confirmation did not dismiss for '+button.dataset.action)),1500);modal.addEventListener('hidden.bs.modal',()=>{clearTimeout(timeout);resolve()},{once:true})});
+          verify(!modal.classList.contains('show'),'confirmation dismisses for '+button.dataset.action);
+          verify(bootstrap.Modal.getInstance(modal)===instance,'no duplicate modal initialization for '+button.dataset.action);
+          await wait(40);
+        }
+        const nav=document.querySelector('.sidebar-nav a');nav.click();verify(location.hash==='#attendance-actions','main navigation anchor responds');
+        verify(!window.__testRequests.some(request=>/api\/(clock|break)\.php/.test(request.url)),'no attendance mutation submitted');
+        verify(window.__testErrors.length===0,'no blocking JavaScript exceptions');
+        document.getElementById('testResult').textContent='PASS '+checks.length+': '+checks.join('; ');
+        document.title='PASS Phase 3E.1 local Bootstrap smoke test';
+      }catch(error){document.getElementById('testResult').textContent='FAIL: '+error.message;document.title='FAIL Phase 3E.1 local Bootstrap smoke test';}
+    })();
+  </script>
+</body>
+</html>

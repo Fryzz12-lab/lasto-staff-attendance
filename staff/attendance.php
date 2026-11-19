@@ -40,7 +40,14 @@ $bodyClass = 'staff-history-page';
 require __DIR__ . '/../includes/layout_header.php';
 ?>
 
-<h2 class="h4 mb-3 d-none d-lg-block"><?= e(__('my_attendance')) ?></h2>
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <h2 class="h4 mb-0 d-none d-lg-block"><?= e(__('my_attendance')) ?></h2>
+    <div>
+        <a href="<?= e(url('/staff/corrections.php')) ?>" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-pencil-square me-1"></i><?= e(__('my_correction_requests')) ?>
+        </a>
+    </div>
+</div>
 
 <div class="card-soft attendance-filter-card mb-3">
     <div class="card-body">
@@ -84,6 +91,7 @@ require __DIR__ . '/../includes/layout_header.php';
                         <th><?= e(__('breaks')) ?></th>
                         <th><?= e(__('working_time')) ?></th>
                         <th><?= e(__('status')) ?></th>
+                        <th><?= e(__('action')) ?></th>
                     </tr>
                     </thead>
                     <tbody>
@@ -95,6 +103,19 @@ require __DIR__ . '/../includes/layout_header.php';
                             <td><?= e(format_minutes((int) $r['total_break_minutes'])) ?></td>
                             <td><?= e(format_minutes((int) $r['work_minutes'])) ?></td>
                             <td><?= attendance_status_badge($r) ?></td>
+                            <td>
+                                <?php if (empty($r['is_day_off']) && $r['work_date'] <= today_str()): ?>
+                                    <?php
+                                    $corrUrl = url('/staff/corrections.php?date=' . $r['work_date']);
+                                    if (!empty($r['break_review_status']) && in_array($r['break_review_status'], ['under_review', 'correction_pending', 'rejected_unresolved'], true)) {
+                                        $corrUrl .= '&type=break';
+                                    }
+                                    ?>
+                                    <a href="<?= e($corrUrl) ?>" class="btn btn-sm btn-outline-secondary py-0 px-2" title="<?= e(__('request_correction')) ?>">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                <?php endif; ?>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                     </tbody>
@@ -169,6 +190,19 @@ require __DIR__ . '/../includes/layout_header.php';
                                     <span class="text-light-emphasis fw-semibold"><?= e(format_minutes((int) $r['total_break_minutes'])) ?></span>
                                 </div>
                             </div>
+                            <?php if (empty($r['is_day_off']) && $r['work_date'] <= today_str()): ?>
+                                <?php
+                                $corrUrl = url('/staff/corrections.php?date=' . $r['work_date']);
+                                if (!empty($r['break_review_status']) && in_array($r['break_review_status'], ['under_review', 'correction_pending', 'rejected_unresolved'], true)) {
+                                    $corrUrl .= '&type=break';
+                                }
+                                ?>
+                                <div class="mt-2 text-end">
+                                    <a href="<?= e($corrUrl) ?>" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:0.75rem;">
+                                        <i class="bi bi-pencil-square me-1"></i><?= e(__('request_correction')) ?>
+                                    </a>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
                 <?php endforeach; ?>

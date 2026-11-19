@@ -209,9 +209,9 @@ require __DIR__ . '/../includes/layout_header.php';
             <?php endforeach; ?>
         </div>
         <div class="mt-3 pt-3 border-top border-secondary-subtle d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <small class="text-muted">Receive real-time staff attendance alerts on this device</small>
+            <small class="text-muted"><?= e(__('notice_device_hint')) ?></small>
             <button type="button" class="btn btn-sm btn-outline-info" id="btnTestPushNotification">
-                <i class="bi bi-send me-1"></i> Send Test Notification
+                <i class="bi bi-send me-1"></i> <?= e(__('notice_test_button')) ?>
             </button>
         </div>
     </div>

@@ -73,7 +73,7 @@ $ogUrl = $ogUrl ?? current_url();
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="<?= e(asset('vendor/bootstrap-5.3.3/css/bootstrap.min.css')) ?>" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" rel="stylesheet">
     <link rel="icon" type="image/png" href="<?= e(asset('img/logo-dark.png')) ?>">
@@ -131,17 +131,21 @@ $ogUrl = $ogUrl ?? current_url();
                 <div class="sidebar-mobile-controls__lang">
                     <?= lang_switcher() ?>
                 </div>
-                <a href="<?= e(url('/logout.php')) ?>" class="btn btn-sm sidebar-logout-btn">
+                <form method="post" action="<?= e(url('/logout.php')) ?>" class="w-100 m-0 p-0" data-logout-form>
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="endpoint" value="" data-push-endpoint-field>
+                    <button type="submit" class="btn btn-sm sidebar-logout-btn">
                     <i class="bi bi-box-arrow-right"></i>
                     <span><?= e(__('logout')) ?></span>
-                </a>
+                    </button>
+                </form>
             </div>
         </div>
     </aside>
     <div class="sidebar-backdrop d-lg-none" id="sidebarBackdrop"></div>
     <div class="app-main">
         <header class="app-topbar">
-            <button type="button" class="btn btn-light btn-sm sidebar-toggle d-lg-none" id="sidebarToggle" aria-label="Menu">
+            <button type="button" class="btn btn-light btn-sm sidebar-toggle d-lg-none" id="sidebarToggle" aria-label="Menu" aria-controls="appSidebar" aria-expanded="false">
                 <i class="bi bi-list"></i>
             </button>
             <div class="topbar-title d-lg-none"><?= e($pageTitle) ?></div>
@@ -182,12 +186,16 @@ $ogUrl = $ogUrl ?? current_url();
                     <span class="theme-toggle__text"></span>
                 </button>
                 <?= lang_switcher() ?>
-                <a href="<?= e(url('/logout.php')) ?>" class="btn btn-sm btn-outline-secondary">
+                <form method="post" action="<?= e(url('/logout.php')) ?>" class="d-inline m-0 p-0" data-logout-form>
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="endpoint" value="" data-push-endpoint-field>
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">
                     <i class="bi bi-box-arrow-right"></i> <?= e(__('logout')) ?>
-                </a>
+                    </button>
+                </form>
             </div>
             <div class="d-lg-none ms-auto"><?php require __DIR__ . '/notification_bell.php'; ?></div>
-            <button type="button" class="btn btn-link topbar-mobile-avatar d-lg-none text-decoration-none" id="mobileUserBtn" aria-label="Menu">
+            <button type="button" class="btn btn-link topbar-mobile-avatar d-lg-none text-decoration-none" id="mobileUserBtn" aria-label="Menu" aria-controls="appSidebar" aria-expanded="false">
                 <div class="user-avatar-sm">
                     <?php if (!empty($user['profile_photo'])): ?>
                         <img src="<?= e(UPLOAD_URL . '/' . $user['profile_photo']) ?>" alt="">

@@ -75,6 +75,7 @@ if ($user && $user['role'] === 'admin' && ($isAdminArea ?? true)):
             $b('leave')
         );
     }
+    echo nav_item('corrections', '/admin/corrections.php', 'bi-pencil-square', __('correction_requests'), $activeMenu);
     echo nav_item('reports', '/admin/reports.php', 'bi-file-earmark-bar-graph', __('reports'), $activeMenu);
     echo nav_item('offices', '/admin/offices.php', 'bi-buildings', __('office_locations'), $activeMenu);
     echo nav_item('settings', '/admin/settings.php', 'bi-gear', __('settings'), $activeMenu);

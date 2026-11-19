@@ -3473,6 +3473,26 @@ h2.h4,
   }
 }
 
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  .staff-area .app-topbar {
+    flex-wrap: wrap;
+  }
+
+  .staff-area .app-topbar .topbar-information {
+    flex: 0 1 auto;
+    margin-left: auto;
+  }
+
+  .staff-area .app-topbar .topbar-actions {
+    order: 2;
+    flex: 1 0 100%;
+    justify-content: flex-end;
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+  }
+}
+
 @media (max-width: 991.98px) {
   .app-sidebar {
     position: fixed;
@@ -5546,6 +5566,16 @@ html[data-theme='day'] :is(.auth-page, .recovery-page) .auth-card .form-control:
 
 html[data-theme='day'] .recovery-page .auth-card a {
   color: #0f766e;
+}
+
+html[data-theme='day'] .auth-page .auth-card a[href*='forgot_password'],
+html[data-theme='night'] .auth-page .auth-card a[href*='forgot_password'] {
+  color: #0f766e;
+}
+
+html[data-theme='day'] .auth-page .auth-card a[href*='forgot_password']:hover,
+html[data-theme='day'] .auth-page .auth-card a[href*='forgot_password']:focus-visible {
+  color: #0d9488;
 }
 
 .auth-page .auth-top>.theme-toggle,
@@ -12332,18 +12362,20 @@ html[data-theme='night'] .office-form-location-card .office-location-feedback-pa
 .notification-bell { position: relative; }
 .notification-bell__button { position: relative; min-width: 2.3rem; }
 .notification-bell__count { position: absolute; top: -.45rem; right: -.5rem; min-width: 1.25rem; padding: 0 .25rem; border-radius: 1rem; background: #dc3545; color: #fff; font-size: .68rem; line-height: 1.25rem; }
-.notification-dropdown { width: min(23rem, calc(100vw - 1rem)); max-width: calc(100vw - 1rem); padding: 0; max-height: min(34rem, 70vh); overflow-y: auto; background: #ffffff; color: #1e293b; border: 1px solid #cbd5e1; box-shadow: 0 14px 32px rgba(15, 23, 42, .18); opacity: 1; backdrop-filter: none; z-index: 1080; }
+.notification-dropdown { width: min(23rem, calc(100vw - 1rem)); max-width: calc(100vw - 1rem); padding: 0; max-height: min(34rem, 70vh); overflow-y: auto; background: #ffffff; color: #1e293b; border: 1px solid rgba(148, 163, 184, .65); box-shadow: 0 14px 32px rgba(15, 23, 42, .18); opacity: 1; z-index: 1080; }
 .notification-dropdown__heading { display: flex; justify-content: space-between; gap: 1rem; padding: .8rem 1rem; border-bottom: 1px solid var(--bs-border-color, #444); }
 .notification-dropdown__heading,
 .notification-dropdown__item,
 .notification-dropdown__all,
 .notification-empty { background: #ffffff; }
 .notification-dropdown__item { display: grid; gap: .2rem; padding: .7rem 1rem; border-bottom: 1px solid var(--bs-border-color, #444); color: inherit; text-decoration: none; }
-.notification-dropdown__item:hover, .notification-dropdown__item:focus-visible { background: rgba(96,165,250,.15); color: inherit; }
-.notification-dropdown__item.is-unread, .notification-item.is-unread { border-left: 3px solid #38bdf8; }
+.notification-dropdown__item:hover, .notification-dropdown__item:focus-visible { background: rgba(20,184,166,.14); color: inherit; }
+.notification-dropdown__item, .notification-item { border-left: 3px solid transparent; }
+.notification-dropdown__item.is-unread, .notification-item.is-unread { border-left-color: #14b8a6; }
 .notification-dropdown__item small { font-size: .82rem; }
 .notification-dropdown__item time { color: var(--bs-secondary-color, #aaa); font-size: .72rem; }
-.notification-dropdown__all { display: block; padding: .7rem 1rem; text-align: center; }
+.notification-dropdown__all { display: block; padding: .7rem 1rem; text-align: center; color: #0f766e; }
+.notification-dropdown__all:hover, .notification-dropdown__all:focus-visible { color: #0d9488; }
 .notification-page { max-width: 58rem; margin: 0 auto; }
 .notification-page__heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1rem; }
 .notification-filters { display: flex; gap: .5rem; margin-bottom: 1rem; }
@@ -12377,7 +12409,7 @@ html[data-theme='night'] .notification-filters .btn-outline-secondary:focus-visi
   color: #9af0ed;
 }
 .notification-list { display: grid; gap: .6rem; }
-.notification-item { display: flex; justify-content: space-between; gap: 1rem; padding: 1rem; border: 1px solid #cbd5e1; border-radius: .65rem; background: #ffffff; color: #1e293b; }
+.notification-item { display: flex; justify-content: space-between; gap: 1rem; padding: 1rem; border: 1px solid rgba(148, 163, 184, .55); border-radius: .65rem; background: #ffffff; color: #1e293b; }
 .notification-item__body { min-width: 0; }
 .notification-item__body a { text-decoration: none; }
 .notification-empty { padding: 1rem; color: var(--bs-secondary-color, #aaa); }
@@ -12387,7 +12419,7 @@ html[data-theme='night'] .notification-filters .btn-outline-secondary:focus-visi
     position: fixed !important;
     width: min(23rem, calc(100vw - 2rem)) !important;
     max-width: calc(100vw - 2rem) !important;
-    max-height: 65vh;
+    max-height: min(32rem, calc(100vh - 8rem));
     margin-top: .65rem !important;
     top: 4rem !important;
     right: 1rem !important;
@@ -12402,6 +12434,9 @@ html[data-theme='night'] .notification-filters .btn-outline-secondary:focus-visi
 }
 .notification-open-button { display: grid; width: 100%; gap: .2rem; padding: 0; border: 0; background: transparent; color: inherit; text-align: left; }
 .notification-open-button strong { font-weight: 600; }
+.notification-open-button .notification-title { display: inline-flex; align-items: center; gap: .45rem; font-weight: 400; }
+.notification-title.is-unread { font-weight: 700; color: #0f766e; }
+.notification-unread-dot { display: inline-block; width: .5rem; height: .5rem; flex: 0 0 .5rem; border-radius: 50%; background: #14b8a6; }
 .notification-open-button small { font-size: .82rem; }
 .notification-open-button time { color: #64748b; font-size: .72rem; }
 .notification-item .text-muted { color: #64748b !important; }
@@ -12458,7 +12493,7 @@ html[data-theme='night'] .notification-dropdown__item {
 }
 html[data-theme='night'] .notification-dropdown__item:hover,
 html[data-theme='night'] .notification-dropdown__item:focus-visible {
-  background: #182b42;
+  background: rgba(45, 212, 191, .14);
   color: #ffffff;
 }
 html[data-theme='night'] .notification-dropdown__item time,
@@ -12467,13 +12502,13 @@ html[data-theme='night'] .notification-open-button time {
 }
 html[data-theme='night'] .notification-dropdown__all {
   background: #111f33;
-  color: #62d9dc;
+  color: #5eead4;
 }
 html[data-theme='night'] .notification-empty { background: #111f33; }
 html[data-theme='night'] .notification-dropdown__all:hover,
 html[data-theme='night'] .notification-dropdown__all:focus-visible {
   background: #182b42;
-  color: #9af0ed;
+  color: #99f6e4;
 }
 html[data-theme='night'] .notification-item {
   background: #111f33;
@@ -12482,6 +12517,8 @@ html[data-theme='night'] .notification-item {
 }
 html[data-theme='night'] .notification-item .text-muted,
 html[data-theme='night'] .notification-open-button time { color: #afbed1 !important; }
+html[data-theme='night'] .notification-title.is-unread { color: #99f6e4; }
+html[data-theme='night'] .notification-unread-dot { background: #2dd4bf; }
 html[data-theme='night'] .notification-empty { color: #afbed1; }
 
 /* Account access actions: shared secondary treatment for reset and verification. */
@@ -12599,3 +12636,25 @@ html[data-theme='night'] .attendance-location-event__proximity--warning + .atten
 .attendance-records-table td:nth-child(3) small,
 .attendance-records-table td:nth-child(4) small { display:block; white-space:normal; overflow-wrap:anywhere; line-height:1.25; font-size:.75rem; }
 
+[data-attendance-operation-status] {
+  scroll-margin-top: 1rem;
+}
+
+[data-attendance-operation-status] button,
+[data-attendance-operation-status] a,
+.app-content button[data-action="clock_in"],
+.app-content button[data-action="clock_out"],
+.app-content button[data-action="start_break"],
+.app-content button[data-action="end_break"] {
+  min-height: 44px;
+}
+
+[data-attendance-operation-status] button:focus-visible,
+[data-attendance-operation-status] a:focus-visible,
+.app-content button[data-action="clock_in"]:focus-visible,
+.app-content button[data-action="clock_out"]:focus-visible,
+.app-content button[data-action="start_break"]:focus-visible,
+.app-content button[data-action="end_break"]:focus-visible {
+  outline: 3px solid var(--bs-primary);
+  outline-offset: 2px;
+}

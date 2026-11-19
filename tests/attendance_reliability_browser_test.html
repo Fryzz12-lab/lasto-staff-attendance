@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Attendance reliability browser test</title></head>
+<body>
+<main><h1>Attendance reliability browser test</h1><output id="result" role="status" aria-live="polite">RUNNING</output></main>
+<script>window.APP_BASE = ''; window.CSRF_TOKEN = 'browser-csrf-test'; window.SAS_USER_ID = 71;</script>
+<script src="../assets/js/attendance_reliability.js"></script>
+<script>
+(async function () {
+  const checks = [];
+  const originalFetch = window.fetch;
+  const requests = [];
+  let migrationAvailable = true;
+  window.fetch = async (url, options) => {
+    requests.push({ url, options });
+    if (String(url).includes('attendance_operation.php')) {
+      return new Response(JSON.stringify(migrationAvailable ? { contract_version: 1, outcome: 'ready', idempotency_supported: true } : { contract_version: 1, outcome: 'unavailable', idempotency_supported: false }), { status: migrationAvailable ? 200 : 503, headers: { 'Content-Type': 'application/json' } });
+    }
+    return new Response(JSON.stringify({ success: true, outcome: 'confirmed_success' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  };
+  function assert(value, label) { if (!value) throw new Error(label); checks.push(label); }
+  try {
+    const api = window.AttendanceReliability;
+    const pending = api.createPending(window.SAS_USER_ID, 'clock_in', '');
+    assert(window.crypto.randomUUID && /^[0-9a-f-]{36}$/i.test(pending.requestId), 'secure request ID');
+    assert(api.getPending(window.SAS_USER_ID).requestId === pending.requestId, 'pending operation storage');
+    assert(api.getPending(72) === null, 'user scoped pending context');
+    assert((await api.checkCapability()).ready, 'migration capability gate');
+    await api.submit(pending);
+    assert(requests[2].options.headers['Idempotency-Key'] === pending.requestId, 'idempotency request header');
+    assert(!/csrf|password/i.test(JSON.stringify(api.getPending(window.SAS_USER_ID))), 'no credentials in persisted context');
+    api.clearPending(pending);
+    assert(api.getPending(window.SAS_USER_ID) === null, 'terminal cleanup');
+    migrationAvailable = false;
+    assert(!(await api.checkCapability()).ready, 'missing migration disables the feature');
+    const blocked = await api.submit(api.createPending(window.SAS_USER_ID, 'clock_out', ''));
+    assert(blocked.data.outcome === 'feature_unavailable' && requests.at(-1).options.method === 'GET', 'missing migration does not fall back to unkeyed mutation');
+    api.clearPending(api.getPending(window.SAS_USER_ID));
+    document.getElementById('result').textContent = 'PASS ' + checks.length + ': ' + checks.join('; ');
+    document.title = 'PASS attendance reliability browser test';
+  } catch (error) {
+    document.getElementById('result').textContent = 'FAIL: ' + error.message;
+    document.title = 'FAIL attendance reliability browser test';
+  } finally {
+    window.fetch = originalFetch;
+  }
+})();
+</script>
+</body>
+</html>

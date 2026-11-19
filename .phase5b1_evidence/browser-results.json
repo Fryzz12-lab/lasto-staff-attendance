@@ -1,0 +1,669 @@
+﻿{
+    "source":  "synthetic disposable DB; PHP built-in server at 127.0.0.1:8095",
+    "staff":  {
+                  "authenticatedPath":  "/staff/",
+                  "widths":  [
+                                 {
+                                     "viewport":  320,
+                                     "doc":  320,
+                                     "body":  320,
+                                     "htmlLang":  "en-GB",
+                                     "theme":  "night",
+                                     "sidebar":  {
+                                                     "left":  -282,
+                                                     "right":  0,
+                                                     "width":  282,
+                                                     "height":  1000
+                                                 },
+                                     "main":  {
+                                                  "left":  0,
+                                                  "right":  320,
+                                                  "width":  320,
+                                                  "height":  1000
+                                              },
+                                     "topbar":  {
+                                                    "left":  0,
+                                                    "right":  320,
+                                                    "width":  320,
+                                                    "height":  64
+                                                },
+                                     "info":  {
+                                                  "left":  0,
+                                                  "right":  0,
+                                                  "width":  0,
+                                                  "height":  0
+                                              },
+                                     "actions":  {
+                                                     "left":  0,
+                                                     "right":  0,
+                                                     "width":  0,
+                                                     "height":  0
+                                                 },
+                                     "logout":  {
+                                                    "left":  0,
+                                                    "right":  0,
+                                                    "width":  0,
+                                                    "height":  0
+                                                },
+                                     "logoutInViewport":  true
+                                 },
+                                 {
+                                     "viewport":  375,
+                                     "doc":  375,
+                                     "body":  375,
+                                     "htmlLang":  "en-GB",
+                                     "theme":  "night",
+                                     "sidebar":  {
+                                                     "left":  -320,
+                                                     "right":  0,
+                                                     "width":  320,
+                                                     "height":  1000
+                                                 },
+                                     "main":  {
+                                                  "left":  0,
+                                                  "right":  375,
+                                                  "width":  375,
+                                                  "height":  1000
+                                              },
+                                     "topbar":  {
+                                                    "left":  0,
+                                                    "right":  375,
+                                                    "width":  375,
+                                                    "height":  64
+                                                },
+                                     "info":  {
+                                                  "left":  0,
+                                                  "right":  0,
+                                                  "width":  0,
+                                                  "height":  0
+                                              },
+                                     "actions":  {
+                                                     "left":  0,
+                                                     "right":  0,
+                                                     "width":  0,
+                                                     "height":  0
+                                                 },
+                                     "logout":  {
+                                                    "left":  0,
+                                                    "right":  0,
+                                                    "width":  0,
+                                                    "height":  0
+                                                },
+                                     "logoutInViewport":  true
+                                 },
+                                 {
+                                     "viewport":  390,
+                                     "doc":  390,
+                                     "body":  390,
+                                     "htmlLang":  "en-GB",
+                                     "theme":  "night",
+                                     "sidebar":  {
+                                                     "left":  -320,
+                                                     "right":  0,
+                                                     "width":  320,
+                                                     "height":  1000
+                                                 },
+                                     "main":  {
+                                                  "left":  0,
+                                                  "right":  390,
+                                                  "width":  390,
+                                                  "height":  1000
+                                              },
+                                     "topbar":  {
+                                                    "left":  0,
+                                                    "right":  390,
+                                                    "width":  390,
+                                                    "height":  64
+                                                },
+                                     "info":  {
+                                                  "left":  0,
+                                                  "right":  0,
+                                                  "width":  0,
+                                                  "height":  0
+                                              },
+                                     "actions":  {
+                                                     "left":  0,
+                                                     "right":  0,
+                                                     "width":  0,
+                                                     "height":  0
+                                                 },
+                                     "logout":  {
+                                                    "left":  0,
+                                                    "right":  0,
+                                                    "width":  0,
+                                                    "height":  0
+                                                },
+                                     "logoutInViewport":  true
+                                 },
+                                 {
+                                     "viewport":  430,
+                                     "doc":  430,
+                                     "body":  430,
+                                     "htmlLang":  "en-GB",
+                                     "theme":  "night",
+                                     "sidebar":  {
+                                                     "left":  -320,
+                                                     "right":  0,
+                                                     "width":  320,
+                                                     "height":  1000
+                                                 },
+                                     "main":  {
+                                                  "left":  0,
+                                                  "right":  430,
+                                                  "width":  430,
+                                                  "height":  1000
+                                              },
+                                     "topbar":  {
+                                                    "left":  0,
+                                                    "right":  430,
+                                                    "width":  430,
+                                                    "height":  64
+                                                },
+                                     "info":  {
+                                                  "left":  0,
+                                                  "right":  0,
+                                                  "width":  0,
+                                                  "height":  0
+                                              },
+                                     "actions":  {
+                                                     "left":  0,
+                                                     "right":  0,
+                                                     "width":  0,
+                                                     "height":  0
+                                                 },
+                                     "logout":  {
+                                                    "left":  0,
+                                                    "right":  0,
+                                                    "width":  0,
+                                                    "height":  0
+                                                },
+                                     "logoutInViewport":  true
+                                 },
+                                 {
+                                     "viewport":  768,
+                                     "doc":  768,
+                                     "body":  768,
+                                     "htmlLang":  "en-GB",
+                                     "theme":  "night",
+                                     "sidebar":  {
+                                                     "left":  -268,
+                                                     "right":  0,
+                                                     "width":  268,
+                                                     "height":  1000
+                                                 },
+                                     "main":  {
+                                                  "left":  0,
+                                                  "right":  768,
+                                                  "width":  768,
+                                                  "height":  1000
+                                              },
+                                     "topbar":  {
+                                                    "left":  0,
+                                                    "right":  768,
+                                                    "width":  768,
+                                                    "height":  71
+                                                },
+                                     "info":  {
+                                                  "left":  365,
+                                                  "right":  645,
+                                                  "width":  280,
+                                                  "height":  34
+                                              },
+                                     "actions":  {
+                                                     "left":  0,
+                                                     "right":  0,
+                                                     "width":  0,
+                                                     "height":  0
+                                                 },
+                                     "logout":  {
+                                                    "left":  0,
+                                                    "right":  0,
+                                                    "width":  0,
+                                                    "height":  0
+                                                },
+                                     "logoutInViewport":  true
+                                 },
+                                 {
+                                     "viewport":  1024,
+                                     "doc":  1024,
+                                     "body":  1024,
+                                     "htmlLang":  "en-GB",
+                                     "theme":  "night",
+                                     "sidebar":  {
+                                                     "left":  0,
+                                                     "right":  268,
+                                                     "width":  268,
+                                                     "height":  1000
+                                                 },
+                                     "main":  {
+                                                  "left":  268,
+                                                  "right":  1024,
+                                                  "width":  756,
+                                                  "height":  1000
+                                              },
+                                     "topbar":  {
+                                                    "left":  268,
+                                                    "right":  1024,
+                                                    "width":  756,
+                                                    "height":  103
+                                                },
+                                     "info":  {
+                                                  "left":  722,
+                                                  "right":  1002,
+                                                  "width":  280,
+                                                  "height":  34
+                                              },
+                                     "actions":  {
+                                                     "left":  290,
+                                                     "right":  1002,
+                                                     "width":  713,
+                                                     "height":  32
+                                                 },
+                                     "logout":  {
+                                                    "left":  935,
+                                                    "right":  1002,
+                                                    "width":  68,
+                                                    "height":  31
+                                                },
+                                     "logoutInViewport":  true
+                                 },
+                                 {
+                                     "viewport":  1280,
+                                     "doc":  1280,
+                                     "body":  1280,
+                                     "htmlLang":  "en-GB",
+                                     "theme":  "night",
+                                     "sidebar":  {
+                                                     "left":  0,
+                                                     "right":  268,
+                                                     "width":  268,
+                                                     "height":  1000
+                                                 },
+                                     "main":  {
+                                                  "left":  268,
+                                                  "right":  1280,
+                                                  "width":  1012,
+                                                  "height":  1000
+                                              },
+                                     "topbar":  {
+                                                    "left":  268,
+                                                    "right":  1280,
+                                                    "width":  1012,
+                                                    "height":  60
+                                                },
+                                     "info":  {
+                                                  "left":  455,
+                                                  "right":  735,
+                                                  "width":  280,
+                                                  "height":  34
+                                              },
+                                     "actions":  {
+                                                     "left":  755,
+                                                     "right":  1258,
+                                                     "width":  503,
+                                                     "height":  32
+                                                 },
+                                     "logout":  {
+                                                    "left":  1191,
+                                                    "right":  1258,
+                                                    "width":  68,
+                                                    "height":  31
+                                                },
+                                     "logoutInViewport":  true
+                                 },
+                                 {
+                                     "viewport":  1440,
+                                     "doc":  1440,
+                                     "body":  1440,
+                                     "htmlLang":  "en-GB",
+                                     "theme":  "night",
+                                     "sidebar":  {
+                                                     "left":  0,
+                                                     "right":  268,
+                                                     "width":  268,
+                                                     "height":  1000
+                                                 },
+                                     "main":  {
+                                                  "left":  268,
+                                                  "right":  1440,
+                                                  "width":  1172,
+                                                  "height":  1000
+                                              },
+                                     "topbar":  {
+                                                    "left":  268,
+                                                    "right":  1440,
+                                                    "width":  1172,
+                                                    "height":  60
+                                                },
+                                     "info":  {
+                                                  "left":  615,
+                                                  "right":  895,
+                                                  "width":  280,
+                                                  "height":  34
+                                              },
+                                     "actions":  {
+                                                     "left":  915,
+                                                     "right":  1418,
+                                                     "width":  503,
+                                                     "height":  32
+                                                 },
+                                     "logout":  {
+                                                    "left":  1351,
+                                                    "right":  1418,
+                                                    "width":  68,
+                                                    "height":  31
+                                                },
+                                     "logoutInViewport":  true
+                                 }
+                             ],
+                  "mobileMenuOpen":  {
+                                         "open":  true,
+                                         "expanded":  "true"
+                                     },
+                  "mobileMenuClosed":  {
+                                           "open":  false,
+                                           "expanded":  "false"
+                                       },
+                  "escapeClosesMenu":  {
+                                           "open":  false,
+                                           "expanded":  "false"
+                                       },
+                  "dayTheme":  "day",
+                  "nightTheme":  "night",
+                  "malay":  {
+                                "viewport":  390,
+                                "doc":  390,
+                                "body":  390,
+                                "htmlLang":  "ms-MY",
+                                "theme":  "night",
+                                "sidebar":  {
+                                                "left":  -320,
+                                                "right":  0,
+                                                "width":  320,
+                                                "height":  1000
+                                            },
+                                "main":  {
+                                             "left":  0,
+                                             "right":  390,
+                                             "width":  390,
+                                             "height":  1000
+                                         },
+                                "topbar":  {
+                                               "left":  0,
+                                               "right":  390,
+                                               "width":  390,
+                                               "height":  64
+                                           },
+                                "info":  {
+                                             "left":  0,
+                                             "right":  0,
+                                             "width":  0,
+                                             "height":  0
+                                         },
+                                "actions":  {
+                                                "left":  0,
+                                                "right":  0,
+                                                "width":  0,
+                                                "height":  0
+                                            },
+                                "logout":  {
+                                               "left":  0,
+                                               "right":  0,
+                                               "width":  0,
+                                               "height":  0
+                                           },
+                                "logoutInViewport":  true
+                            },
+                  "chinese":  {
+                                  "viewport":  390,
+                                  "doc":  390,
+                                  "body":  390,
+                                  "htmlLang":  "zh-CN",
+                                  "theme":  "night",
+                                  "sidebar":  {
+                                                  "left":  -320,
+                                                  "right":  0,
+                                                  "width":  320,
+                                                  "height":  1000
+                                              },
+                                  "main":  {
+                                               "left":  0,
+                                               "right":  390,
+                                               "width":  390,
+                                               "height":  1000
+                                           },
+                                  "topbar":  {
+                                                 "left":  0,
+                                                 "right":  390,
+                                                 "width":  390,
+                                                 "height":  64
+                                             },
+                                  "info":  {
+                                               "left":  0,
+                                               "right":  0,
+                                               "width":  0,
+                                               "height":  0
+                                           },
+                                  "actions":  {
+                                                  "left":  0,
+                                                  "right":  0,
+                                                  "width":  0,
+                                                  "height":  0
+                                              },
+                                  "logout":  {
+                                                 "left":  0,
+                                                 "right":  0,
+                                                 "width":  0,
+                                                 "height":  0
+                                             },
+                                  "logoutInViewport":  true
+                              },
+                  "normalLogoutFeedback":  true
+              },
+    "admin":  {
+                  "authenticatedPath":  "/admin/",
+                  "widths":  [
+                                 {
+                                     "viewport":  390,
+                                     "doc":  390,
+                                     "body":  390,
+                                     "htmlLang":  "en-GB",
+                                     "theme":  "night",
+                                     "sidebar":  {
+                                                     "left":  -320,
+                                                     "right":  0,
+                                                     "width":  320,
+                                                     "height":  1000
+                                                 },
+                                     "main":  {
+                                                  "left":  0,
+                                                  "right":  390,
+                                                  "width":  390,
+                                                  "height":  1000
+                                              },
+                                     "topbar":  {
+                                                    "left":  0,
+                                                    "right":  390,
+                                                    "width":  390,
+                                                    "height":  64
+                                                },
+                                     "info":  {
+                                                  "left":  0,
+                                                  "right":  0,
+                                                  "width":  0,
+                                                  "height":  0
+                                              },
+                                     "actions":  {
+                                                     "left":  0,
+                                                     "right":  0,
+                                                     "width":  0,
+                                                     "height":  0
+                                                 },
+                                     "logout":  {
+                                                    "left":  0,
+                                                    "right":  0,
+                                                    "width":  0,
+                                                    "height":  0
+                                                },
+                                     "logoutInViewport":  true
+                                 },
+                                 {
+                                     "viewport":  1024,
+                                     "doc":  1024,
+                                     "body":  1024,
+                                     "htmlLang":  "en-GB",
+                                     "theme":  "night",
+                                     "sidebar":  {
+                                                     "left":  0,
+                                                     "right":  268,
+                                                     "width":  268,
+                                                     "height":  1000
+                                                 },
+                                     "main":  {
+                                                  "left":  268,
+                                                  "right":  1024,
+                                                  "width":  756,
+                                                  "height":  1000
+                                              },
+                                     "topbar":  {
+                                                    "left":  268,
+                                                    "right":  1024,
+                                                    "width":  756,
+                                                    "height":  60
+                                                },
+                                     "info":  {
+                                                  "left":  290,
+                                                  "right":  490,
+                                                  "width":  201,
+                                                  "height":  34
+                                              },
+                                     "actions":  {
+                                                     "left":  505,
+                                                     "right":  1002,
+                                                     "width":  498,
+                                                     "height":  32
+                                                 },
+                                     "logout":  {
+                                                    "left":  0,
+                                                    "right":  0,
+                                                    "width":  0,
+                                                    "height":  0
+                                                },
+                                     "logoutInViewport":  true
+                                 },
+                                 {
+                                     "viewport":  1280,
+                                     "doc":  1280,
+                                     "body":  1280,
+                                     "htmlLang":  "en-GB",
+                                     "theme":  "night",
+                                     "sidebar":  {
+                                                     "left":  0,
+                                                     "right":  268,
+                                                     "width":  268,
+                                                     "height":  1000
+                                                 },
+                                     "main":  {
+                                                  "left":  268,
+                                                  "right":  1280,
+                                                  "width":  1012,
+                                                  "height":  1000
+                                              },
+                                     "topbar":  {
+                                                    "left":  268,
+                                                    "right":  1280,
+                                                    "width":  1012,
+                                                    "height":  74
+                                                },
+                                     "info":  {
+                                                  "left":  290,
+                                                  "right":  735,
+                                                  "width":  446,
+                                                  "height":  47
+                                              },
+                                     "actions":  {
+                                                     "left":  755,
+                                                     "right":  1258,
+                                                     "width":  503,
+                                                     "height":  32
+                                                 },
+                                     "logout":  {
+                                                    "left":  0,
+                                                    "right":  0,
+                                                    "width":  0,
+                                                    "height":  0
+                                                },
+                                     "logoutInViewport":  true
+                                 }
+                             ]
+              },
+    "forms":  {
+                  "leave":  {
+                                "fields":  [
+                                               {
+                                                   "id":  "leave_date",
+                                                   "label":  "Date",
+                                                   "required":  true
+                                               },
+                                               {
+                                                   "id":  "leave_type",
+                                                   "label":  "Type",
+                                                   "required":  true
+                                               },
+                                               {
+                                                   "id":  "reason",
+                                                   "label":  "Reason",
+                                                   "required":  true
+                                               }
+                                           ],
+                                "valid":  false,
+                                "validationMessage":  "Please fill out this field."
+                            },
+                  "leaveSubmitMessage":  true,
+                  "clockOutDate":  {
+                                       "label":  "Date",
+                                       "valid":  false
+                                   }
+              },
+    "sessionExpiry":  {
+                          "languages":  [
+                                            {
+                                                "language":  "en",
+                                                "visible":  true,
+                                                "url":  "http://127.0.0.1:8095/"
+                                            },
+                                            {
+                                                "language":  "ms",
+                                                "visible":  true,
+                                                "url":  "http://127.0.0.1:8095/"
+                                            },
+                                            {
+                                                "language":  "zh",
+                                                "visible":  true,
+                                                "url":  "http://127.0.0.1:8095/"
+                                            }
+                                        ],
+                          "englishRecheck":  "PASS: isolated repeat rendered the English session-expiry message; see session-expiry-debug.json"
+                      },
+    "assets":  {
+                   "localBootstrap":  {
+                                          "css":  true,
+                                          "js":  true,
+                                          "failedExternal":  [
+                                                                 {
+                                                                     "url":  "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css",
+                                                                     "status":  504
+                                                                 },
+                                                                 {
+                                                                     "url":  "https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css",
+                                                                     "status":  504
+                                                                 },
+                                                                 {
+                                                                     "url":  "https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700\u0026family=Rajdhani:wght@500;600;700\u0026family=IBM+Plex+Sans:wght@400;500;600;700\u0026display=swap",
+                                                                     "status":  504
+                                                                 }
+                                                             ]
+                                      },
+                   "runtimeRecheck":  "PASS: fully loaded staff page exposed window.bootstrap object and local bundle HTTP 200; see bootstrap-runtime-probe.json"
+               }
+}

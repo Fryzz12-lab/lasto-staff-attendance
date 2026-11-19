@@ -62,8 +62,11 @@ function attendance_location_finalize(int $eventId, int $userId, array $input): 
         $stmt = db()->prepare('SELECT * FROM attendance_location_events WHERE id=? AND user_id=? FOR UPDATE');
         $stmt->execute([$eventId, $userId]);
         $event = $stmt->fetch();
-        if (!$event || $event['location_finalized_at'] !== null
-            || strtotime((string) $event['event_time']) < time() - 120
+        if (!$event) return false;
+        // Retries after a lost location response are successful no-ops once
+        // this employee's event has already been finalized.
+        if ($event['location_finalized_at'] !== null) return true;
+        if (strtotime((string) $event['event_time']) < time() - 120
             || !attendance_location_enabled($userId)) return false;
 
         $status = (string) ($input['location_status'] ?? 'unavailable');

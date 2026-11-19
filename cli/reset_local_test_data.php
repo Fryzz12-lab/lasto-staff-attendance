@@ -12,7 +12,7 @@ $host = strtolower((string)($identity['host'] ?? ''));
 $dbName = (string)($identity['db'] ?? '');
 if (!in_array(strtolower(DB_HOST), ['localhost', '127.0.0.1', '::1'], true)
     || !in_array($host, ['localhost', '127.0.0.1', '::1', strtolower(gethostname())], true)
-    || $dbName !== 'staff_attendance' || APP_ENV === 'production') {
+    || $dbName !== 'staff_attendance' || APP_ENV === 'production' || APP_ENV === 'staging') {
     throw new RuntimeException('Refusing reset: the active connection is not the local XAMPP staff_attendance database.');
 }
 

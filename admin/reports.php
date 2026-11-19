@@ -37,6 +37,7 @@ $reportCondition = match ($report) {
     'incomplete' => " AND (a.status = 'incomplete' OR (a.clock_in IS NOT NULL AND a.clock_out IS NULL AND a.work_date < CURDATE()))",
     'leave' => " AND (a.is_day_off = 1 OR a.status = 'day_off')",
     'wfh' => ' AND a.is_wfh = 1',
+    'discrepancies' => " AND a.break_review_status IN ('under_review', 'correction_pending', 'rejected_unresolved')",
     default => '',
 };
 $baseParams = [$from, $to, ...$userParams];
@@ -111,17 +112,37 @@ if ($report === 'late') {
         ['label' => __('wfh_employees'), 'value' => number_format((int)($wfhData['unique_users'] ?? 0)), 'mod' => 'report-summary-card--late'],
         ['label' => __('wfh_total_hours'), 'value' => format_minutes((int)($wfhData['total_work_minutes'] ?? 0)), 'mod' => 'report-summary-card--hours'],
     ];
+} elseif ($report === 'discrepancies') {
+    $discStmt = db()->prepare("SELECT
+        COUNT(*) AS total_disc,
+        SUM(CASE WHEN a.break_review_status = 'under_review' THEN 1 ELSE 0 END) AS awaiting_staff,
+        SUM(CASE WHEN a.break_review_status = 'correction_pending' THEN 1 ELSE 0 END) AS pending_admin,
+        SUM(CASE WHEN a.break_review_status = 'rejected_unresolved' THEN 1 ELSE 0 END) AS rejected_unresolved,
+        COUNT(DISTINCT a.user_id) AS unique_users,
+        COALESCE(SUM(a.provisional_work_minutes), 0) AS total_provisional_minutes
+        FROM attendance a JOIN users u ON u.id=a.user_id WHERE {$baseWhere}");
+    $discStmt->execute($baseParams);
+    $discData = $discStmt->fetch() ?: [];
+    $totalRows = (int) ($discData['total_disc'] ?? 0);
+    $summaryCardsList = [
+        ['label' => __('unresolved_discrepancies'), 'value' => number_format((int)($discData['total_disc'] ?? 0)), 'mod' => 'report-summary-card--late'],
+        ['label' => __('awaiting_employee_action'), 'value' => number_format((int)($discData['awaiting_staff'] ?? 0)), 'mod' => 'report-summary-card--records'],
+        ['label' => __('pending_admin_review'), 'value' => number_format((int)($discData['pending_admin'] ?? 0)), 'mod' => 'report-summary-card--present'],
+        ['label' => __('rejected_unresolved'), 'value' => number_format((int)($discData['rejected_unresolved'] ?? 0)), 'mod' => 'report-summary-card--hours'],
+    ];
 } else {
     // Default: daily attendance details
     $summaryStmt = db()->prepare("SELECT COUNT(*) AS scheduled_days,
         SUM(CASE WHEN a.clock_in IS NOT NULL THEN 1 ELSE 0 END) AS present_days,
         SUM(CASE WHEN a.late_minutes > 0 OR a.status='late' THEN 1 ELSE 0 END) AS late_count,
         COALESCE(SUM(a.work_minutes),0) AS total_work_minutes,
-        COALESCE(SUM(a.total_break_minutes),0) AS total_break_minutes
+        COALESCE(SUM(a.total_break_minutes),0) AS total_break_minutes,
+        SUM(CASE WHEN a.break_review_status IN ('under_review', 'correction_pending', 'rejected_unresolved') THEN 1 ELSE 0 END) AS unresolved_break_count
         FROM attendance a JOIN users u ON u.id=a.user_id WHERE {$baseWhere}");
     $summaryStmt->execute($baseParams);
     $summaryRow = $summaryStmt->fetch() ?: [];
     $totalRows = (int) ($summaryRow['scheduled_days'] ?? 0);
+    $unresolvedBreakCount = (int) ($summaryRow['unresolved_break_count'] ?? 0);
     $summaryCardsList = [
         ['label' => __('total_attendance_records'), 'value' => number_format((int)($summaryRow['scheduled_days'] ?? 0)), 'mod' => 'report-summary-card--records'],
         ['label' => __('report_clocked_records'), 'value' => number_format((int)($summaryRow['present_days'] ?? 0)), 'mod' => 'report-summary-card--present'],
@@ -192,6 +213,7 @@ $reportTitles = [
     'leave' => __('report_day_off_leave'),
     'wfh' => __('leave_wfh'),
     'breaks' => __('report_break_usage'),
+    'discrepancies' => __('report_break_discrepancies'),
     'daily' => __('report_attendance_detail'),
 ];
 $reportTitle = $reportTitles[$report] ?? __('report_attendance_detail');
@@ -227,6 +249,12 @@ $summaryNotes = match ($report) {
         __('exceeded_breaks') => __('report_break_exceeded_note'),
         __('avg_break_duration') => __('report_break_average_note'),
     ],
+    'discrepancies' => [
+        __('unresolved_discrepancies') => __('report_discrepancies_note'),
+        __('awaiting_employee_action') => __('awaiting_employee_action'),
+        __('pending_admin_review') => __('pending_admin_review'),
+        __('rejected_unresolved') => __('rejected_unresolved'),
+    ],
     default => [
         __('total_attendance_records') => __('report_records_note'),
         __('report_clocked_records') => __('report_clocked_note'),
@@ -254,6 +282,15 @@ if ($export !== '') {
     if ($userId > 0) {
         $meta[] = [__('employee'), $empName !== '' ? $empName : ('#' . $userId)];
     }
+    $unresolvedInFiltered = 0;
+    foreach ($filtered as $r) {
+        if (!empty($r['break_review_status']) && in_array($r['break_review_status'], ['under_review', 'correction_pending', 'rejected_unresolved'], true)) {
+            $unresolvedInFiltered++;
+        }
+    }
+    if ($unresolvedInFiltered > 0) {
+        $meta[] = [__('payroll_audit_warning'), __('discrepancy_payroll_warning')];
+    }
 
     // Build clean, collision-free export filename
     $compWords = preg_split('/\s+/', trim(company_name())) ?: ['Report'];
@@ -266,6 +303,7 @@ if ($export !== '') {
         'leave' => 'Leave_Records',
         'wfh' => 'WFH_Records',
         'breaks' => 'Break_Usage',
+        'discrepancies' => 'Break_Discrepancies',
     ];
     $typeLabel = $reportTypeLabels[$report] ?? ucfirst(preg_replace('/[^a-zA-Z0-9]+/', '_', $report));
 
@@ -381,6 +419,7 @@ $pageQs = ['report' => $report, 'from' => $from, 'to' => $to, 'user_id' => $user
                     <option value="daily" <?= $report === 'daily' ? 'selected' : '' ?>><?= e(__('report_attendance_detail')) ?></option>
                     <option value="late" <?= $report === 'late' ? 'selected' : '' ?>><?= e(__('report_late_summary')) ?></option>
                     <option value="breaks" <?= $report === 'breaks' ? 'selected' : '' ?>><?= e(__('report_break_usage')) ?></option>
+                    <option value="discrepancies" <?= $report === 'discrepancies' ? 'selected' : '' ?>><?= e(__('report_break_discrepancies')) ?></option>
                     <option value="incomplete" <?= $report === 'incomplete' ? 'selected' : '' ?>><?= e(__('report_missing_clockout')) ?></option>
                     <option value="leave" <?= $report === 'leave' ? 'selected' : '' ?>><?= e(__('report_day_off_leave')) ?></option>
                     <option value="wfh" <?= $report === 'wfh' ? 'selected' : '' ?>><?= e(__('leave_wfh')) ?></option>
@@ -467,6 +506,23 @@ if ($report === 'breaks') {
             <div class="report-loading-text"><?= e(__('loading')) ?></div>
         </div>
     </div>
+<?php if ($report !== 'discrepancies' && !empty($unresolvedBreakCount) && $unresolvedBreakCount > 0): ?>
+    <div class="alert alert-warning d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 shadow-sm" role="alert">
+        <div>
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+            <span><?= e(str_replace(':count', (string) $unresolvedBreakCount, __('unresolved_discrepancies_banner'))) ?></span>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="<?= e(url('/admin/reports.php?report=discrepancies&from=' . urlencode($from) . '&to=' . urlencode($to) . ($userId > 0 ? '&user_id=' . $userId : ''))) ?>" class="btn btn-sm btn-outline-warning text-dark">
+                <i class="bi bi-funnel me-1"></i><?= e(__('view_discrepancies')) ?>
+            </a>
+            <a href="<?= e(url('/admin/corrections.php')) ?>" class="btn btn-sm btn-warning text-dark">
+                <i class="bi bi-clock-history me-1"></i><?= e(__('btn_review_in_corrections')) ?>
+            </a>
+        </div>
+    </div>
+<?php endif; ?>
+
 <div class="row g-3 mb-3 report-summary">
     <?php foreach ($summaryCardsList as $c): ?>
         <div class="col-6 col-md-3">
@@ -534,6 +590,9 @@ if ($report === 'breaks') {
                         <th><?= e(__('total_break_time')) ?></th>
                         <th><?= e(__('total_working_time')) ?></th>
                         <th><?= e(__('status')) ?></th>
+                        <?php if ($report === 'discrepancies'): ?>
+                            <th><?= e(__('action')) ?></th>
+                        <?php endif; ?>
                     </tr>
                     </thead>
                     <tbody>
@@ -545,8 +604,22 @@ if ($report === 'breaks') {
                             <td><?= e(format_time($r['clock_out'])) ?></td>
                             <td><?= e(format_minutes((int) $r['late_minutes'])) ?></td>
                             <td><?= e(format_minutes((int) $r['total_break_minutes'])) ?></td>
-                            <td><?= e(format_minutes((int) $r['work_minutes'])) ?></td>
+                            <td>
+                                <?= e(format_minutes((int) $r['work_minutes'])) ?>
+                                <?php if (!empty($r['break_review_status']) && in_array($r['break_review_status'], ['under_review', 'correction_pending', 'rejected_unresolved'], true)): ?>
+                                    <div class="small text-warning mt-1" style="font-size:0.75rem;">
+                                        <i class="bi bi-exclamation-circle me-1"></i><?= e(__('provisional_work_time_unverified')) ?>: <?= e(isset($r['provisional_work_minutes']) && $r['provisional_work_minutes'] !== null ? format_minutes((int)$r['provisional_work_minutes']) : '-') ?>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
                             <td><div class="report-status-badges"><?= attendance_status_badge($r) ?></div></td>
+                            <?php if ($report === 'discrepancies'): ?>
+                                <td>
+                                    <a href="<?= e(url('/admin/corrections.php?search=' . urlencode((string)$r['full_name']))) ?>" class="btn btn-sm btn-outline-primary" style="white-space:nowrap;">
+                                        <i class="bi bi-clock-history me-1"></i><?= e(__('btn_review_in_corrections')) ?>
+                                    </a>
+                                </td>
+                            <?php endif; ?>
                         </tr>
                     <?php endforeach; ?>
                     </tbody>
@@ -558,7 +631,22 @@ if ($report === 'breaks') {
                         <div class="report-result-mobile__top"><span><?= e(format_date($r['work_date'])) ?></span><div><?= attendance_status_badge($r) ?></div></div>
                         <strong class="report-result-mobile__name"><?= e($r['full_name']) ?></strong>
                         <div class="report-result-mobile__times"><span>Clock In <b><?= e(format_time($r['clock_in'])) ?></b></span><span>Clock Out <b><?= e(format_time($r['clock_out'])) ?></b></span></div>
-                        <div class="report-result-mobile__metrics"><span>Late <?= e(format_minutes((int)$r['late_minutes'])) ?></span><span>Break <?= e(format_minutes((int)$r['total_break_minutes'])) ?></span><span>Worked <?= e(format_minutes((int)$r['work_minutes'])) ?></span></div>
+                        <div class="report-result-mobile__metrics">
+                            <span>Late <?= e(format_minutes((int)$r['late_minutes'])) ?></span>
+                            <span>Break <?= e(format_minutes((int)$r['total_break_minutes'])) ?></span>
+                            <span>Worked <?= e(format_minutes((int)$r['work_minutes'])) ?>
+                                <?php if (!empty($r['break_review_status']) && in_array($r['break_review_status'], ['under_review', 'correction_pending', 'rejected_unresolved'], true)): ?>
+                                    <span class="text-warning d-block" style="font-size:0.75rem;">(Prov: <?= e(isset($r['provisional_work_minutes']) && $r['provisional_work_minutes'] !== null ? format_minutes((int)$r['provisional_work_minutes']) : '-') ?>)</span>
+                                <?php endif; ?>
+                            </span>
+                        </div>
+                        <?php if ($report === 'discrepancies'): ?>
+                            <div class="mt-2 text-end">
+                                <a href="<?= e(url('/admin/corrections.php?search=' . urlencode((string)$r['full_name']))) ?>" class="btn btn-sm btn-outline-primary w-100">
+                                    <i class="bi bi-clock-history me-1"></i><?= e(__('btn_review_in_corrections')) ?>
+                                </a>
+                            </div>
+                        <?php endif; ?>
                     </article>
                 <?php endforeach; ?>
             </div>

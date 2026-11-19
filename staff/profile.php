@@ -256,7 +256,7 @@ require __DIR__ . '/../includes/layout_header.php';
             <label class="notification-preference notification-preference--all" data-push-label="<?= e(__('notice_push')) ?>"><span data-allow-label="<?= e(__('notice_allow_short')) ?>"><i class="bi bi-bell-fill me-1"></i> <?= e(__('notice_allow_all')) ?></span><input type="checkbox" id="allowAllNotifications" class="notification-toggle"><span class="notification-switch" aria-hidden="true"></span></label>
             <span class="form-hint" id="notificationStatus" role="status" data-off="<?= e(__('notice_off')) ?>" data-enabled="<?= e(__('notice_enabled')) ?>" data-not-enabled="<?= e(__('notice_not_enabled')) ?>" data-blocked="<?= e(__('notice_blocked')) ?>" data-unsupported="<?= e(__('notice_unsupported')) ?>"><?= e(__('notice_not_enabled')) ?></span>
         </div>
-        <div class="notification-preferences">
+        <div class="notification-preferences" aria-label="<?= e(__('notice_phone')) ?>">
             <?php foreach ([
                 'break_ending' => 'Break ending soon',
                 'shift_ending' => 'Shift ending soon',

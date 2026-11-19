@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/csrf.php';
+require_once __DIR__ . '/rate_limiter.php';
 
 function is_request_secure(): bool
 {
@@ -17,7 +18,7 @@ function is_request_secure(): bool
 
 function cookie_is_secure(): bool
 {
-    return APP_ENV === 'production' || is_request_secure();
+    return APP_ENV === 'production' || APP_ENV === 'staging' || is_request_secure();
 }
 
 function start_app_session(): void
@@ -39,7 +40,17 @@ function start_app_session(): void
 
     $timeout = setting_int('session_timeout_minutes', SESSION_TIMEOUT_MINUTES) * 60;
     if (empty($_SESSION['remember_me']) && !empty($_SESSION['last_activity']) && (time() - (int) $_SESSION['last_activity']) > $timeout) {
+        $expiredLanguage = $_SESSION['lang'] ?? null;
         logout_user();
+        if (preg_match('#(?:^|/)api/#', (string) ($_SERVER['SCRIPT_NAME'] ?? '')) === 1) {
+            json_response(['success' => false, 'outcome' => 'authentication_required', 'message' => __('msg_session_api')], 401);
+        }
+        // Expiration destroys the old session; create a fresh one so the
+        // explanatory flash survives the redirect to the login page.
+        start_app_session();
+        if (in_array($expiredLanguage, ['en', 'ms', 'zh'], true)) {
+            $_SESSION['lang'] = $expiredLanguage;
+        }
         flash_set('warning', __('msg_session_expired'));
         redirect('/');
     }
@@ -134,18 +145,43 @@ function attempt_login(string $username, string $password, bool $remember = fals
         return ['success' => false, 'message' => __('msg_login_required_fields')];
     }
 
+    $ip = auth_client_ip();
+
+    $throttle = auth_is_throttled($username, $ip);
+    if ($throttle['throttled']) {
+        return [
+            'success' => false,
+            'message' => __('msg_login_throttled', ['minutes' => $throttle['minutes']]),
+            'throttled' => true,
+            'retry_after' => $throttle['retry_after'],
+        ];
+    }
+
     $stmt = db()->prepare('SELECT * FROM users WHERE username = ? LIMIT 1');
     $stmt->execute([$username]);
     $user = $stmt->fetch();
 
     if (!$user || !password_verify($password, $user['password_hash'])) {
+        $failedState = auth_record_failed_attempt($username, $ip);
+        if (!empty($failedState['throttled'])) {
+            return [
+                'success' => false,
+                'message' => __('msg_login_throttled', ['minutes' => $failedState['minutes']]),
+                'throttled' => true,
+                'retry_after' => $failedState['retry_after'],
+            ];
+        }
         return ['success' => false, 'message' => __('msg_invalid_credentials')];
     }
     if (!(int) $user['is_active']) {
         return ['success' => false, 'message' => __('msg_account_inactive')];
     }
 
-    session_regenerate_id(true);
+    auth_clear_failed_attempts($username, $ip);
+
+    if (!headers_sent()) {
+        @session_regenerate_id(true);
+    }
     $_SESSION['user_id'] = (int) $user['id'];
     $_SESSION['user_role'] = $user['role'];
     $_SESSION['auth_version'] = (int) ($user['auth_version'] ?? 0);
@@ -294,6 +330,7 @@ function logout_user(): void
         setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'] ?? '', (bool) $params['secure'], (bool) $params['httponly']);
     }
     session_destroy();
+    session_id('');
 }
 
 function require_own_or_admin(int $userId): void

@@ -131,12 +131,12 @@ require __DIR__ . '/../includes/layout_header.php';
                         <?= csrf_field() ?>
                         <div class="row g-3">
                             <div class="col-12 col-md-6">
-                            <label class="form-label"><?= e(__('date')) ?></label>
-                            <input type="date" name="leave_date" class="form-control" required min="<?= e(today_str()) ?>">
+                            <label class="form-label" for="leave_date"><?= e(__('date')) ?></label>
+                            <input type="date" id="leave_date" name="leave_date" class="form-control" required min="<?= e(today_str()) ?>">
                             </div>
                             <div class="col-12 col-md-6">
-                            <label class="form-label"><?= e(__('type')) ?></label>
-                            <select name="leave_type" class="form-select" required>
+                            <label class="form-label" for="leave_type"><?= e(__('type')) ?></label>
+                            <select id="leave_type" name="leave_type" class="form-select" required>
                                 <option value="medical"><?= e(__('leave_medical')) ?></option>
                                 <option value="wfh"><?= e(__('leave_wfh')) ?></option>
                                 <option value="annual"><?= e(__('leave_annual')) ?></option>
@@ -145,8 +145,8 @@ require __DIR__ . '/../includes/layout_header.php';
                             </select>
                             </div>
                             <div class="col-12">
-                            <label class="form-label"><?= e(__('reason')) ?></label>
-                            <textarea name="reason" class="form-control" rows="3" required placeholder="<?= e(__('leave_reason_placeholder')) ?>"></textarea>
+                            <label class="form-label" for="reason"><?= e(__('reason')) ?></label>
+                            <textarea id="reason" name="reason" class="form-control" rows="3" required placeholder="<?= e(__('leave_reason_placeholder')) ?>"></textarea>
                             </div>
                         </div>
                         <button class="btn btn-accent w-100 w-md-auto mt-3"><i class="bi bi-send me-1"></i><?= e(__('submit_request')) ?></button>

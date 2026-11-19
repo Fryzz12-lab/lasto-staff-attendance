@@ -1,0 +1,29 @@
+{
+  "database": "staff_attendance_uat_3e6_53342da8",
+  "appPort": 8094,
+  "browserVersion": "Edg/156.0.4314.50",
+  "generatedAt": "2026-10-31T10:43:00.829Z",
+  "proxyEvidence": {
+    "mutationReceipts": [],
+    "droppedResponses": [],
+    "reconciliations": [],
+    "sessionExpirations": []
+  },
+  "results": [
+    {
+      "name": "Disposable database identity and fixture guard",
+      "result": "PASS",
+      "detail": "staff_attendance_uat_3e6_53342da8; fixture_state=7:0:0:0:0"
+    },
+    {
+      "name": "Authenticated dashboard uses local Bootstrap with jsDelivr blocked",
+      "result": "PASS",
+      "detail": "{\"bootstrapAvailable\":true,\"css\":true,\"js\":true,\"cdn\":false}"
+    },
+    {
+      "name": "UAT harness execution",
+      "result": "FAIL",
+      "detail": "fresh synthetic staff begins without a clock-in\n+ actual - expected\n\n+ 'today_not_started'\n- 'not_clocked_in'\n"
+    }
+  ]
+}

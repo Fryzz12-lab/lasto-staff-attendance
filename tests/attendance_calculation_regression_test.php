@@ -30,8 +30,10 @@ if (PHP_SAPI !== 'cli') {
 require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/../includes/attendance_service.php';
 require_once __DIR__ . '/../includes/report_export.php';
+require_once __DIR__ . '/test_database_safety.php';
 
 $pdo = db();
+TestDatabaseSafety::requireDisposableDatabase($pdo, 'attendance_calculation_regression_test');
 $pdo->beginTransaction();
 
 $passCount = 0;
@@ -235,10 +237,16 @@ try {
     echo "Test 13: Report Export Matrix Parity...\n";
     $row2['full_name'] = 'Test Automation User';
     $exportMatrix = report_attendance_export_matrix([$row2]);
+    $exportHeaders = report_attendance_headers();
+    $statusColumn = array_search(__('status'), $exportHeaders, true);
+    $reviewColumn = array_search(__('break_review_status_col'), $exportHeaders, true);
     assert_test(count($exportMatrix) === 1, "Export matrix returns 1 row");
     assert_test($exportMatrix[0][5] === '1h 00m', "Export break duration matches '1h 00m'", "Got " . $exportMatrix[0][5]);
     assert_test($exportMatrix[0][6] === '9h 00m', "Export work duration matches '9h 00m' (540m)", "Got " . $exportMatrix[0][6]);
-    assert_test($exportMatrix[0][7] === 'Completed', "Export status label matches 'Completed'");
+    assert_test($statusColumn !== false && $reviewColumn !== false, 'Attendance and break-review status headers are present');
+    assert_test($statusColumn === 9 && $reviewColumn === 7, 'Status headers retain their current columns without reordering');
+    assert_test($exportMatrix[0][$statusColumn] === 'Completed', "Attendance status column matches 'Completed'");
+    assert_test($exportMatrix[0][$reviewColumn] === '-', 'Break-review status remains separate for a clean attendance row');
 
     echo "\n=========================================================\n";
     echo " Test Suite Finished: {$passCount} Passed, {$failCount} Failed\n";

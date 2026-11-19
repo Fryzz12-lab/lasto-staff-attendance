@@ -1,0 +1,14 @@
+{
+  "url": "http://127.0.0.1:8095/staff/",
+  "bootstrapType": "object",
+  "scripts": [
+    "http://127.0.0.1:8095/assets/vendor/bootstrap-5.3.3/js/bootstrap.bundle.min.js?v=499162500"
+  ],
+  "resource": [
+    {
+      "url": "http://127.0.0.1:8095/assets/vendor/bootstrap-5.3.3/js/bootstrap.bundle.min.js?v=499162500",
+      "status": 200,
+      "bytes": 81021
+    }
+  ]
+}

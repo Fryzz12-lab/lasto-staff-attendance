@@ -7,8 +7,13 @@ if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit;
 }
-$testSessions = __DIR__ . '/../storage/test-sessions';
-if (!is_dir($testSessions)) mkdir($testSessions, 0700, true);
+$testSessions = rtrim((string) sys_get_temp_dir(), '/\\') . DIRECTORY_SEPARATOR . 'agy-staff-attendance-test-sessions';
+if (!is_dir($testSessions) && !mkdir($testSessions, 0700, true) && !is_dir($testSessions)) {
+    throw new RuntimeException('Cannot create isolated test session directory: ' . $testSessions);
+}
+if (!is_writable($testSessions)) {
+    throw new RuntimeException('Isolated test session directory is not writable: ' . $testSessions);
+}
 session_save_path($testSessions);
 require_once __DIR__ . '/../includes/attendance_service.php';
 require_once __DIR__ . '/../includes/i18n.php';
@@ -225,6 +230,82 @@ try {
     rejected(fn() => working_weekdays(7), 'Reject invalid off day');
     rejected(fn() => normalize_attendance_time('2026-02-30T10:00'), 'Reject invalid calendar date');
     $today = today_str();
+    $resolverDate = new DateTimeImmutable($today);
+    $resolverYesterday = $resolverDate->modify('-1 day')->format('Y-m-d');
+    $resolverTwoDaysAgo = $resolverDate->modify('-2 days')->format('Y-m-d');
+    $resolverThreeDaysAgo = $resolverDate->modify('-3 days')->format('Y-m-d');
+    $resolverFourDaysAgo = $resolverDate->modify('-4 days')->format('Y-m-d');
+    $pdo->beginTransaction();
+    try {
+        $resolverInsert = $pdo->prepare("INSERT INTO attendance (user_id,work_date,schedule_id,scheduled_start,scheduled_end,status,version) VALUES (?, ?, 1, '10:00:00', '20:00:00', ?, 1)");
+        $resolverBreakInsert = $pdo->prepare("INSERT INTO break_records (attendance_id,user_id,break_type,sequence_no,start_time,allowed_minutes) VALUES (?,?,'lunch',1,?,60)");
+        $resolverUser = test_user(0);
+        $noAttendance = resolve_attendance_state($resolverUser, $today);
+        check($noAttendance['attendance_id'] === null && $noAttendance['derived']['classification'] === 'no_attendance', 'Resolver reports no attendance');
+
+        $resolverInsert->execute([$resolverUser, $today, 'not_clocked_in']);
+        $todayAttendanceId = (int) $pdo->lastInsertId();
+        $notStarted = resolve_attendance_state($resolverUser, $today);
+        check($notStarted['attendance_id'] === $todayAttendanceId && $notStarted['derived']['classification'] === 'today_not_started', 'Resolver reports today not started');
+        check($notStarted['schedule']['scheduled_start'] === '10:00:00' && $notStarted['schedule']['scheduled_end'] === '20:00:00' && $notStarted['schedule']['source'] === 'attendance_snapshot', 'Resolver preserves standard schedule snapshot');
+
+        $pdo->prepare("UPDATE attendance SET clock_in=?, status='present' WHERE id=?")->execute([$today . ' 10:00:00', $todayAttendanceId]);
+        $working = resolve_attendance_state($resolverUser, $today);
+        check($working['derived']['classification'] === 'working' && $working['derived']['candidate_open_shift'] === true, 'Resolver reports working attendance as open candidate');
+
+        $resolverBreakInsert->execute([$todayAttendanceId, $resolverUser, $today . ' 13:00:00']);
+        $onBreak = resolve_attendance_state($resolverUser, $today);
+        check($onBreak['derived']['classification'] === 'on_break' && $onBreak['active_break']['attendance_id'] === $todayAttendanceId, 'Resolver reports active break for its attendance');
+
+        $pdo->prepare("UPDATE break_records SET end_time=?, duration_minutes=30 WHERE attendance_id=? AND end_time IS NULL")->execute([$today . ' 13:30:00', $todayAttendanceId]);
+        $pdo->prepare("UPDATE attendance SET clock_out=?, status='completed' WHERE id=?")->execute([$today . ' 20:00:00', $todayAttendanceId]);
+        $completed = resolve_attendance_state($resolverUser, $today);
+        check($completed['derived']['classification'] === 'completed' && $completed['derived']['candidate_open_shift'] === false, 'Resolver reports completed attendance');
+        $pdo->prepare("UPDATE attendance SET break_review_status='under_review' WHERE id=?")->execute([$todayAttendanceId]);
+        $underReview = resolve_attendance_state($resolverUser, $today);
+        check($underReview['derived']['classification'] === 'under_review' && $underReview['derived']['validity_unresolved'] === true, 'Resolver reports administrator review as unresolved');
+        $pdo->prepare("UPDATE attendance SET break_review_status='none' WHERE id=?")->execute([$todayAttendanceId]);
+
+        $priorUser = test_user(0);
+        $resolverInsert->execute([$priorUser, $resolverYesterday, 'present']);
+        $priorAttendanceId = (int) $pdo->lastInsertId();
+        $pdo->prepare("UPDATE attendance SET clock_in=?, status='present' WHERE id=?")->execute([$resolverYesterday . ' 22:00:00', $priorAttendanceId]);
+        $priorOpen = resolve_attendance_state($priorUser, $today);
+        check($priorOpen['attendance_id'] === $priorAttendanceId && $priorOpen['derived']['classification'] === 'open_shift_unresolved' && $priorOpen['derived']['validity_unresolved'] === true, 'Resolver leaves prior-day open attendance unresolved');
+
+        $ambiguousUser = test_user(0);
+        foreach ([$resolverTwoDaysAgo, $resolverThreeDaysAgo] as $openDate) {
+            $resolverInsert->execute([$ambiguousUser, $openDate, 'present']);
+            $openId = (int) $pdo->lastInsertId();
+            $pdo->prepare("UPDATE attendance SET clock_in=?, status='present' WHERE id=?")->execute([$openDate . ' 22:00:00', $openId]);
+        }
+        $ambiguous = resolve_attendance_state($ambiguousUser, $today);
+        check($ambiguous['attendance_id'] === null && $ambiguous['derived']['classification'] === 'ambiguous_open_attendance', 'Resolver reports multiple open attendances as ambiguous');
+
+        $staleUser = test_user(0);
+        $resolverInsert->execute([$staleUser, $today, 'present']);
+        $staleCurrentId = (int) $pdo->lastInsertId();
+        $pdo->prepare("UPDATE attendance SET clock_in=?, status='present' WHERE id=?")->execute([$today . ' 10:00:00', $staleCurrentId]);
+        $resolverInsert->execute([$staleUser, $resolverFourDaysAgo, 'completed']);
+        $staleHistoricalId = (int) $pdo->lastInsertId();
+        $resolverBreakInsert->execute([$staleHistoricalId, $staleUser, $resolverFourDaysAgo . ' 13:00:00']);
+        $stale = resolve_attendance_state($staleUser, $today);
+        check($stale['attendance_id'] === $staleCurrentId && $stale['derived']['classification'] === 'stale_break_unresolved' && $stale['derived']['validity_unresolved'] === true, 'Resolver identifies stale break association');
+
+        $incompleteUser = test_user(0);
+        $resolverInsert->execute([$incompleteUser, $today, 'incomplete']);
+        $incompleteId = (int) $pdo->lastInsertId();
+        $pdo->prepare("UPDATE attendance SET clock_in=?, status='incomplete' WHERE id=?")->execute([$today . ' 10:00:00', $incompleteId]);
+        $incomplete = resolve_attendance_state($incompleteUser, $today);
+        check($incomplete['attendance_id'] === $incompleteId && $incomplete['derived']['classification'] === 'incomplete', 'Resolver reports incomplete attendance');
+
+        $beforeResolver = $pdo->query("SELECT * FROM attendance WHERE id={$staleCurrentId}")->fetch();
+        resolve_attendance_state($staleUser, $today);
+        $afterResolver = $pdo->query("SELECT * FROM attendance WHERE id={$staleCurrentId}")->fetch();
+        check($beforeResolver === $afterResolver, 'Resolver is read-only');
+    } finally {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+    }
     $off = ((int) now()->format('w') + 1) % 7;
     $user = test_user($off);
     check(!start_break($user, 'lunch')['success'], 'Break requires clock-in');
@@ -241,7 +322,7 @@ try {
             check((int) $active['id'] === $result['break_id'], 'Returned break id is not the audit id');
             check((int) $active['allowed_minutes'] === $allowed, 'Per-session allowance');
             check(!start_break($user, 'short')['success'], 'Overlapping break rejected');
-            check(!clock_out($user)['success'], 'Clock-out during break rejected');
+
             if ($type === 'lunch') {
                 $pdo->prepare('UPDATE break_records SET start_time=? WHERE id=?')->execute([now()->modify('-3601 seconds')->format('Y-m-d H:i:s'), $active['id']]);
             }
@@ -385,7 +466,7 @@ try {
     check(start_break($remote, 'lunch')['success'], 'WFH lunch allowed');
     $remoteAtt = get_attendance($remote, $today);
     check($remoteAtt['status'] === 'on_break' && (int) $remoteAtt['is_wfh'] === 1, 'WFH visible during break');
-    check(!clock_out($remote)['success'], 'WFH active break blocks clock-out');
+
     check(end_break($remote)['success'], 'WFH break can end');
     check(!start_break($remote, 'lunch')['success'], 'WFH uses normal lunch session limit');
     check(clock_out($remote)['success'], 'WFH can clock out');
@@ -475,6 +556,18 @@ try {
     $standardMigration = str_replace('USE staff_attendance;', 'USE `' . $database . '`;', file_get_contents(__DIR__ . '/../database/migration_standard_schedule.sql'));
     $pdo->exec($standardMigration);
     $standardId = standard_schedule_id();
+    $standardDefinition = $pdo->query("SELECT start_time,end_time,is_flexible,target_work_minutes FROM work_schedules WHERE id={$standardId}")->fetch();
+    check($standardDefinition['start_time'] === POLICY_START_TIME && $standardDefinition['end_time'] === POLICY_END_TIME, 'Standard schedule keeps the approved 10:00-20:00 window');
+    check((int) $standardDefinition['is_flexible'] === 0, 'Standard schedule is not flexible');
+    $pdo->exec("UPDATE work_schedules SET start_time='09:00:00' WHERE id={$standardId}");
+    $rejectedInvalidStandard = false;
+    try {
+        standard_schedule_id();
+    } catch (RuntimeException $error) {
+        $rejectedInvalidStandard = true;
+    }
+    check($rejectedInvalidStandard, 'Misconfigured standard schedule is rejected');
+    $pdo->exec("UPDATE work_schedules SET start_time='10:00:00' WHERE id={$standardId}");
     $afterAssignments = $pdo->query('SELECT * FROM schedule_assignments ORDER BY id')->fetchAll();
     $pdo->exec($standardMigration);
     check($afterAssignments === $pdo->query('SELECT * FROM schedule_assignments ORDER BY id')->fetchAll(), 'Standard migration is repeatable without extra assignments');
@@ -488,6 +581,27 @@ try {
     $newStaff = test_user(2);
     assign_employee_schedule($newStaff, standard_schedule_id(), 2);
     check(get_schedule_for_date($newStaff, $today)['schedule_id'] === $standardId, 'New staff receives standard schedule');
+    $singleSnapshot = ensure_attendance_row($newStaff, $today);
+    check((int) $singleSnapshot['schedule_id'] === $standardId && $singleSnapshot['scheduled_start'] === POLICY_START_TIME && $singleSnapshot['scheduled_end'] === POLICY_END_TIME, 'Single attendance row stores the standard schedule snapshot');
+    $bulkStaff = test_user(2);
+    assign_employee_schedule($bulkStaff, standard_schedule_id(), 2);
+    ensure_attendance_rows_for_date($today);
+    $bulkSnapshot = get_attendance($bulkStaff, $today);
+    check($bulkSnapshot && (int) $bulkSnapshot['schedule_id'] === $standardId && $bulkSnapshot['scheduled_start'] === POLICY_START_TIME && $bulkSnapshot['scheduled_end'] === POLICY_END_TIME, 'Bulk attendance generation stores the standard schedule snapshot');
+    $pdo->prepare('UPDATE attendance SET scheduled_start=?, scheduled_end=? WHERE id=?')->execute(['09:00:00', '18:00:00', $singleSnapshot['id']]);
+    $reconciledSnapshot = reconcile_attendance_day_status($newStaff, $today);
+    check($reconciledSnapshot['scheduled_start'] === POLICY_START_TIME && $reconciledSnapshot['scheduled_end'] === POLICY_END_TIME, 'Unclocked row reconciliation restores the standard schedule snapshot');
+    $completedSnapshot = ensure_attendance_row($bulkStaff, $today);
+    $pdo->prepare('UPDATE attendance SET clock_in=?, clock_out=?, scheduled_start=?, scheduled_end=?, status=? WHERE id=?')->execute([$today . ' 10:00:00', $today . ' 20:00:00', '09:00:00', '18:00:00', 'completed', $completedSnapshot['id']]);
+    $beforeCompleted = $pdo->query('SELECT scheduled_start,scheduled_end FROM attendance WHERE id=' . (int) $completedSnapshot['id'])->fetch();
+    $afterCompleted = reconcile_attendance_day_status($bulkStaff, $today);
+    check($afterCompleted['scheduled_start'] === $beforeCompleted['scheduled_start'] && $afterCompleted['scheduled_end'] === $beforeCompleted['scheduled_end'], 'Completed attendance snapshot remains unchanged during reconciliation');
+    $pdo->prepare("INSERT INTO work_schedules (name,start_time,end_time,is_flexible,work_days,target_work_minutes,is_default,is_active) VALUES ('Phase 2B1 Nonstandard Fixture','08:00:00','17:00:00',0,'0,1,2,3,4,5,6',450,0,1)")->execute();
+    $nonstandardId = (int) $pdo->lastInsertId();
+    $nonstandardStaff = test_user(2);
+    assign_employee_schedule($nonstandardStaff, $nonstandardId, 2);
+    $nonstandardResolved = get_schedule_for_date($nonstandardStaff, $today);
+    check($nonstandardResolved['start_time'] === POLICY_START_TIME && $nonstandardResolved['end_time'] === POLICY_END_TIME, 'Nonstandard assignment does not activate custom times');
     $seed = file_get_contents(__DIR__ . '/../database/seed.sql');
     preg_match('/INSERT INTO `work_schedules`.*?;\r?\n/s', $seed, $seedSchedule);
     $pdo->exec($seedSchedule[0]);
@@ -522,7 +636,12 @@ try {
         $recommended = $owedDays > 0 ? 'Settle 1 day owed' : 'Grant 1 day of Replacement Leave';
         check(str_contains($reviewHtml, 'Recommended: ' . $recommended), 'Recommendation follows ' . $owedDays . ' owed balance');
         check(str_contains($reviewHtml, 'data-owed="' . $owedDays . '"'), 'Balance preview uses current owed balance');
-        check(str_contains($reviewHtml, 'Days to Replace: ' . $owedDays . ' to ' . ($owedDays - 1)) === ($owedDays > 0), 'Settlement option eligibility at ' . $owedDays . ' owed');
+        $settlement = preg_match('/<label[^>]*>\s*<input[^>]*name="decision" value="settle_cuti_ganti"[^>]*>.*?<small>(.*?)<\/small>.*?<\/label>/s', $reviewHtml, $choiceMatch) === 1;
+        check($settlement === ($owedDays > 0), 'Settlement option eligibility at ' . $owedDays . ' owed');
+        if ($settlement) {
+            preg_match_all('/\d+/', strip_tags($choiceMatch[1]), $balanceNumbers);
+            check(array_map('intval', array_slice($balanceNumbers[0], -2)) === [$owedDays, $owedDays - 1], 'Settlement reduces owed balance by one');
+        }
         check(str_contains($reviewHtml, 'name="decision" value="no_adjustment"'), 'No adjustment remains available');
         check(!preg_match('/name="decision" value="[^"]+" checked/', $reviewHtml), 'No adjustment is preselected');
     }

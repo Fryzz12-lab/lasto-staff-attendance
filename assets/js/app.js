@@ -185,7 +185,8 @@
     el.setAttribute('role', 'alert');
     el.innerHTML =
       '<div class="d-flex"><div class="toast-body"></div>' +
-      '<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Dismiss notification"></button></div>';
+      '<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>';
+    el.querySelector('.btn-close').setAttribute('aria-label', i18n('toast_dismiss'));
     el.querySelector('.toast-body').textContent = message;
     toastContainer.appendChild(el);
     const toast = new bootstrap.Toast(el, { delay: 4000 });
@@ -257,8 +258,8 @@
   window.copyCredsText = copyCredsText;
   window.copySidebarTemplate = (button) => copyCredsText(button, sidebarTemplateText());
 
-  async function apiPost(path, data) {
-    showLoading(true);
+  async function apiPost(path, data, useLoadingOverlay, includeHttpStatus) {
+    if (useLoadingOverlay !== false) showLoading(true);
     try {
       const token = document.querySelector('meta[name="csrf-token"]')?.content || window.CSRF_TOKEN || '';
       const res = await fetch((window.APP_BASE || '') + path, {
@@ -272,11 +273,12 @@
         body: JSON.stringify(Object.assign({}, data || {}, { csrf_token: token })),
       });
       const json = await res.json().catch(() => ({ success: false, message: 'Unexpected server response.' }));
+      if (includeHttpStatus) json.http_status = res.status;
       return json;
     } catch (e) {
       return { success: false, message: 'Network error. Please try again.' };
     } finally {
-      showLoading(false);
+      if (useLoadingOverlay !== false) showLoading(false);
     }
   }
 
@@ -318,6 +320,7 @@
     if (!modal || !window.bootstrap?.Modal) return Promise.resolve(confirmAction(message));
     return new Promise((resolve) => {
       const originalParent = modal.parentNode;
+      const trigger = document.activeElement;
       // Keep Bootstrap's modal and backdrop in the document root. The app shell
       // has transformed stacking contexts that can otherwise place the backdrop
       // above the modal buttons, making the entire screen appear unclickable.
@@ -333,13 +336,21 @@
         accepted = true;
         instance.hide();
       };
+      const onEscape = (event) => {
+        if (event.key !== 'Escape') return;
+        event.preventDefault();
+        instance.hide();
+      };
       const onHidden = () => {
         confirmButton.removeEventListener('click', onConfirm);
+        modal.removeEventListener('keydown', onEscape);
         modal.removeEventListener('hidden.bs.modal', onHidden);
         if (originalParent?.isConnected) originalParent.appendChild(modal);
+        if (trigger?.isConnected && !trigger.disabled) trigger.focus({ preventScroll: true });
         resolve(accepted);
       };
       confirmButton.addEventListener('click', onConfirm);
+      modal.addEventListener('keydown', onEscape);
       modal.addEventListener('hidden.bs.modal', onHidden);
       modal.addEventListener('shown.bs.modal', () => cancelButton.focus(), { once: true });
       instance.show();
@@ -434,16 +445,21 @@
   // Sidebar mobile toggle & swipe gestures (once)
   const sidebar = document.getElementById('appSidebar');
   const toggle = document.getElementById('sidebarToggle');
+  const mobileUserButton = document.getElementById('mobileUserBtn');
   const backdrop = document.getElementById('sidebarBackdrop');
 
   function openSidebar() {
     sidebar && sidebar.classList.add('open');
     backdrop && backdrop.classList.add('show');
+    toggle && toggle.setAttribute('aria-expanded', 'true');
+    mobileUserButton && mobileUserButton.setAttribute('aria-expanded', 'true');
   }
 
   function closeSidebar() {
     sidebar && sidebar.classList.remove('open');
     backdrop && backdrop.classList.remove('show');
+    toggle && toggle.setAttribute('aria-expanded', 'false');
+    mobileUserButton && mobileUserButton.setAttribute('aria-expanded', 'false');
   }
 
   function toggleSidebar() {
@@ -633,9 +649,261 @@
     }).catch(() => { browserPermission = 'unknown'; render(); });
   }
 
+  let attendanceCapability = null;
+  let activeAttendanceOperation = null;
+  let attendanceOperationBusy = false;
+  let attendanceStatusRegion = null;
+  let attendanceRecoveryInitialized = false;
+  let attendanceRecoveryPromise = null;
+  let attendanceFrontendState = 'ready';
+  const locationFinalizationAttempts = new Set();
+
+  function attendanceStatus(message, state, retry) {
+    const root = document.querySelector('.app-content');
+    if (!root) return;
+    if (!attendanceStatusRegion || !attendanceStatusRegion.isConnected) {
+      attendanceStatusRegion = document.createElement('section');
+      attendanceStatusRegion.className = 'alert alert-info d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3';
+      attendanceStatusRegion.setAttribute('role', 'status');
+      attendanceStatusRegion.setAttribute('aria-live', 'polite');
+      attendanceStatusRegion.setAttribute('aria-atomic', 'true');
+      attendanceStatusRegion.tabIndex = -1;
+      attendanceStatusRegion.dataset.attendanceOperationStatus = '1';
+      const text = document.createElement('span');
+      text.dataset.attendanceStatusText = '1';
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'btn btn-sm btn-outline-primary';
+      button.textContent = 'Check status / retry safely';
+      button.hidden = true;
+      button.addEventListener('click', () => {
+        if (activeAttendanceOperation && !attendanceOperationBusy) runAttendanceOperation(activeAttendanceOperation, true);
+      });
+      const loginLink = document.createElement('a');
+      loginLink.href = (window.APP_BASE || '') + '/';
+      loginLink.className = 'btn btn-sm btn-outline-primary';
+      loginLink.textContent = 'Go to login';
+      loginLink.hidden = true;
+      attendanceStatusRegion.append(text, button, loginLink);
+      root.prepend(attendanceStatusRegion);
+    }
+    attendanceFrontendState = state;
+    root.dataset.attendanceState = state;
+    attendanceStatusRegion.dataset.state = state;
+    attendanceStatusRegion.classList.toggle('alert-warning', ['connection_unavailable', 'retry_available', 'session_expired', 'administrator_review_required'].includes(state));
+    attendanceStatusRegion.classList.toggle('alert-info', !['connection_unavailable', 'retry_available', 'session_expired', 'administrator_review_required'].includes(state));
+    attendanceStatusRegion.querySelector('[data-attendance-status-text]').textContent = message;
+    const retryButton = attendanceStatusRegion.querySelector('button');
+    retryButton.hidden = !retry;
+    retryButton.disabled = attendanceOperationBusy;
+    attendanceStatusRegion.querySelector('a').hidden = state !== 'session_expired';
+    attendanceStatusRegion.hidden = false;
+    if (['connection_unavailable', 'retry_available', 'session_expired', 'administrator_review_required'].includes(state)) {
+      attendanceStatusRegion.focus({ preventScroll: true });
+    }
+  }
+
+  function setAttendanceActionsDisabled(disabled) {
+    document.querySelectorAll('.app-content [data-action="clock_in"], .app-content [data-action="clock_out"], .app-content [data-action="start_break"], .app-content [data-action="end_break"]').forEach((button) => {
+      button.disabled = disabled;
+      if (disabled) button.setAttribute('aria-disabled', 'true');
+      else button.removeAttribute('aria-disabled');
+    });
+  }
+
+  async function finalizeAttendanceLocationOnce(pending, terminalResult) {
+    const attemptKey = String(pending?.requestId || '');
+    if (!terminalResult?.location_event_id || !attemptKey || !['clock_in', 'clock_out'].includes(pending.action)) return true;
+    if (locationFinalizationAttempts.has(attemptKey)) return true;
+    // This guard is page-local. Persisting it before geolocation resolves would
+    // strand the optional location event if the tab reloads mid-finalization.
+    locationFinalizationAttempts.add(attemptKey);
+    pending.locationFinalizationAttempted = true;
+    attendanceStatus('Attendance is confirmed. Updating optional location status…', 'confirmed_success', false);
+    try {
+      let location = { location_status: 'unavailable' };
+      if (navigator.geolocation && window.isSecureContext) {
+        location = await new Promise((resolve) => navigator.geolocation.getCurrentPosition(
+          (position) => resolve({ location_status: 'captured', latitude: position.coords.latitude, longitude: position.coords.longitude, accuracy_metres: position.coords.accuracy }),
+          (error) => resolve({ location_status: error.code === 1 ? 'permission_denied' : error.code === 3 ? 'timed_out' : 'unavailable' }),
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        ));
+      } else if (!navigator.geolocation || !window.isSecureContext) location.location_status = 'unsupported';
+      const saved = await apiPost('/api/clock.php', { action: 'location_result', event_id: terminalResult.location_event_id, ...location }, false, true);
+      if (!saved.success) {
+        locationFinalizationAttempts.delete(attemptKey);
+        const authRequired = saved.http_status === 401 || saved.http_status === 403;
+        const authMessage = saved.http_status === 401
+          ? 'Attendance is confirmed, but the optional location update is unresolved. Your session expired; log in again to verify and complete it.'
+          : 'Attendance is confirmed, but the optional location update is unresolved. Refresh or log in again to verify the security token and complete it.';
+        attendanceStatus(authRequired
+          ? authMessage
+          : 'Attendance is confirmed, but the optional location update is unresolved. The original request is retained; retry will check its result before updating location.',
+        authRequired ? 'session_expired' : 'connection_unavailable', !authRequired);
+        showToast(authRequired ? 'Attendance was recorded. Refresh or log in again to complete the optional location update.' : 'Attendance was recorded. Location status remains unresolved; retry safely when connected.', 'warning', 'attendance-location-result');
+        return false;
+      }
+      showToast('Attendance location status updated.', 'success', 'attendance-location-result');
+      return true;
+    } catch (_) {
+      locationFinalizationAttempts.delete(attemptKey);
+      attendanceStatus('Attendance is confirmed, but the optional location update is unresolved. The original request is retained; retry will check its result before updating location.', 'connection_unavailable', true);
+      showToast('Attendance was recorded. Location could not be completed; this does not affect attendance.', 'warning', 'attendance-location-result');
+      return false;
+    }
+  }
+
+  async function checkAttendanceOperation(pending) {
+    attendanceStatus('Checking server status for the pending attendance action…', 'checking_server_status', false);
+    try {
+      const reconciliation = await window.AttendanceReliability.reconcile(pending);
+      if (String(window.SAS_USER_ID) !== String(pending.userId) || activeAttendanceOperation?.requestId !== pending.requestId) return;
+      const data = reconciliation.data || {};
+      if (reconciliation.httpStatus === 401) {
+        attendanceStatus('Your session expired. Log in again to verify this action. The pending request is saved and will not be sent while you are signed out.', 'session_expired', false);
+        setAttendanceActionsDisabled(true);
+      } else if (data.request_id && data.request_id !== pending.requestId) {
+        attendanceStatus('The server response did not match the pending request. Administrator review is required.', 'administrator_review_required', false);
+        attendanceOperationBusy = false;
+        setAttendanceActionsDisabled(true);
+      } else if (data.outcome === 'confirmed_success' || data.outcome === 'confirmed_rejection') {
+        const expectedOperation = ({ clock_in: 'clock_in', clock_out: 'clock_out', start_break: 'break_start', end_break: 'break_end' })[pending.action];
+        if (data.operation !== expectedOperation) {
+          attendanceStatus('The stored operation does not match the pending action. Administrator review is required.', 'administrator_review_required', false);
+          attendanceOperationBusy = false;
+          setAttendanceActionsDisabled(true);
+          return;
+        }
+        const terminal = data.result || {};
+        if (data.outcome === 'confirmed_success' && !await finalizeAttendanceLocationOnce(pending, terminal)) return;
+        window.AttendanceReliability.clearPending(pending);
+        activeAttendanceOperation = null;
+        attendanceOperationBusy = false;
+        if (data.outcome === 'confirmed_success') {
+          attendanceStatus('Attendance action confirmed by the server.', 'confirmed_success', false);
+          showToast(terminal.message || 'Attendance action confirmed.', 'success');
+          if (pending.action === 'clock_in') earthPulse('in');
+          if (pending.action === 'clock_out') earthPulse('out');
+        } else {
+          attendanceStatus(terminal.message || 'The server confirmed that this attendance action was not accepted.', 'confirmed_rejection', false);
+          showToast(terminal.message || 'Attendance action was not accepted.', 'danger');
+        }
+        setTimeout(() => window.location.reload(), 700);
+      } else if (data.outcome === 'unknown') {
+        const observed = data.state?.derived?.classification;
+        const stateText = observed ? ' Current server attendance state: ' + observed.replace(/_/g, ' ') + '.' : '';
+        attendanceStatus('No result is recorded for this request ID.' + stateText + ' A state change from another device does not confirm this request. You can safely retry with the same request ID.', 'retry_available', true);
+        attendanceOperationBusy = false;
+        setAttendanceActionsDisabled(true);
+      } else if (data.outcome === 'processing') {
+        attendanceStatus('The server is still processing this attendance action. Checking again shortly…', 'checking_server_status', false);
+        setTimeout(() => { if (activeAttendanceOperation?.requestId === pending.requestId) checkAttendanceOperation(pending); }, 2000);
+      } else if (data.outcome === 'expired' || data.outcome === 'unavailable' || data.outcome === 'server_unavailable' || data.outcome === 'invalid_request') {
+        attendanceStatus('The operation result cannot be verified automatically. Please contact an administrator before taking another attendance action.', 'administrator_review_required', false);
+        attendanceOperationBusy = false;
+        setAttendanceActionsDisabled(true);
+      } else {
+        attendanceStatus('The attendance service is temporarily unavailable. The action outcome is uncertain; check status again before retrying.', 'connection_unavailable', true);
+        attendanceOperationBusy = false;
+        setAttendanceActionsDisabled(true);
+      }
+    } catch (_) {
+      attendanceStatus('The attendance service is temporarily unavailable. The action outcome is uncertain; check status again before retrying.', 'connection_unavailable', true);
+      attendanceOperationBusy = false;
+      setAttendanceActionsDisabled(true);
+    }
+  }
+
+  async function runAttendanceOperation(pending, retry) {
+    if (!pending || attendanceOperationBusy) return;
+    attendanceOperationBusy = true;
+    activeAttendanceOperation = pending;
+    setAttendanceActionsDisabled(true);
+    attendanceStatus(retry ? 'Checking the original request before retrying…' : 'Submitting attendance action securely…', retry ? 'checking_server_status' : 'submitting', false);
+
+    if (retry) {
+      try {
+        const beforeRetry = await window.AttendanceReliability.reconcile(pending);
+        if (activeAttendanceOperation?.requestId !== pending.requestId) return;
+        const data = beforeRetry.data || {};
+        if (beforeRetry.httpStatus === 401) {
+          attendanceOperationBusy = false;
+          attendanceStatus('Your session expired. Log in again to verify this action. The pending request is retained.', 'session_expired', false);
+          return;
+        }
+        if (['confirmed_success', 'confirmed_rejection', 'processing', 'expired'].includes(data.outcome)) {
+          attendanceOperationBusy = false;
+          await checkAttendanceOperation(pending);
+          return;
+        }
+        if (data.outcome !== 'unknown') throw new Error('Status check is unavailable.');
+      } catch (_) {
+        attendanceOperationBusy = false;
+        attendanceStatus('Could not verify the original request. No retry was sent. Check status again when the connection returns.', 'connection_unavailable', true);
+        return;
+      }
+    }
+
+    try {
+      const response = await window.AttendanceReliability.submit(pending);
+      if (activeAttendanceOperation?.requestId !== pending.requestId) return;
+      const data = response.data || {};
+      if (response.httpStatus === 401 || response.httpStatus === 403) {
+        attendanceOperationBusy = false;
+        attendanceStatus('Your session or security check needs attention. Refresh or log in again to verify this action. The pending request is retained and will not be resent until you are authenticated.', 'session_expired', false);
+        return;
+      }
+      if (response.httpStatus === 400) {
+        window.AttendanceReliability.clearPending(pending);
+        activeAttendanceOperation = null;
+        attendanceOperationBusy = false;
+        setAttendanceActionsDisabled(false);
+        attendanceStatus(data.message || 'The attendance request was rejected before processing. No attendance change was made.', 'confirmed_rejection', false);
+        showToast(data.message || 'The attendance request was rejected before processing.', 'danger');
+        return;
+      }
+      if (data.outcome === 'confirmed_success' || data.outcome === 'confirmed_rejection') {
+        attendanceOperationBusy = false;
+        await checkAttendanceOperation(pending);
+        return;
+      }
+      attendanceOperationBusy = false;
+      await checkAttendanceOperation(pending);
+    } catch (_) {
+      if (activeAttendanceOperation?.requestId !== pending.requestId) return;
+      attendanceOperationBusy = false;
+      await checkAttendanceOperation(pending);
+    }
+  }
+
+  function initializeAttendanceRecovery() {
+    if (!window.AttendanceReliability || !document.querySelector('.app-content [data-action="clock_in"], .app-content [data-action="clock_out"], .app-content [data-action="start_break"], .app-content [data-action="end_break"]')) return Promise.resolve(null);
+    if (attendanceRecoveryInitialized) return attendanceRecoveryPromise || Promise.resolve(attendanceCapability);
+    attendanceRecoveryInitialized = true;
+    document.querySelector('.app-content').dataset.attendanceState = attendanceFrontendState;
+    const pending = window.AttendanceReliability.getPending(window.SAS_USER_ID);
+    if (pending) {
+      activeAttendanceOperation = pending;
+      setAttendanceActionsDisabled(true);
+    }
+    attendanceRecoveryPromise = window.AttendanceReliability.checkCapability().then((capability) => {
+      attendanceCapability = capability;
+      if (!pending) return;
+      if (!capability.ready) {
+        attendanceStatus(capability.sessionExpired ? 'Your session expired. Log in again to verify the pending action.' : (capability.message || 'Safe attendance actions are unavailable. Contact an administrator.'), capability.sessionExpired ? 'session_expired' : 'administrator_review_required', false);
+        return;
+      }
+      return checkAttendanceOperation(pending);
+    });
+    return attendanceRecoveryPromise;
+  }
+
   function bindPageActions() {
     initAttendanceLocationCard();
     initPushNotificationManager();
+    syncPushSubscription();
+    syncPushLanguage();
+    initializeAttendanceRecovery();
     document.querySelectorAll('.app-content [data-action]').forEach((btn) => {
       if (btn.dataset.actionBound === '1') return;
       btn.dataset.actionBound = '1';
@@ -646,6 +914,14 @@
 
         const action = btn.getAttribute('data-action');
         const type = btn.getAttribute('data-type') || '';
+
+        if (['clock_in', 'clock_out', 'start_break', 'end_break'].includes(action)) {
+          if (attendanceRecoveryPromise) await attendanceRecoveryPromise;
+          if (activeAttendanceOperation || attendanceOperationBusy) {
+            showToast('An attendance action is still unresolved. Check its status before continuing.', 'warning');
+            return;
+          }
+        }
 
         const confirmMsg = btn.getAttribute('data-confirm');
         if (['clock_in', 'clock_out', 'start_break', 'end_break'].includes(action)) {
@@ -658,66 +934,44 @@
           }
         }
 
-        btn.disabled = true;
-        let result;
-        if (action === 'clock_in' || action === 'clock_out') {
-          if (btn.dataset.locationPreference === 'undecided') {
-            const choice = await askAttendanceLocation();
-            if (!choice) { btn.disabled = false; return; }
-            const savedChoice = await apiPost('/api/clock.php', { action: 'location_preference', preference: choice });
-            if (!savedChoice.success) {
-              showToast(savedChoice.message || 'Could not save your location choice. Please try again.', 'danger');
-              btn.disabled = false;
-              return;
-            }
-            document.querySelectorAll('[data-location-preference]').forEach((button) => {
-              button.dataset.locationPreference = choice;
-            });
+        if (['clock_in', 'clock_out', 'start_break', 'end_break'].includes(action)) {
+          if (!window.AttendanceReliability) {
+            showToast('Safe attendance actions are unavailable in this browser. No action was submitted.', 'danger');
+            return;
           }
-          result = await apiPost('/api/clock.php', { action });
-          if (result?.success && result.location_event_id && btn.dataset.locationPreference === 'enabled') {
-            showLoading(true, (action === 'clock_in' ? 'Clock-in time' : 'Clock-out time') + ' recorded. Getting your location…');
-            let location;
-            try {
-              location = await new Promise((resolve) => {
-                if (!navigator.geolocation || !window.isSecureContext) {
-                  resolve({ location_status: 'unsupported' }); return;
-                }
-                try {
-                  navigator.geolocation.getCurrentPosition(
-                    (position) => resolve({
-                      location_status: 'captured', latitude: position.coords.latitude,
-                      longitude: position.coords.longitude, accuracy_metres: position.coords.accuracy
-                    }),
-                    (error) => resolve({ location_status: error.code === 1 ? 'permission_denied' : error.code === 3 ? 'timed_out' : 'unavailable' }),
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-                  );
-                } catch (_) { resolve({ location_status: 'unavailable' }); }
+          if (activeAttendanceOperation || attendanceOperationBusy) return;
+          if (!attendanceCapability) attendanceCapability = await window.AttendanceReliability.checkCapability();
+          if (!attendanceCapability.ready) {
+            showToast(attendanceCapability.message || 'Safe attendance actions are unavailable. Contact an administrator.', 'danger');
+            return;
+          }
+          if (action === 'clock_in' || action === 'clock_out') {
+            if (btn.dataset.locationPreference === 'undecided') {
+              const choice = await askAttendanceLocation();
+              if (!choice) return;
+              const savedChoice = await apiPost('/api/clock.php', { action: 'location_preference', preference: choice });
+              if (!savedChoice.success) {
+                showToast(savedChoice.message || 'Could not save your location choice. Please try again.', 'danger');
+                return;
+              }
+              document.querySelectorAll('[data-location-preference]').forEach((button) => {
+                button.dataset.locationPreference = choice;
               });
-            } finally {
-              showLoading(false);
-            }
-            const saved = await apiPost('/api/clock.php', { action: 'location_result', event_id: result.location_event_id, ...location });
-            if (!saved.success) result.location_notice = 'Location could not be saved.';
-            if (location.location_status === 'permission_denied') {
-              result.location_notice = 'Location is blocked in your browser. See Attendance Location in your profile to enable it.';
             }
           }
-        } else if (action === 'start_break') {
-          result = await apiPost('/api/break.php', { action: 'start', type });
-        } else if (action === 'end_break') {
-          result = await apiPost('/api/break.php', { action: 'end' });
+          try {
+            activeAttendanceOperation = window.AttendanceReliability.createPending(window.SAS_USER_ID, action, type);
+            runAttendanceOperation(activeAttendanceOperation, false);
+          } catch (error) {
+            showToast(error.message || 'Could not safely prepare the attendance action.', 'danger');
+          }
+          return;
         }
 
-        if (result && result.success) {
-          if (action === 'clock_in') earthPulse('in');
-          else if (action === 'clock_out') earthPulse('out');
-          showToast((result.message || 'Done') + (result.location_notice ? ' ' + result.location_notice : ''), result.location_notice || result.exceeded ? 'warning' : 'success');
-          setTimeout(() => window.location.reload(), 500);
-        } else {
-          showToast((result && result.message) || 'Action failed', 'danger');
-          btn.disabled = false;
-        }
+        btn.disabled = true;
+        const result = await apiPost('/api/clock.php', { action });
+        if (result?.success) showToast(result.message || 'Done', 'success');
+        else { showToast(result?.message || 'Action failed', 'danger'); btn.disabled = false; }
       });
     });
   }
@@ -1015,6 +1269,41 @@
   let badgeTimer = null;
   let notificationAudioContext = null;
   let notificationAudioUnlocked = false;
+  let recentMissingClockOutPushAt = 0;
+
+  const handleSwMessage = (event) => {
+    if (event.data?.type === 'sas-critical-push' && event.data.category === 'missing_clock_out') {
+      recentMissingClockOutPushAt = Date.now();
+      document.querySelectorAll('[data-toast-key="badge-incomplete"]').forEach((toast) => toast.remove());
+    }
+    if (event.data?.type === 'sas-navigate' && event.data.url) {
+      try {
+        const target = new URL(event.data.url, window.location.href);
+        if (target.origin === window.location.origin && (target.protocol === 'http:' || target.protocol === 'https:')) {
+          const path = target.pathname;
+          const isBlocked = path === '/logout.php' ||
+                            path.endsWith('/logout.php') ||
+                            path.includes('/api/') ||
+                            path.includes('/cli/') ||
+                            path.includes('/config/') ||
+                            path.includes('/storage/');
+          if (!isBlocked && window.location.href !== target.href) {
+            window.location.assign(target.href);
+          }
+        }
+      } catch (e) { }
+    }
+  };
+
+  if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+    if (navigator.serviceWorker.addEventListener) {
+      navigator.serviceWorker.addEventListener('message', handleSwMessage);
+    }
+    navigator.serviceWorker.onmessage = handleSwMessage;
+    if (typeof navigator.serviceWorker.startMessages === 'function') {
+      try { navigator.serviceWorker.startMessages(); } catch (e) { }
+    }
+  }
 
   function unlockNotificationSound() {
     try {
@@ -1109,7 +1398,11 @@
       const incNow = parseInt(map.incomplete, 10) || 0;
       const incWas = parseInt(badgePrev.incomplete, 10) || 0;
       if (incNow > incWas && document.querySelector('.sidebar-nav a[data-badge-key="incomplete"]')) {
-        showToast(i18n('badge_incomplete'), 'warning');
+        setTimeout(() => {
+          if (Date.now() - recentMissingClockOutPushAt > 15000) {
+            showToast(i18n('badge_incomplete'), 'warning', 'badge-incomplete');
+          }
+        }, 1000);
       }
     }
 
@@ -1220,7 +1513,7 @@
 
     if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
       if (allowToggle) allowToggle.disabled = true;
-      setStatus('unsupported', 'Notifications unsupported');
+      setStatus('unsupported', i18n('push_ui_unsupported'));
       return;
     }
 
@@ -1231,17 +1524,78 @@
       return;
     }
 
+    let subscription = null;
+    try { subscription = await reg.pushManager.getSubscription(); } catch (e) { console.warn('[WebPush] Subscription unavailable:', e); }
     let serverConfig = null;
     try {
-      const res = await fetch((window.APP_BASE || '') + '/api/push_subscription.php', {
+      const endpointQuery = subscription?.endpoint ? '?endpoint=' + encodeURIComponent(subscription.endpoint) : '';
+      const res = await fetch((window.APP_BASE || '') + '/api/push_subscription.php' + endpointQuery, {
         headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
         credentials: 'same-origin',
         cache: 'no-store',
       });
       serverConfig = await res.json();
+      if (!res.ok || !serverConfig?.success) throw new Error(serverConfig?.message || 'Settings unavailable');
     } catch (e) { }
 
     const prefs = serverConfig?.preferences || {};
+    const pushRecovery = window.SASPushRecovery;
+    const subscribeWithKey = (key) => reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: typeof key === 'string' ? urlBase64ToUint8Array(key) : key,
+    });
+    const saveSubscription = (device, preferences) => apiPost('/api/push_subscription.php', {
+      action: 'subscribe', subscription: device.toJSON(), preferences,
+    });
+    const removeEndpoint = (endpoint) => apiPost('/api/push_subscription.php', {
+      action: 'unsubscribe', endpoint,
+    });
+    if (serverConfig) {
+      try {
+        const pendingEndpoint = sessionStorage.getItem('sas-push-cleanup-endpoint');
+        if (pendingEndpoint) {
+          const cleaned = await removeEndpoint(pendingEndpoint);
+          if (cleaned?.success) sessionStorage.removeItem('sas-push-cleanup-endpoint');
+        }
+      } catch (error) { /* Keep the pending endpoint for a later page load. */ }
+    }
+    let recoveryResult = null;
+    if (subscription && serverConfig?.subscribed && prefs.all !== false && Notification.permission === 'granted'
+        && pushRecovery?.keyStatus(subscription, serverConfig.vapid_public_key) === 'stale') {
+      const attemptKey = subscription.endpoint + ':' + serverConfig.vapid_public_key;
+      window.__SAS_PUSH_RECOVERY_ATTEMPTS__ ||= new Set();
+      let recentlyAttempted = false;
+      try {
+        const lastAttempt = JSON.parse(sessionStorage.getItem('sas-push-recovery-attempt') || 'null');
+        recentlyAttempted = lastAttempt?.key === attemptKey && Date.now() - lastAttempt.at < 300000;
+      } catch (error) { }
+      if (!window.__SAS_PUSH_RECOVERY_ATTEMPTS__.has(attemptKey) && !recentlyAttempted) {
+        window.__SAS_PUSH_RECOVERY_ATTEMPTS__.add(attemptKey);
+        try { sessionStorage.setItem('sas-push-recovery-attempt', JSON.stringify({ key: attemptKey, at: Date.now() })); } catch (error) { }
+        setStatus('off', i18n('push_recovery_progress'));
+        recoveryResult = await pushRecovery.recover({
+          subscription,
+          currentKey: serverConfig.vapid_public_key,
+          preferences: Object.assign({}, prefs),
+          subscribe: subscribeWithKey,
+          register: saveSubscription,
+          removeOld: removeEndpoint,
+        });
+        subscription = recoveryResult.subscription;
+        if (recoveryResult.ok) {
+          serverConfig.subscribed = true;
+          Object.assign(prefs, { all: true });
+          try { sessionStorage.removeItem('sas-push-recovery-attempt'); } catch (error) { }
+          if (recoveryResult.cleanupPending) {
+            try { sessionStorage.setItem('sas-push-cleanup-endpoint', recoveryResult.oldEndpoint); } catch (error) { }
+          }
+        } else if (recoveryResult.serverUnconfirmed || recoveryResult.reason === 'replacement_unsubscribe_failed') {
+          serverConfig.subscribed = false;
+        }
+      } else {
+        recoveryResult = { ok: false, retained: true, subscription };
+      }
+    }
 
     const syncCategoryUi = (isEnabled) => {
       const container = document.querySelector('.notification-preferences');
@@ -1272,28 +1626,45 @@
         if (!allowToggle?.checked) return;
         const key = cb.dataset.notificationKey;
         if (!key) return;
-        prefs[key] = cb.checked;
+        const previous = prefs[key] !== false;
         const update = { [key]: cb.checked };
-        await apiPost('/api/push_subscription.php', { action: 'update_preferences', endpoint: subscription?.endpoint || '', preferences: update });
+        const result = await apiPost('/api/push_subscription.php', { action: 'update_preferences', endpoint: subscription?.endpoint || '', preferences: update });
+        if (result?.success) prefs[key] = result.preferences[key];
+        else {
+          cb.checked = previous;
+          if (result?.code === 'device_not_registered') {
+            serverConfig.subscribed = false;
+            if (allowToggle) allowToggle.checked = false;
+            syncCategoryUi(false);
+            setStatus('off', i18n('push_ui_unregistered'));
+          }
+          showToast(result?.message || i18n('push_ui_preference_failed'), 'danger', 'push-preference');
+        }
       });
     });
-
-    let subscription = await reg.pushManager.getSubscription();
 
     if (Notification.permission === 'denied') {
       if (allowToggle) {
         allowToggle.checked = false;
         allowToggle.disabled = true;
       }
-      setStatus('blocked', 'Blocked in browser settings');
+      setStatus('blocked', i18n('push_ui_blocked'));
       syncCategoryUi(false);
-    } else if (subscription && prefs.all !== false) {
+    } else if (!serverConfig) {
+      if (allowToggle) { allowToggle.checked = false; allowToggle.disabled = true; }
+      setStatus('off', i18n('push_ui_settings_unavailable'));
+      syncCategoryUi(false);
+    } else if (recoveryResult && !recoveryResult.ok) {
+      if (allowToggle) allowToggle.checked = !!subscription && !!serverConfig.subscribed;
+      syncCategoryUi(!!allowToggle?.checked);
+      setStatus('off', i18n(recoveryResult.restored || recoveryResult.retained ? 'push_recovery_retained' : 'push_recovery_failed'));
+    } else if (subscription && serverConfig.subscribed && prefs.all !== false) {
       if (allowToggle) allowToggle.checked = true;
-      setStatus('enabled', 'Enabled on this device');
+      setStatus('enabled', recoveryResult?.cleanupPending ? i18n('push_recovery_cleanup') : i18n('push_ui_enabled'));
       syncCategoryUi(true);
     } else {
       if (allowToggle) allowToggle.checked = false;
-      setStatus('off', 'Disabled on this device');
+      setStatus('off', i18n(subscription ? 'push_ui_unregistered' : 'push_ui_disabled'));
       syncCategoryUi(false);
     }
 
@@ -1306,66 +1677,80 @@
             if (permission !== 'granted') {
               allowToggle.checked = false;
               syncCategoryUi(false);
-              setStatus('blocked', 'Blocked in browser settings');
-              showToast('Notification permission was not granted.', 'warning', 'push-toggle');
+              setStatus('blocked', i18n('push_ui_blocked'));
+              showToast(i18n('push_ui_permission_denied'), 'warning', 'push-toggle');
               return;
             }
 
             const vapidKey = serverConfig?.vapid_public_key;
             if (!vapidKey) {
-              throw new Error('VAPID public key unavailable from server.');
+              throw new Error(i18n('push_ui_key_unavailable'));
             }
 
-            subscription = await reg.pushManager.subscribe({
-              userVisibleOnly: true,
-              applicationServerKey: urlBase64ToUint8Array(vapidKey),
-            });
-
-            const subJson = subscription.toJSON();
-            const res = await apiPost('/api/push_subscription.php', {
-              action: 'subscribe',
-              subscription: subJson,
-            });
+            let res;
+            if (subscription && pushRecovery?.keyStatus(subscription, vapidKey) === 'stale') {
+              const recovered = await pushRecovery.recover({
+                subscription, currentKey: vapidKey, preferences: Object.assign({}, prefs),
+                subscribe: subscribeWithKey, register: saveSubscription, removeOld: removeEndpoint,
+              });
+              subscription = recovered.subscription;
+              if (!recovered.ok) {
+                recoveryResult = recovered;
+                if (recovered.serverUnconfirmed || recovered.reason === 'replacement_unsubscribe_failed') serverConfig.subscribed = false;
+                throw new Error(i18n(recovered.restored || recovered.retained ? 'push_recovery_retained' : 'push_recovery_failed'));
+              }
+              recoveryResult = recovered;
+              if (recovered.cleanupPending) {
+                try { sessionStorage.setItem('sas-push-cleanup-endpoint', recovered.oldEndpoint); } catch (error) { }
+              }
+              res = { success: true, preferences: prefs };
+            } else {
+              subscription = await subscribeWithKey(vapidKey);
+              res = await saveSubscription(subscription, Object.assign({}, prefs));
+            }
 
             if (res?.success) {
-              prefs.all = true;
+              Object.assign(prefs, res.preferences || {}, { all: true });
+              serverConfig.subscribed = true;
               syncCategoryUi(true);
-              setStatus('enabled', 'Enabled on this device');
-              showToast('Push notifications enabled for this device!', 'success', 'push-toggle');
+              setStatus('enabled', recoveryResult?.cleanupPending ? i18n('push_recovery_cleanup') : i18n('push_ui_enabled'));
+              showToast(i18n('push_ui_enabled_toast'), 'success', 'push-toggle');
             } else {
-              throw new Error(res?.message || 'Server failed to save subscription.');
+              throw new Error(res?.message || i18n('push_ui_enable_failed'));
             }
           } catch (err) {
             console.error('[WebPush] Subscribe error:', err);
-            allowToggle.checked = false;
-            syncCategoryUi(false);
-            setStatus('off', 'Disabled on this device');
-            showToast(err.message || 'Failed to enable notifications.', 'danger');
+            allowToggle.checked = !!subscription && !!serverConfig?.subscribed;
+            syncCategoryUi(allowToggle.checked);
+            const failure = recoveryResult
+              ? i18n(recoveryResult.restored || recoveryResult.retained ? 'push_recovery_retained' : 'push_recovery_failed')
+              : i18n('push_ui_enable_failed');
+            setStatus('off', failure);
+            showToast(failure, 'danger', 'push-toggle');
           }
         } else {
-          // Immediately update UI to disabled state and untick child options
-          syncCategoryUi(false);
-          setStatus('off', 'Disabled on this device');
-          showToast('Push notifications disabled on this device.', 'info', 'push-toggle');
-          prefs.all = false;
-
           try {
             if (subscription) {
               const endpoint = subscription.endpoint;
-              await subscription.unsubscribe();
-              subscription = null;
-              await apiPost('/api/push_subscription.php', {
+              const result = await apiPost('/api/push_subscription.php', {
                 action: 'unsubscribe',
                 endpoint: endpoint,
               });
-            } else {
-              await apiPost('/api/push_subscription.php', {
-                action: 'unsubscribe',
-                endpoint: '',
-              });
+              if (!result?.success) throw new Error(result?.message || i18n('push_ui_disable_failed'));
+              serverConfig.subscribed = false;
+              const removed = await subscription.unsubscribe();
+              if (removed) subscription = null;
             }
+            prefs.all = false;
+            syncCategoryUi(false);
+            setStatus('off', i18n('push_ui_disabled'));
+            showToast(i18n('push_ui_disabled_toast'), 'info', 'push-toggle');
           } catch (err) {
             console.error('[WebPush] Unsubscribe error:', err);
+            allowToggle.checked = !!serverConfig.subscribed;
+            syncCategoryUi(allowToggle.checked);
+            setStatus('off', i18n(serverConfig.subscribed ? 'push_ui_disable_failed' : 'push_ui_disabled'));
+            showToast(err?.message || i18n('push_ui_disable_failed'), 'danger', 'push-toggle');
           }
         }
       });
@@ -1377,26 +1762,150 @@
         e.preventDefault();
         testBtn.disabled = true;
         const origHtml = testBtn.innerHTML;
-        testBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Sending…';
+        testBtn.textContent = i18n('push_ui_sending');
         try {
           if (!subscription && Notification.permission !== 'granted') {
-            showToast('Please enable notifications first using the toggle above.', 'warning');
+            showToast(i18n('push_ui_test_enable_first'), 'warning');
             return;
           }
           const res = await apiPost('/api/push_subscription.php', { action: 'test' });
           if (res?.success) {
-            showToast('Test notification sent! Check your device notification tray.', 'success');
+            showToast(i18n('push_ui_test_sent'), 'success');
           } else {
-            showToast(res?.message || 'Could not send test notification.', 'warning');
+            showToast(res?.message || i18n('push_ui_test_failed'), 'warning');
           }
         } catch (err) {
-          showToast('Failed to trigger test notification.', 'danger');
+          showToast(i18n('push_ui_test_failed'), 'danger');
         } finally {
           testBtn.disabled = false;
           testBtn.innerHTML = origHtml;
         }
       });
     }
+  }
+
+  let pushLanguageSyncQueue = Promise.resolve();
+  function syncPushLanguage() {
+    pushLanguageSyncQueue = pushLanguageSyncQueue.then(async () => {
+      if (!('serviceWorker' in navigator) || !('Notification' in window) || Notification.permission !== 'granted') return;
+      const langTag = (document.documentElement.lang || '').toLowerCase();
+      const language = langTag.startsWith('zh') ? 'zh' : langTag.startsWith('ms') ? 'ms' : 'en';
+      const registration = await navigator.serviceWorker.ready;
+      const device = await registration.pushManager?.getSubscription();
+      if (!device?.endpoint) return;
+      const marker = device.endpoint + '|' + language;
+      try { if (sessionStorage.getItem('sas-push-language') === marker) return; } catch (error) { }
+      const token = document.querySelector('meta[name="csrf-token"]')?.content || window.CSRF_TOKEN || '';
+      const response = await fetch((window.APP_BASE || '') + '/api/push_subscription.php', {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ action: 'set_language', endpoint: device.endpoint, csrf_token: token }),
+      });
+      const result = await response.json();
+      if (response.ok && result?.success) {
+        try { sessionStorage.setItem('sas-push-language', marker); } catch (error) { }
+      }
+    }).catch((error) => { console.warn('[WebPush] Language sync unavailable:', error); });
+    return pushLanguageSyncQueue;
+  }
+
+  let pushSyncQueue = Promise.resolve();
+  function syncPushSubscription() {
+    pushSyncQueue = pushSyncQueue.then(async () => {
+      if (!window.SAS_USER_ID) return;
+      if (!('serviceWorker' in navigator) || !('Notification' in window) || Notification.permission !== 'granted') return;
+      const registration = await navigator.serviceWorker.ready;
+      const sub = await registration.pushManager?.getSubscription();
+      if (!sub?.endpoint) return;
+
+      const marker = String(window.SAS_USER_ID) + '|' + sub.endpoint;
+      try {
+        if (sessionStorage.getItem('sas-push-synced') === marker) return;
+      } catch (_) {}
+
+      const rawKey = sub.getKey ? sub.getKey('p256dh') : null;
+      const rawAuth = sub.getKey ? sub.getKey('auth') : null;
+      const p256dh = rawKey ? btoa(String.fromCharCode.apply(null, new Uint8Array(rawKey))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '') : '';
+      const auth = rawAuth ? btoa(String.fromCharCode.apply(null, new Uint8Array(rawAuth))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '') : '';
+
+      const token = document.querySelector('meta[name="csrf-token"]')?.content || window.CSRF_TOKEN || '';
+      const response = await fetch((window.APP_BASE || '') + '/api/push_subscription.php', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify({
+          action: 'sync',
+          endpoint: sub.endpoint,
+          p256dh: p256dh,
+          auth: auth,
+          csrf_token: token,
+        }),
+      });
+      const result = await response.json();
+      if (response.ok && result?.success) {
+        try {
+          sessionStorage.setItem('sas-push-synced', marker);
+        } catch (_) {}
+      }
+    }).catch((error) => {
+      console.warn('[WebPush] Subscription sync unavailable:', error);
+    });
+    return pushSyncQueue;
+  }
+
+  function initLogoutProtection() {
+    if (window.__SAS_LOGOUT_BOUND__) return;
+    window.__SAS_LOGOUT_BOUND__ = true;
+
+    document.addEventListener('submit', async (event) => {
+      const form = event.target.closest('form[data-logout-form]');
+      if (!form) return;
+
+      if (form.dataset.submitting === '1') {
+        return;
+      }
+
+      event.preventDefault();
+      form.dataset.submitting = '1';
+
+      let endpoint = '';
+      try {
+        if ('serviceWorker' in navigator) {
+          const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 800));
+          const subPromise = (async () => {
+            const reg = await navigator.serviceWorker.ready;
+            return await reg.pushManager?.getSubscription();
+          })();
+          const sub = await Promise.race([subPromise, timeoutPromise]);
+          if (sub?.endpoint) {
+            endpoint = sub.endpoint;
+            try {
+              await Promise.race([sub.unsubscribe(), new Promise((resolve) => setTimeout(resolve, 500))]);
+            } catch (_) {}
+          }
+        }
+      } catch (err) {
+        console.warn('[Logout] Push cleanup error:', err);
+      }
+
+      try {
+        sessionStorage.removeItem('sas-push-synced');
+        sessionStorage.removeItem('sas-push-language');
+        sessionStorage.removeItem('sas-push-cleanup-endpoint');
+        sessionStorage.removeItem('sas-push-recovery-attempt');
+      } catch (_) {}
+
+      const field = form.querySelector('[data-push-endpoint-field]');
+      if (field && endpoint) {
+        field.value = endpoint;
+      }
+
+      form.submit();
+    });
   }
 
   function initServiceWorker() {
@@ -1463,6 +1972,7 @@
   initLiveTicker();
   initBadgePoller();
   initServiceWorker();
+  initLogoutProtection();
 
   window.SAS = {
     showToast,
@@ -1484,5 +1994,6 @@
     },
     applyBadges,
     printPage,
+    syncPushSubscription,
   };
 })();

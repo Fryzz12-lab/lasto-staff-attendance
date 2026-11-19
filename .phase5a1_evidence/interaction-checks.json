@@ -1,0 +1,106 @@
+[
+  {
+    "label": "permission_granted",
+    "result": {}
+  },
+  {
+    "label": "location-enabled",
+    "title": "My Profile · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/staff/profile.php",
+    "body": "LASTO TECHNOLOGY\nSTAFF ATTENDANCE SYSTEM\nDashboard\nMy Attendance\nMy Breaks\nMy Schedule\nWorking Hours & Policy\nLeave / WFH Requests\nMy Profile\nS\nSynthetic Location Enabled\nSTAFF\n3D GLOBE: ON\nDAY CONSOLE\nEnglish\nLOGOUT\nMY PROFILE\nS\nVerify your email address\nVerify your email to keep your account secure.\nSend verification email\nATTENDANCE LOCATION\n\nShare your location for Clock In and Clock Out only. Not continuously tracked.\n\nShare location for attendance\nBrowser permission:\nAllowed\nHow to enable location\nPERSONAL INFORMATION\nSTAFF ID\nUSERNAME\nFULL NAME\nSynthetic Location Enabled\nEMAIL\n● Not verified\nResend verification email\nPHONE\n+60\nJOB POSITION\nJOINING DATE\nEMPLOYMENT END DATE\nSave\nCHANGE PASSWORD\nCURRENT PASSWORD\nNEW PASSWORD\nAt least 8 characters. Use a mix of letters, numbers, and symbols for a stronger password.\nCONFIRM NEW PASSWORD\nUpdate Password\nPHONE NOTIFICATIONS\n\nChoose which attendance alerts you want to receive on this device.\n\nAllow all notifications\nDisabled on this device\nBreak ending soon\nShift ending soon\nLeave / WFH decision\nMissing clock-out reminder\nDISPLAY PREFERENCES\n\nRender interactive 3D Earth and celestial space background\n\n3D Globe Background\nAllow\n© 2026 LASTO TECHNOLOGY · Staff Attendance System\nv1.0.0",
+    "permission": "Allowed",
+    "locationEnabled": true,
+    "locationHint": "Location will be requested during attendance events.",
+    "swReg": true,
+    "swController": true,
+    "menuButton": null,
+    "menuRect": {
+      "w": 44,
+      "h": 44
+    },
+    "screenshot": "location-enabled.png"
+  },
+  {
+    "label": "permission_granted",
+    "result": {}
+  },
+  {
+    "label": "location-disabled",
+    "title": "My Profile · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/staff/profile.php",
+    "body": "LASTO TECHNOLOGY\nSTAFF ATTENDANCE SYSTEM\nDashboard\nMy Attendance\nMy Breaks\nMy Schedule\nWorking Hours & Policy\nLeave / WFH Requests\nMy Profile\nS\nSynthetic Location Disabled\nSTAFF\n3D GLOBE: ON\nDAY CONSOLE\nEnglish\nLOGOUT\nMY PROFILE\nS\nVerify your email address\nVerify your email to keep your account secure.\nSend verification email\nATTENDANCE LOCATION\n\nShare your location for Clock In and Clock Out only. Not continuously tracked.\n\nShare location for attendance\nBrowser permission:\nAllowed\nHow to enable location\nPERSONAL INFORMATION\nSTAFF ID\nUSERNAME\nFULL NAME\nSynthetic Location Disabled\nEMAIL\n● Not verified\nResend verification email\nPHONE\n+60\nJOB POSITION\nJOINING DATE\nEMPLOYMENT END DATE\nSave\nCHANGE PASSWORD\nCURRENT PASSWORD\nNEW PASSWORD\nAt least 8 characters. Use a mix of letters, numbers, and symbols for a stronger password.\nCONFIRM NEW PASSWORD\nUpdate Password\nPHONE NOTIFICATIONS\n\nChoose which attendance alerts you want to receive on this device.\n\nAllow all notifications\nDisabled on this device\nBreak ending soon\nShift ending soon\nLeave / WFH decision\nMissing clock-out reminder\nDISPLAY PREFERENCES\n\nRender interactive 3D Earth and celestial space background\n\n3D Globe Background\nAllow\n© 2026 LASTO TECHNOLOGY · Staff Attendance System\nv1.0.0",
+    "permission": "Allowed",
+    "locationEnabled": false,
+    "locationHint": "Location will not be requested during attendance events.",
+    "swReg": true,
+    "swController": true,
+    "menuButton": null,
+    "menuRect": {
+      "w": 44,
+      "h": 44
+    },
+    "screenshot": "location-disabled.png"
+  },
+  {
+    "label": "permission_denied",
+    "result": {}
+  },
+  {
+    "label": "location-permission-denied",
+    "title": "My Profile · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/staff/profile.php",
+    "body": "LASTO TECHNOLOGY\nSTAFF ATTENDANCE SYSTEM\nDashboard\nMy Attendance\nMy Breaks\nMy Schedule\nWorking Hours & Policy\nLeave / WFH Requests\nMy Profile\nS\nSynthetic Location Denied\nSTAFF\n3D GLOBE: ON\nDAY CONSOLE\nEnglish\nLOGOUT\nMY PROFILE\nS\nVerify your email address\nVerify your email to keep your account secure.\nSend verification email\nATTENDANCE LOCATION\n\nShare your location for Clock In and Clock Out only. Not continuously tracked.\n\nShare location for attendance\nBrowser permission:\nBlocked\nHow to enable location\nPERSONAL INFORMATION\nSTAFF ID\nUSERNAME\nFULL NAME\nSynthetic Location Denied\nEMAIL\n● Not verified\nResend verification email\nPHONE\n+60\nJOB POSITION\nJOINING DATE\nEMPLOYMENT END DATE\nSave\nCHANGE PASSWORD\nCURRENT PASSWORD\nNEW PASSWORD\nAt least 8 characters. Use a mix of letters, numbers, and symbols for a stronger password.\nCONFIRM NEW PASSWORD\nUpdate Password\nPHONE NOTIFICATIONS\n\nChoose which attendance alerts you want to receive on this device.\n\nAllow all notifications\nDisabled on this device\nBreak ending soon\nShift ending soon\nLeave / WFH decision\nMissing clock-out reminder\nDISPLAY PREFERENCES\n\nRender interactive 3D Earth and celestial space background\n\n3D Globe Background\nAllow\n© 2026 LASTO TECHNOLOGY · Staff Attendance System\nv1.0.0",
+    "permission": "Blocked",
+    "locationEnabled": false,
+    "locationHint": "Not decided yet — choose during your next Clock In or Clock Out, or enable it here.",
+    "swReg": true,
+    "swController": true,
+    "menuButton": null,
+    "menuRect": {
+      "w": 44,
+      "h": 44
+    },
+    "screenshot": "location-permission-denied.png"
+  },
+  {
+    "label": "dashboard-ready-modal-check",
+    "title": "Dashboard · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/staff/",
+    "body": "LASTO TECHNOLOGY\nSTAFF ATTENDANCE SYSTEM\nDashboard\nMy Attendance\nMy Breaks\nMy Schedule\nWorking Hours & Policy\nLeave / WFH Requests\nMy Profile\nS\nSynthetic Ready\nSTAFF\n3D GLOBE: ON\nDAY CONSOLE\nEnglish\nLOGOUT\nDASHBOARD\n1\nS\nGood evening, Synthetic Ready\n31/10/2026 · Saturday\nREADY TO START?\nServer time: 6:46 PM\n\nYour scheduled start time is 10:00 AM. Arrival after this time will be recorded as Late.\n\nCLOCK IN\n© 2026 LASTO TECHNOLOGY · Staff Attendance System\nv1.0.0",
+    "swReg": true,
+    "swController": true,
+    "menuButton": null,
+    "menuRect": {
+      "w": 44,
+      "h": 44
+    },
+    "screenshot": "dashboard-ready-modal-check.png"
+  },
+  {
+    "label": "clock-in-confirm-modal",
+    "exists": true,
+    "classes": "modal fade dashboard-confirm-modal show",
+    "text": "Clock in\n\nAre you sure you want to clock in?\n\nCancel\nClock in",
+    "active": "<button type=\"button\" class=\"btn btn-outline-secondary\" data-bs-dismiss=\"modal\" data-action-cancel=\"\">Cancel</button>",
+    "rect": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 900
+    },
+    "confirm": "Clock in"
+  },
+  {
+    "label": "mobile-navigation-open",
+    "sidebar": "app-sidebar open",
+    "transform": "matrix(1, 0, 0, 1, -1.26276, 0)",
+    "ariaExpanded": null,
+    "backdrop": "sidebar-backdrop d-lg-none show",
+    "focus": ""
+  },
+  {
+    "label": "notification-dropdown",
+    "expanded": "true",
+    "body": false
+  }
+]

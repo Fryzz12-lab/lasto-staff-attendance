@@ -1,0 +1,8 @@
+{
+  "url": "http://127.0.0.1:8093/staff/attendance.php",
+  "title": "Offline · Staff Attendance",
+  "text": "Connection Lost\n\nThe attendance server could not be reached. Attendance changes require server confirmation. No offline attendance action was saved.\n\nRetry connection",
+  "controller": true,
+  "online": true,
+  "main": "Connection Lost\n\nThe attendance server could not be reached. Attendance changes require server confirmation. No offline attendance action was saved.\n\nRetry connection"
+}

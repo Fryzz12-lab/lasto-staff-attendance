@@ -1,0 +1,47 @@
+<?php
+/**
+ * Staging Environment Configuration Template
+ * 
+ * Copy this file to config/local.php on the ISOLATED STAGING server only.
+ * DO NOT use production database credentials.
+ * DO NOT point to production domains.
+ * DO NOT enable live outbound email delivery to real employees.
+ * 
+ * Boundary Protection:
+ * - Configure HTTP Basic Authentication (.htpasswd) on the staging subdomain
+ *   via cPanel -> Directory Privacy to block public search engine indexing and unauthorized access.
+ * - Staging cron jobs should remain DISABLED until isolated manual testing is complete.
+ */
+declare(strict_types=1);
+
+return [
+    // Target environment: 'staging' enforces domain root, secure cookies, suppresses errors
+    'LASTO_APP_ENV' => 'staging',
+
+    // Root directory of the staging subdomain (empty string = domain root)
+    'LASTO_BASE_PATH' => '',
+
+    // Isolated Staging Database (Must be separate from production DB)
+    'LASTO_DB_HOST' => 'localhost',
+    'LASTO_DB_PORT' => '3306',
+    'LASTO_DB_NAME' => 'REPLACE_WITH_STAGING_CPANEL_DB_NAME',
+    'LASTO_DB_USER' => 'REPLACE_WITH_STAGING_CPANEL_DB_USER',
+    'LASTO_DB_PASS' => 'REPLACE_WITH_STAGING_STRONG_PASSWORD',
+
+    // Staging Public Origin (HTTPS required)
+    'LASTO_PUBLIC_ORIGIN' => 'https://staging-attendance.lastotechnology.my',
+
+    // Isolated session cookie name to prevent session collision with production
+    'LASTO_SESSION_NAME' => 'SAS_STAGING_SESSION',
+
+    // Dedicated VAPID credentials for Web Push testing (Generate separate keys for staging)
+    // NEVER reuse production VAPID keys on staging.
+    'LASTO_VAPID_PUBLIC_KEY' => 'REPLACE_WITH_STAGING_VAPID_PUBLIC_KEY',
+    'LASTO_VAPID_PRIVATE_KEY' => 'REPLACE_WITH_STAGING_VAPID_PRIVATE_KEY',
+    'LASTO_VAPID_SUBJECT' => 'mailto:staging-admin@lastotechnology.my',
+
+    // Outbound Email: INTENTIONALLY DISABLED in staging to prevent sending emails to real staff.
+    // Leave LASTO_MAIL_TRANSPORT omitted or set to 'disabled'.
+    // 'LASTO_MAIL_TRANSPORT' => 'disabled',
+];
+

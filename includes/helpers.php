@@ -163,7 +163,7 @@ function format_date(?string $date): string
 function html_lang(): string
 {
     return match (lang_current()) {
-        'zh' => 'zh-HK',
+        'zh' => 'zh-CN',
         'ms' => 'ms-MY',
         default => 'en-GB',
     };
@@ -337,6 +337,14 @@ function attendance_status_badge(array $attendance): string
     $html = status_badge($attendance['status']);
     if (!empty($attendance['is_wfh']) && $attendance['status'] !== 'wfh') {
         $html .= ' <span class="status-badge badge-wfh" title="' . e(__('leave_wfh')) . '">' . e(__('st_wfh')) . '</span>';
+    }
+    if (!empty($attendance['break_review_status']) && in_array($attendance['break_review_status'], ['under_review', 'correction_pending', 'rejected_unresolved'], true)) {
+        $badge = '<span class="badge bg-warning text-dark ms-1" style="font-size:0.72rem;" title="' . e(__('break_under_review_hint')) . '"><i class="bi bi-clock-history me-1"></i>' . e(__('st_break_review')) . '</span>';
+        if (!empty($attendance['work_date']) && (!is_logged_in() || current_user()['role'] === 'staff')) {
+            $html .= ' <a href="' . e(url('/staff/corrections.php?date=' . $attendance['work_date'] . '&type=break')) . '" class="text-decoration-none" title="' . e(__('break_under_review_hint')) . '">' . $badge . '</a>';
+        } else {
+            $html .= ' ' . $badge;
+        }
     }
     return $html;
 }

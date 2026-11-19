@@ -1,6 +1,6 @@
 -- cPanel policy seed. Import after cpanel_schema.sql into the SAME selected database.
 -- Does not create users. Create the first admin with:
--- php cli/create_admin.php --username=... --password='...' --name='...' --email=...
+-- php cli/create_admin.php --username=... --name='...' --email=... (password entered via secure prompt)
 
 SET NAMES utf8mb4;
 

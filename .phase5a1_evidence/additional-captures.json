@@ -1,0 +1,101 @@
+[
+  {
+    "title": "Break Details · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/admin/break_detail.php?attendance_id=5?lang=en",
+    "lang": "en-GB",
+    "width": 390,
+    "docWidth": 390,
+    "height": 900,
+    "overflow": false,
+    "heading": [],
+    "text": "LASTO TECHNOLOGY\nSTAFF ATTENDANCE SYSTEM\nDashboard\nStaff Management\nDaily Attendance\nAttendance Records\n1\nBreak Records\nOff-day Adjustments\nWorking Hours & Policy\nLeave / WFH Requests\n1\nCorrection Requests\nReports\nOffice Locations\nSettings\nMy Profile\nS\nSynthetic Administrator\nADMIN\n3D GLOBE: ON\nHOLO NIGHT\nEnglish\nLOGOUT\nBREAK DETAILS\nS\n← Back\nSYNTHETIC OVERTIME · 31/10/2026\nTOTAL BREAK TIME\n1h 44m\nNUMBER OF BREAKS\n1\nSTATUS\nON BREAK\nBREAK RECORDS\nTYPE\tSTART\tEND\tDURATION\tALLOWED\tACTION\nLunch Break\t5:02 PM\tOpen\t1h 44m\t1h 00m\tEdit\n© 2026 LASTO TECHNOLOGY · Staff Attendance System\nv1.0.0",
+    "role": "admin",
+    "name": "break_detail",
+    "user": "audit_admin",
+    "screenshot": "admin_break_detail_390.png"
+  },
+  {
+    "title": "Break Details · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/admin/break_detail.php?attendance_id=5?lang=en",
+    "lang": "en-GB",
+    "width": 1280,
+    "docWidth": 1280,
+    "height": 900,
+    "overflow": false,
+    "heading": [],
+    "text": "LASTO TECHNOLOGY\nSTAFF ATTENDANCE SYSTEM\nDashboard\nStaff Management\nDaily Attendance\nAttendance Records\n1\nBreak Records\nOff-day Adjustments\nWorking Hours & Policy\nLeave / WFH Requests\n1\nCorrection Requests\nReports\nOffice Locations\nSettings\nMy Profile\nS\nSynthetic Administrator\nADMIN\nLIVE FEED\nSynthetic Location Denied Â· Clocked in 10:00 AM◆Synthetic Location Disabled Â· Clocked in 10:00 AM◆Synthetic Location Enabled Â· Clocked in 10:00 AM◆Synthetic Location Unavailable Â· Clocked in 10:00 AM◆Synthetic Lunch Â· On break since 6:02 PM◆Now Â· Working 6 Â· Break 4 Â· Late 0◆Synthetic Location Denied Â· Clocked in 10:00 AM◆Synthetic Location Disabled Â· Clocked in 10:00 AM◆Synthetic Location Enabled Â· Clocked in 10:00 AM◆Synthetic Location Unavailable Â· Clocked in 10:00 AM◆Synthetic Lunch Â· On break since 6:02 PM◆Now Â· Working 6 Â· Break 4 Â· Late 0\nSYSTEM ONLINE\n18\n:\n47\n:\n08\n3D GLOBE: ON\nHOLO NIGHT\nEnglish\nLogout\n← Back\nSYNTHETIC OVERTIME · 31/10/2026\nTOTAL BREAK TIME\n1h 44m\nNUMBER OF BREAKS\n1\nSTATUS\nON BREAK\nBREAK RECORDS\nTYPE\tSTART\tEND\tDURATION\tALLOWED\tACTION\nLunch Break\t5:02 PM\tOp",
+    "role": "admin",
+    "name": "break_detail",
+    "user": "audit_admin",
+    "screenshot": "admin_break_detail_1280.png"
+  },
+  {
+    "title": "Leave / WFH Requests · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/staff/leave.php?lang=en",
+    "lang": "en-GB",
+    "width": 390,
+    "docWidth": 390,
+    "height": 900,
+    "overflow": false,
+    "heading": [
+      "Leave / WFH Requests"
+    ],
+    "text": "LASTO TECHNOLOGY\nSTAFF ATTENDANCE SYSTEM\nDashboard\nMy Attendance\nMy Breaks\nMy Schedule\nWorking Hours & Policy\nLeave / WFH Requests\nMy Profile\nS\nSynthetic Working\nSTAFF\n3D GLOBE: ON\nHOLO NIGHT\nEnglish\nLOGOUT\nLEAVE / WFH REQUESTS\nS\nREPLACEMENT LEAVE\n0\nAvailable to Use\n\nExtra days off you can use.\n\nDAYS TO REPLACE\n0\nDays\n\nNo replacement required\n\nPENDING\n1\nAPPROVED\n0\nREJECTED\n0\nNew Request\nMY REQUESTS\n03/11/2026\nWork From Home (WFH)\nPENDING\n\"Synthetic WFH review fixture\"\nSubmitted On: 31 Oct 2026, 6:27 PM\n© 2026 LASTO TECHNOLOGY · Staff Attendance System\nv1.0.0",
+    "role": "staff",
+    "name": "leave_populated",
+    "user": "audit_working",
+    "screenshot": "staff_leave_populated_390.png"
+  },
+  {
+    "title": "My Correction Requests · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/staff/corrections.php?lang=en",
+    "lang": "en-GB",
+    "width": 390,
+    "docWidth": 390,
+    "height": 1634,
+    "overflow": false,
+    "heading": [
+      "My Correction Requests"
+    ],
+    "text": "LASTO TECHNOLOGY\nSTAFF ATTENDANCE SYSTEM\nDashboard\nMy Attendance\nMy Breaks\nMy Schedule\nWorking Hours & Policy\nLeave / WFH Requests\nMy Profile\nS\nSynthetic Complete\nSTAFF\n3D GLOBE: ON\nHOLO NIGHT\nEnglish\nLOGOUT\nMY CORRECTION REQUESTS\nS\nYou cannot edit historical Clock In/Out directly. Submit a request for Admin review.\nMy Attendance\nPENDING\n1\nAPPROVED\n0\nREJECTED\n0\nREQUEST CORRECTION\nDATE *\nTimes entered here apply to this date. To correct another day, select it in Daily Attendance and open that record.\nCORRECTION CATEGORY *\nAttendance Punches (In / Out)\nBreak Times\nCURRENTLY RECORDED\nIn: 10:00 AM Out: 6:00 PM COMPLETED\nREQUESTED CHANGE *\nBoth Clock In & Out\nClock In only\nClock Out only\nCLOCK IN *\nCLOCK OUT *\nSame Day (10-31)\nNext Day (11-01)\nFor overnight shifts, select 'Next Day'.\nREASON FOR CORRECTION *\nSave Correction\nREQUEST STATUS\nAll\nPending\nApproved\nRejected\nMY CORRECTION REQUESTS\n1 RECORDS\n31/10/2026\nPENDING\nClock Out only\nOriginal: In 10:00 AM | Out 6:00 PM\nRequested: In 10:00 AM | Out 6:15 PM\nReason: Synthetic correction review fixture\nSubmitted: 31 Oct 2026, 18:27\n© 2026 LAST",
+    "role": "staff",
+    "name": "corrections_populated",
+    "user": "audit_complete",
+    "screenshot": "staff_corrections_populated_390.png"
+  },
+  {
+    "title": "Notifications · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/notifications.php?lang=en",
+    "lang": "en-GB",
+    "width": 390,
+    "docWidth": 390,
+    "height": 900,
+    "overflow": false,
+    "heading": [
+      "NOTIFICATIONS",
+      "Synthetic audit notice"
+    ],
+    "text": "LASTO TECHNOLOGY\nSTAFF ATTENDANCE SYSTEM\nDashboard\nMy Attendance\nMy Breaks\nMy Schedule\nWorking Hours & Policy\nLeave / WFH Requests\nMy Profile\nS\nSynthetic Ready\nSTAFF\n3D GLOBE: ON\nHOLO NIGHT\nEnglish\nLOGOUT\nNOTIFICATIONS\n1\nS\nNOTIFICATIONS\n\n1 unread\n\nMark all as read\nUnread\nAll\nSynthetic audit notice\n\nSynthetic notice for UX inspection.\n\n31 Oct 2026, 18:27\nMark read\n© 2026 LASTO TECHNOLOGY · Staff Attendance System\nv1.0.0",
+    "role": "shared",
+    "name": "notifications_populated",
+    "user": "audit_idle",
+    "screenshot": "shared_notifications_populated_390.png"
+  },
+  {
+    "title": "Notifications · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/notifications.php?lang=en",
+    "lang": "en-GB",
+    "width": 390,
+    "docWidth": 390,
+    "height": 900,
+    "overflow": false,
+    "heading": [
+      "NOTIFICATIONS"
+    ],
+    "text": "LASTO TECHNOLOGY\nSTAFF ATTENDANCE SYSTEM\nDashboard\nStaff Management\nDaily Attendance\nAttendance Records\n1\nBreak Records\nOff-day Adjustments\nWorking Hours & Policy\nLeave / WFH Requests\n1\nCorrection Requests\nReports\nOffice Locations\nSettings\nMy Profile\nS\nSynthetic Administrator\nADMIN\n3D GLOBE: ON\nHOLO NIGHT\nEnglish\nLOGOUT\nNOTIFICATIONS\nS\nNOTIFICATIONS\n\n0 unread\n\nUnread\nAll\n\nNo notifications here yet.\n\n© 2026 LASTO TECHNOLOGY · Staff Attendance System\nv1.0.0",
+    "role": "admin",
+    "name": "notifications_empty",
+    "user": "audit_admin",
+    "screenshot": "admin_notifications_empty_390.png"
+  }
+]

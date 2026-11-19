@@ -106,8 +106,14 @@ require __DIR__ . '/includes/layout_header.php';
         </button>
 
         <div class="text-center mt-3">
-            <a href="<?= e(url('/logout.php')) ?>" class="text-muted small"><i class="bi bi-box-arrow-right"></i> <?= e(__('logout')) ?></a>
+            <button type="submit" form="setupLogoutForm" class="btn btn-link text-muted small p-0 text-decoration-none border-0 align-baseline">
+                <i class="bi bi-box-arrow-right"></i> <?= e(__('logout')) ?>
+            </button>
         </div>
+    </form>
+    <form id="setupLogoutForm" method="post" action="<?= e(url('/logout.php')) ?>" class="d-none" data-logout-form>
+        <?= csrf_field() ?>
+        <input type="hidden" name="endpoint" value="" data-push-endpoint-field>
     </form>
 </div>
 

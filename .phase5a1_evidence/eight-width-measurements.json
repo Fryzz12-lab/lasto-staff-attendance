@@ -1,0 +1,3266 @@
+[
+  {
+    "title": "Dashboard · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/staff/?lang=en",
+    "lang": "en-GB",
+    "theme": "day",
+    "viewportWidth": 320,
+    "documentWidth": 320,
+    "documentHeight": 900,
+    "horizontalOverflow": false,
+    "tables": [],
+    "clippedControls": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Attendance",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Breaks",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Schedule",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Leave / WFH Requests",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "right": -11
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "right": -145
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "right": -15
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "right": -15
+      },
+      {
+        "tag": "BUTTON",
+        "text": "LOGOUT",
+        "right": -15
+      }
+    ],
+    "smallTargets": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "width": 261,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Attendance",
+        "width": 261,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Breaks",
+        "width": 261,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Schedule",
+        "width": 261,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "width": 261,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Leave / WFH Requests",
+        "width": 261,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "width": 261,
+        "height": 41
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "width": 123,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "width": 123,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "width": 253,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "LOGOUT",
+        "width": 253,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "1",
+        "width": 37,
+        "height": 10
+      }
+    ],
+    "labelsMissing": [],
+    "resources": [
+      {
+        "name": "bootstrap.min.css",
+        "duration": 24,
+        "bytes": 0
+      },
+      {
+        "name": "app.css",
+        "duration": 29,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.css",
+        "duration": 40,
+        "bytes": 0
+      },
+      {
+        "name": "bootstrap.bundle.min.js",
+        "duration": 19,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.js",
+        "duration": 34,
+        "bytes": 0
+      },
+      {
+        "name": "app.js",
+        "duration": 18,
+        "bytes": 0
+      }
+    ],
+    "iconsLoaded": true,
+    "bootstrapLoaded": true,
+    "flatpickrLoaded": false,
+    "dateInputs": 0,
+    "headings": [
+      "Good evening, Synthetic Ready",
+      ""
+    ],
+    "role": "staff",
+    "width": 320,
+    "screenshot": "staff_320_measurement.png"
+  },
+  {
+    "title": "Dashboard · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/staff/?lang=en",
+    "lang": "en-GB",
+    "theme": "day",
+    "viewportWidth": 375,
+    "documentWidth": 375,
+    "documentHeight": 900,
+    "horizontalOverflow": false,
+    "tables": [],
+    "clippedControls": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Attendance",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Breaks",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Schedule",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Leave / WFH Requests",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "right": -11
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "right": -164
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "right": -15
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "right": -15
+      },
+      {
+        "tag": "BUTTON",
+        "text": "LOGOUT",
+        "right": -15
+      }
+    ],
+    "smallTargets": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Attendance",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Breaks",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Schedule",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Leave / WFH Requests",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "width": 142,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "width": 142,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "width": 292,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "LOGOUT",
+        "width": 292,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "1",
+        "width": 37,
+        "height": 10
+      }
+    ],
+    "labelsMissing": [],
+    "resources": [
+      {
+        "name": "bootstrap.min.css",
+        "duration": 7,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.css",
+        "duration": 22,
+        "bytes": 0
+      },
+      {
+        "name": "app.css",
+        "duration": 7,
+        "bytes": 0
+      },
+      {
+        "name": "bootstrap.bundle.min.js",
+        "duration": 6,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.js",
+        "duration": 20,
+        "bytes": 0
+      },
+      {
+        "name": "app.js",
+        "duration": 12,
+        "bytes": 0
+      }
+    ],
+    "iconsLoaded": true,
+    "bootstrapLoaded": true,
+    "flatpickrLoaded": false,
+    "dateInputs": 0,
+    "headings": [
+      "Good evening, Synthetic Ready",
+      ""
+    ],
+    "role": "staff",
+    "width": 375,
+    "screenshot": "staff_375_measurement.png"
+  },
+  {
+    "title": "Dashboard · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/staff/?lang=en",
+    "lang": "en-GB",
+    "theme": "day",
+    "viewportWidth": 390,
+    "documentWidth": 390,
+    "documentHeight": 900,
+    "horizontalOverflow": false,
+    "tables": [],
+    "clippedControls": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Attendance",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Breaks",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Schedule",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Leave / WFH Requests",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "right": -11
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "right": -164
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "right": -15
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "right": -15
+      },
+      {
+        "tag": "BUTTON",
+        "text": "LOGOUT",
+        "right": -15
+      }
+    ],
+    "smallTargets": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Attendance",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Breaks",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Schedule",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Leave / WFH Requests",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "width": 142,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "width": 142,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "width": 292,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "LOGOUT",
+        "width": 292,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "1",
+        "width": 37,
+        "height": 10
+      }
+    ],
+    "labelsMissing": [],
+    "resources": [
+      {
+        "name": "bootstrap.min.css",
+        "duration": 6,
+        "bytes": 0
+      },
+      {
+        "name": "app.css",
+        "duration": 5,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.css",
+        "duration": 20,
+        "bytes": 0
+      },
+      {
+        "name": "bootstrap.bundle.min.js",
+        "duration": 9,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.js",
+        "duration": 42,
+        "bytes": 0
+      },
+      {
+        "name": "app.js",
+        "duration": 8,
+        "bytes": 0
+      }
+    ],
+    "iconsLoaded": true,
+    "bootstrapLoaded": true,
+    "flatpickrLoaded": false,
+    "dateInputs": 0,
+    "headings": [
+      "Good evening, Synthetic Ready",
+      ""
+    ],
+    "role": "staff",
+    "width": 390,
+    "screenshot": "staff_390_measurement.png"
+  },
+  {
+    "title": "Dashboard · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/staff/?lang=en",
+    "lang": "en-GB",
+    "theme": "day",
+    "viewportWidth": 430,
+    "documentWidth": 430,
+    "documentHeight": 900,
+    "horizontalOverflow": false,
+    "tables": [],
+    "clippedControls": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Attendance",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Breaks",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Schedule",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Leave / WFH Requests",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "right": -11
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "right": -164
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "right": -15
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "right": -15
+      },
+      {
+        "tag": "BUTTON",
+        "text": "LOGOUT",
+        "right": -15
+      }
+    ],
+    "smallTargets": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Attendance",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Breaks",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Schedule",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Leave / WFH Requests",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "width": 142,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "width": 142,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "width": 292,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "LOGOUT",
+        "width": 292,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "1",
+        "width": 37,
+        "height": 10
+      }
+    ],
+    "labelsMissing": [],
+    "resources": [
+      {
+        "name": "bootstrap.min.css",
+        "duration": 5,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.css",
+        "duration": 19,
+        "bytes": 0
+      },
+      {
+        "name": "app.css",
+        "duration": 7,
+        "bytes": 0
+      },
+      {
+        "name": "bootstrap.bundle.min.js",
+        "duration": 17,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.js",
+        "duration": 63,
+        "bytes": 0
+      },
+      {
+        "name": "app.js",
+        "duration": 24,
+        "bytes": 0
+      }
+    ],
+    "iconsLoaded": true,
+    "bootstrapLoaded": true,
+    "flatpickrLoaded": false,
+    "dateInputs": 0,
+    "headings": [
+      "Good evening, Synthetic Ready",
+      ""
+    ],
+    "role": "staff",
+    "width": 430,
+    "screenshot": "staff_430_measurement.png"
+  },
+  {
+    "title": "Dashboard · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/staff/?lang=en",
+    "lang": "en-GB",
+    "theme": "day",
+    "viewportWidth": 768,
+    "documentWidth": 768,
+    "documentHeight": 900,
+    "horizontalOverflow": false,
+    "tables": [],
+    "clippedControls": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Attendance",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Breaks",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Schedule",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Leave / WFH Requests",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "right": -11
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "right": -132
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "right": -2
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "right": -15
+      },
+      {
+        "tag": "BUTTON",
+        "text": "LOGOUT",
+        "right": -15
+      }
+    ],
+    "smallTargets": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Attendance",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Breaks",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Schedule",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Leave / WFH Requests",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "width": 123,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "width": 122,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "width": 240,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "LOGOUT",
+        "width": 240,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "1",
+        "width": 37,
+        "height": 10
+      }
+    ],
+    "labelsMissing": [],
+    "resources": [
+      {
+        "name": "bootstrap.min.css",
+        "duration": 15,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.css",
+        "duration": 39,
+        "bytes": 0
+      },
+      {
+        "name": "app.css",
+        "duration": 14,
+        "bytes": 0
+      },
+      {
+        "name": "bootstrap.bundle.min.js",
+        "duration": 20,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.js",
+        "duration": 47,
+        "bytes": 0
+      },
+      {
+        "name": "app.js",
+        "duration": 20,
+        "bytes": 0
+      }
+    ],
+    "iconsLoaded": true,
+    "bootstrapLoaded": true,
+    "flatpickrLoaded": false,
+    "dateInputs": 0,
+    "headings": [
+      "Good evening, Synthetic Ready",
+      ""
+    ],
+    "role": "staff",
+    "width": 768,
+    "screenshot": "staff_768_measurement.png"
+  },
+  {
+    "title": "Dashboard · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/staff/?lang=en",
+    "lang": "en-GB",
+    "theme": "day",
+    "viewportWidth": 1024,
+    "documentWidth": 1095,
+    "documentHeight": 900,
+    "horizontalOverflow": true,
+    "tables": [],
+    "clippedControls": [
+      {
+        "tag": "BUTTON",
+        "text": "Logout",
+        "right": 1095
+      }
+    ],
+    "smallTargets": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Attendance",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Breaks",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Schedule",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Leave / WFH Requests",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "BUTTON",
+        "text": "1",
+        "width": 37,
+        "height": 10
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "width": 139,
+        "height": 32
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "width": 138,
+        "height": 32
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "width": 87,
+        "height": 31
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Logout",
+        "width": 68,
+        "height": 31
+      }
+    ],
+    "labelsMissing": [],
+    "resources": [
+      {
+        "name": "bootstrap.min.css",
+        "duration": 4,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.css",
+        "duration": 10,
+        "bytes": 0
+      },
+      {
+        "name": "app.css",
+        "duration": 4,
+        "bytes": 0
+      },
+      {
+        "name": "bootstrap.bundle.min.js",
+        "duration": 13,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.js",
+        "duration": 59,
+        "bytes": 0
+      },
+      {
+        "name": "app.js",
+        "duration": 30,
+        "bytes": 0
+      }
+    ],
+    "iconsLoaded": true,
+    "bootstrapLoaded": true,
+    "flatpickrLoaded": false,
+    "dateInputs": 0,
+    "headings": [
+      "Good evening, Synthetic Ready",
+      ""
+    ],
+    "role": "staff",
+    "width": 1024,
+    "screenshot": "staff_1024_measurement.png"
+  },
+  {
+    "title": "Dashboard · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/staff/?lang=en",
+    "lang": "en-GB",
+    "theme": "day",
+    "viewportWidth": 1280,
+    "documentWidth": 1280,
+    "documentHeight": 900,
+    "horizontalOverflow": false,
+    "tables": [],
+    "clippedControls": [],
+    "smallTargets": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Attendance",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Breaks",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Schedule",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Leave / WFH Requests",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "BUTTON",
+        "text": "1",
+        "width": 37,
+        "height": 10
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "width": 139,
+        "height": 32
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "width": 138,
+        "height": 32
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "width": 87,
+        "height": 31
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Logout",
+        "width": 68,
+        "height": 31
+      }
+    ],
+    "labelsMissing": [],
+    "resources": [
+      {
+        "name": "bootstrap.min.css",
+        "duration": 8,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.css",
+        "duration": 17,
+        "bytes": 0
+      },
+      {
+        "name": "app.css",
+        "duration": 7,
+        "bytes": 0
+      },
+      {
+        "name": "bootstrap.bundle.min.js",
+        "duration": 15,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.js",
+        "duration": 38,
+        "bytes": 0
+      },
+      {
+        "name": "app.js",
+        "duration": 15,
+        "bytes": 0
+      }
+    ],
+    "iconsLoaded": true,
+    "bootstrapLoaded": true,
+    "flatpickrLoaded": false,
+    "dateInputs": 0,
+    "headings": [
+      "Good evening, Synthetic Ready",
+      ""
+    ],
+    "role": "staff",
+    "width": 1280,
+    "screenshot": "staff_1280_measurement.png"
+  },
+  {
+    "title": "Dashboard · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/staff/?lang=en",
+    "lang": "en-GB",
+    "theme": "day",
+    "viewportWidth": 1440,
+    "documentWidth": 1440,
+    "documentHeight": 900,
+    "horizontalOverflow": false,
+    "tables": [],
+    "clippedControls": [],
+    "smallTargets": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Attendance",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Breaks",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Schedule",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Leave / WFH Requests",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "BUTTON",
+        "text": "1",
+        "width": 37,
+        "height": 10
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "width": 139,
+        "height": 32
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "width": 138,
+        "height": 32
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "width": 87,
+        "height": 31
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Logout",
+        "width": 68,
+        "height": 31
+      }
+    ],
+    "labelsMissing": [],
+    "resources": [
+      {
+        "name": "bootstrap.min.css",
+        "duration": 6,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.css",
+        "duration": 19,
+        "bytes": 0
+      },
+      {
+        "name": "app.css",
+        "duration": 5,
+        "bytes": 0
+      },
+      {
+        "name": "bootstrap.bundle.min.js",
+        "duration": 9,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.js",
+        "duration": 49,
+        "bytes": 0
+      },
+      {
+        "name": "app.js",
+        "duration": 11,
+        "bytes": 0
+      }
+    ],
+    "iconsLoaded": true,
+    "bootstrapLoaded": true,
+    "flatpickrLoaded": false,
+    "dateInputs": 0,
+    "headings": [
+      "Good evening, Synthetic Ready",
+      ""
+    ],
+    "role": "staff",
+    "width": 1440,
+    "screenshot": "staff_1440_measurement.png"
+  },
+  {
+    "title": "Daily Attendance · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/admin/attendance_today.php?lang=en",
+    "lang": "en-GB",
+    "theme": "day",
+    "viewportWidth": 320,
+    "documentWidth": 320,
+    "documentHeight": 2591,
+    "horizontalOverflow": false,
+    "tables": [
+      {
+        "tableWidth": 367,
+        "containerWidth": 294,
+        "containerOverflow": "auto"
+      }
+    ],
+    "clippedControls": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Staff Management",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Daily Attendance",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Attendance Records\n1",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Break Records",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Off-day Adjustments",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Leave / WFH Requests\n1",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Correction Requests",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Reports",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Office Locations",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Settings",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "right": -11
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "right": -145
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "right": -15
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "right": -15
+      },
+      {
+        "tag": "BUTTON",
+        "text": "LOGOUT",
+        "right": -15
+      },
+      {
+        "tag": "A",
+        "text": "View Details",
+        "right": 380
+      },
+      {
+        "tag": "A",
+        "text": "View Details",
+        "right": 380
+      },
+      {
+        "tag": "A",
+        "text": "View Details",
+        "right": 380
+      }
+    ],
+    "smallTargets": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "width": 261,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Staff Management",
+        "width": 261,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Daily Attendance",
+        "width": 261,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Attendance Records\n1",
+        "width": 261,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Break Records",
+        "width": 261,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Off-day Adjustments",
+        "width": 261,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "width": 261,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Leave / WFH Requests\n1",
+        "width": 261,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Correction Requests",
+        "width": 261,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Reports",
+        "width": 261,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Office Locations",
+        "width": 261,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Settings",
+        "width": 261,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "width": 261,
+        "height": 41
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "width": 123,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "width": 123,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "width": 253,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "LOGOUT",
+        "width": 253,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "",
+        "width": 37,
+        "height": 10
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Today",
+        "width": 79,
+        "height": 42
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Yesterday",
+        "width": 79,
+        "height": 42
+      }
+    ],
+    "labelsMissing": [],
+    "resources": [
+      {
+        "name": "bootstrap.min.css",
+        "duration": 6,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.css",
+        "duration": 22,
+        "bytes": 0
+      },
+      {
+        "name": "app.css",
+        "duration": 6,
+        "bytes": 0
+      },
+      {
+        "name": "bootstrap.bundle.min.js",
+        "duration": 18,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.js",
+        "duration": 43,
+        "bytes": 0
+      },
+      {
+        "name": "app.js",
+        "duration": 18,
+        "bytes": 0
+      }
+    ],
+    "iconsLoaded": true,
+    "bootstrapLoaded": true,
+    "flatpickrLoaded": false,
+    "dateInputs": 1,
+    "headings": [],
+    "role": "admin",
+    "width": 320,
+    "screenshot": "admin_320_measurement.png"
+  },
+  {
+    "title": "Daily Attendance · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/admin/attendance_today.php?lang=en",
+    "lang": "en-GB",
+    "theme": "day",
+    "viewportWidth": 375,
+    "documentWidth": 375,
+    "documentHeight": 2388,
+    "horizontalOverflow": false,
+    "tables": [
+      {
+        "tableWidth": 414,
+        "containerWidth": 349,
+        "containerOverflow": "auto"
+      }
+    ],
+    "clippedControls": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Staff Management",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Daily Attendance",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Attendance Records\n1",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Break Records",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Off-day Adjustments",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Leave / WFH Requests\n1",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Correction Requests",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Reports",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Office Locations",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Settings",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "right": -11
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "right": -164
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "right": -15
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "right": -15
+      },
+      {
+        "tag": "BUTTON",
+        "text": "LOGOUT",
+        "right": -15
+      },
+      {
+        "tag": "A",
+        "text": "View Details",
+        "right": 427
+      },
+      {
+        "tag": "A",
+        "text": "View Details",
+        "right": 427
+      },
+      {
+        "tag": "A",
+        "text": "View Details",
+        "right": 427
+      }
+    ],
+    "smallTargets": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Staff Management",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Daily Attendance",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Attendance Records\n1",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Break Records",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Off-day Adjustments",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Leave / WFH Requests\n1",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Correction Requests",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Reports",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Office Locations",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Settings",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "width": 142,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "width": 142,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "width": 292,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "LOGOUT",
+        "width": 292,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "",
+        "width": 37,
+        "height": 10
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Today",
+        "width": 97,
+        "height": 42
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Yesterday",
+        "width": 97,
+        "height": 42
+      }
+    ],
+    "labelsMissing": [],
+    "resources": [
+      {
+        "name": "bootstrap.min.css",
+        "duration": 8,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.css",
+        "duration": 21,
+        "bytes": 0
+      },
+      {
+        "name": "app.css",
+        "duration": 13,
+        "bytes": 0
+      },
+      {
+        "name": "bootstrap.bundle.min.js",
+        "duration": 16,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.js",
+        "duration": 71,
+        "bytes": 0
+      },
+      {
+        "name": "app.js",
+        "duration": 21,
+        "bytes": 0
+      }
+    ],
+    "iconsLoaded": true,
+    "bootstrapLoaded": true,
+    "flatpickrLoaded": false,
+    "dateInputs": 1,
+    "headings": [],
+    "role": "admin",
+    "width": 375,
+    "screenshot": "admin_375_measurement.png"
+  },
+  {
+    "title": "Daily Attendance · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/admin/attendance_today.php?lang=en",
+    "lang": "en-GB",
+    "theme": "day",
+    "viewportWidth": 390,
+    "documentWidth": 390,
+    "documentHeight": 2243,
+    "horizontalOverflow": false,
+    "tables": [
+      {
+        "tableWidth": 427,
+        "containerWidth": 364,
+        "containerOverflow": "auto"
+      }
+    ],
+    "clippedControls": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Staff Management",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Daily Attendance",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Attendance Records\n1",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Break Records",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Off-day Adjustments",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Leave / WFH Requests\n1",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Correction Requests",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Reports",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Office Locations",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Settings",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "right": -11
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "right": -164
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "right": -15
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "right": -15
+      },
+      {
+        "tag": "BUTTON",
+        "text": "LOGOUT",
+        "right": -15
+      },
+      {
+        "tag": "A",
+        "text": "View Details",
+        "right": 440
+      },
+      {
+        "tag": "A",
+        "text": "View Details",
+        "right": 440
+      },
+      {
+        "tag": "A",
+        "text": "View Details",
+        "right": 440
+      }
+    ],
+    "smallTargets": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Staff Management",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Daily Attendance",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Attendance Records\n1",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Break Records",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Off-day Adjustments",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Leave / WFH Requests\n1",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Correction Requests",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Reports",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Office Locations",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Settings",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "width": 142,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "width": 142,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "width": 292,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "LOGOUT",
+        "width": 292,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "",
+        "width": 37,
+        "height": 10
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Today",
+        "width": 102,
+        "height": 42
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Yesterday",
+        "width": 102,
+        "height": 42
+      }
+    ],
+    "labelsMissing": [],
+    "resources": [
+      {
+        "name": "bootstrap.min.css",
+        "duration": 5,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.css",
+        "duration": 14,
+        "bytes": 0
+      },
+      {
+        "name": "app.css",
+        "duration": 9,
+        "bytes": 0
+      },
+      {
+        "name": "bootstrap.bundle.min.js",
+        "duration": 16,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.js",
+        "duration": 81,
+        "bytes": 0
+      },
+      {
+        "name": "app.js",
+        "duration": 30,
+        "bytes": 0
+      }
+    ],
+    "iconsLoaded": true,
+    "bootstrapLoaded": true,
+    "flatpickrLoaded": false,
+    "dateInputs": 1,
+    "headings": [],
+    "role": "admin",
+    "width": 390,
+    "screenshot": "admin_390_measurement.png"
+  },
+  {
+    "title": "Daily Attendance · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/admin/attendance_today.php?lang=en",
+    "lang": "en-GB",
+    "theme": "day",
+    "viewportWidth": 430,
+    "documentWidth": 430,
+    "documentHeight": 1974,
+    "horizontalOverflow": false,
+    "tables": [
+      {
+        "tableWidth": 461,
+        "containerWidth": 404,
+        "containerOverflow": "auto"
+      }
+    ],
+    "clippedControls": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Staff Management",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Daily Attendance",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Attendance Records\n1",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Break Records",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Off-day Adjustments",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Leave / WFH Requests\n1",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Correction Requests",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Reports",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Office Locations",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Settings",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "right": -11
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "right": -164
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "right": -15
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "right": -15
+      },
+      {
+        "tag": "BUTTON",
+        "text": "LOGOUT",
+        "right": -15
+      },
+      {
+        "tag": "A",
+        "text": "View Details",
+        "right": 474
+      },
+      {
+        "tag": "A",
+        "text": "View Details",
+        "right": 474
+      },
+      {
+        "tag": "A",
+        "text": "View Details",
+        "right": 474
+      }
+    ],
+    "smallTargets": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Staff Management",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Daily Attendance",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Attendance Records\n1",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Break Records",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Off-day Adjustments",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Leave / WFH Requests\n1",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Correction Requests",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Reports",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Office Locations",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Settings",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "width": 300,
+        "height": 41
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "width": 142,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "width": 142,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "width": 292,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "LOGOUT",
+        "width": 292,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "",
+        "width": 37,
+        "height": 10
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Today",
+        "width": 115,
+        "height": 42
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Yesterday",
+        "width": 115,
+        "height": 42
+      }
+    ],
+    "labelsMissing": [],
+    "resources": [
+      {
+        "name": "bootstrap.min.css",
+        "duration": 7,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.css",
+        "duration": 22,
+        "bytes": 0
+      },
+      {
+        "name": "app.css",
+        "duration": 7,
+        "bytes": 0
+      },
+      {
+        "name": "bootstrap.bundle.min.js",
+        "duration": 8,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.js",
+        "duration": 27,
+        "bytes": 0
+      },
+      {
+        "name": "app.js",
+        "duration": 8,
+        "bytes": 0
+      }
+    ],
+    "iconsLoaded": true,
+    "bootstrapLoaded": true,
+    "flatpickrLoaded": false,
+    "dateInputs": 1,
+    "headings": [],
+    "role": "admin",
+    "width": 430,
+    "screenshot": "admin_430_measurement.png"
+  },
+  {
+    "title": "Daily Attendance · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/admin/attendance_today.php?lang=en",
+    "lang": "en-GB",
+    "theme": "day",
+    "viewportWidth": 768,
+    "documentWidth": 760,
+    "documentHeight": 1510,
+    "horizontalOverflow": false,
+    "tables": [
+      {
+        "tableWidth": 724,
+        "containerWidth": 713,
+        "containerOverflow": "auto"
+      }
+    ],
+    "clippedControls": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Staff Management",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Daily Attendance",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Attendance Records\n1",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Break Records",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Off-day Adjustments",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Leave / WFH Requests\n1",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Correction Requests",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Reports",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Office Locations",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "Settings",
+        "right": -11
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "right": -11
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "right": -132
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "right": -2
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "right": -15
+      },
+      {
+        "tag": "BUTTON",
+        "text": "LOGOUT",
+        "right": -15
+      }
+    ],
+    "smallTargets": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Staff Management",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Daily Attendance",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Attendance Records\n1",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Break Records",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Off-day Adjustments",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Correction Requests",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Reports",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Office Locations",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Settings",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "width": 123,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "width": 122,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "width": 240,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "LOGOUT",
+        "width": 240,
+        "height": 38
+      },
+      {
+        "tag": "BUTTON",
+        "text": "",
+        "width": 37,
+        "height": 10
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Today",
+        "width": 75,
+        "height": 28
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Yesterday",
+        "width": 86,
+        "height": 28
+      },
+      {
+        "tag": "BUTTON",
+        "text": "2 days ago",
+        "width": 91,
+        "height": 28
+      }
+    ],
+    "labelsMissing": [],
+    "resources": [
+      {
+        "name": "bootstrap.min.css",
+        "duration": 10,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.css",
+        "duration": 38,
+        "bytes": 0
+      },
+      {
+        "name": "app.css",
+        "duration": 14,
+        "bytes": 0
+      },
+      {
+        "name": "bootstrap.bundle.min.js",
+        "duration": 20,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.js",
+        "duration": 44,
+        "bytes": 0
+      },
+      {
+        "name": "app.js",
+        "duration": 19,
+        "bytes": 0
+      }
+    ],
+    "iconsLoaded": true,
+    "bootstrapLoaded": true,
+    "flatpickrLoaded": false,
+    "dateInputs": 1,
+    "headings": [],
+    "role": "admin",
+    "width": 768,
+    "screenshot": "admin_768_measurement.png"
+  },
+  {
+    "title": "Daily Attendance · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/admin/attendance_today.php?lang=en",
+    "lang": "en-GB",
+    "theme": "day",
+    "viewportWidth": 1024,
+    "documentWidth": 1016,
+    "documentHeight": 1515,
+    "horizontalOverflow": false,
+    "tables": [
+      {
+        "tableWidth": 714,
+        "containerWidth": 701,
+        "containerOverflow": "auto"
+      }
+    ],
+    "clippedControls": [],
+    "smallTargets": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Staff Management",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Daily Attendance",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Attendance Records\n1",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Break Records",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Off-day Adjustments",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Correction Requests",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Reports",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Office Locations",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Settings",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "BUTTON",
+        "text": "",
+        "width": 37,
+        "height": 10
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "width": 139,
+        "height": 32
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "width": 138,
+        "height": 32
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "width": 87,
+        "height": 31
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Logout",
+        "width": 68,
+        "height": 31
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Today",
+        "width": 75,
+        "height": 28
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Yesterday",
+        "width": 86,
+        "height": 28
+      },
+      {
+        "tag": "BUTTON",
+        "text": "2 days ago",
+        "width": 91,
+        "height": 28
+      }
+    ],
+    "labelsMissing": [],
+    "resources": [
+      {
+        "name": "bootstrap.min.css",
+        "duration": 6,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.css",
+        "duration": 18,
+        "bytes": 0
+      },
+      {
+        "name": "app.css",
+        "duration": 6,
+        "bytes": 0
+      },
+      {
+        "name": "bootstrap.bundle.min.js",
+        "duration": 10,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.js",
+        "duration": 29,
+        "bytes": 0
+      },
+      {
+        "name": "app.js",
+        "duration": 14,
+        "bytes": 0
+      }
+    ],
+    "iconsLoaded": true,
+    "bootstrapLoaded": true,
+    "flatpickrLoaded": false,
+    "dateInputs": 1,
+    "headings": [],
+    "role": "admin",
+    "width": 1024,
+    "screenshot": "admin_1024_measurement.png"
+  },
+  {
+    "title": "Daily Attendance · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/admin/attendance_today.php?lang=en",
+    "lang": "en-GB",
+    "theme": "day",
+    "viewportWidth": 1280,
+    "documentWidth": 1272,
+    "documentHeight": 1360,
+    "horizontalOverflow": false,
+    "tables": [
+      {
+        "tableWidth": 957,
+        "containerWidth": 957,
+        "containerOverflow": "auto"
+      }
+    ],
+    "clippedControls": [],
+    "smallTargets": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Staff Management",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Daily Attendance",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Attendance Records\n1",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Break Records",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Off-day Adjustments",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Correction Requests",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Reports",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Office Locations",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Settings",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "BUTTON",
+        "text": "",
+        "width": 37,
+        "height": 10
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "width": 139,
+        "height": 32
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "width": 138,
+        "height": 32
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "width": 87,
+        "height": 31
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Logout",
+        "width": 68,
+        "height": 31
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Today",
+        "width": 75,
+        "height": 28
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Yesterday",
+        "width": 86,
+        "height": 28
+      },
+      {
+        "tag": "BUTTON",
+        "text": "2 days ago",
+        "width": 91,
+        "height": 28
+      }
+    ],
+    "labelsMissing": [],
+    "resources": [
+      {
+        "name": "bootstrap.min.css",
+        "duration": 9,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.css",
+        "duration": 29,
+        "bytes": 0
+      },
+      {
+        "name": "app.css",
+        "duration": 8,
+        "bytes": 0
+      },
+      {
+        "name": "bootstrap.bundle.min.js",
+        "duration": 14,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.js",
+        "duration": 35,
+        "bytes": 0
+      },
+      {
+        "name": "app.js",
+        "duration": 12,
+        "bytes": 0
+      }
+    ],
+    "iconsLoaded": true,
+    "bootstrapLoaded": true,
+    "flatpickrLoaded": false,
+    "dateInputs": 1,
+    "headings": [],
+    "role": "admin",
+    "width": 1280,
+    "screenshot": "admin_1280_measurement.png"
+  },
+  {
+    "title": "Daily Attendance · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/admin/attendance_today.php?lang=en",
+    "lang": "en-GB",
+    "theme": "day",
+    "viewportWidth": 1440,
+    "documentWidth": 1432,
+    "documentHeight": 1267,
+    "horizontalOverflow": false,
+    "tables": [
+      {
+        "tableWidth": 1117,
+        "containerWidth": 1117,
+        "containerOverflow": "auto"
+      }
+    ],
+    "clippedControls": [],
+    "smallTargets": [
+      {
+        "tag": "A",
+        "text": "Dashboard",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Staff Management",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Daily Attendance",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Attendance Records\n1",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Break Records",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Off-day Adjustments",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Working Hours & Policy",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Correction Requests",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Reports",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Office Locations",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "Settings",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "A",
+        "text": "My Profile",
+        "width": 248,
+        "height": 41
+      },
+      {
+        "tag": "BUTTON",
+        "text": "",
+        "width": 37,
+        "height": 10
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3D GLOBE: ON",
+        "width": 139,
+        "height": 32
+      },
+      {
+        "tag": "BUTTON",
+        "text": "DAY CONSOLE",
+        "width": 138,
+        "height": 32
+      },
+      {
+        "tag": "BUTTON",
+        "text": "English",
+        "width": 87,
+        "height": 31
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Logout",
+        "width": 68,
+        "height": 31
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Today",
+        "width": 75,
+        "height": 28
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Yesterday",
+        "width": 86,
+        "height": 28
+      },
+      {
+        "tag": "BUTTON",
+        "text": "2 days ago",
+        "width": 91,
+        "height": 28
+      }
+    ],
+    "labelsMissing": [],
+    "resources": [
+      {
+        "name": "bootstrap.min.css",
+        "duration": 5,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.css",
+        "duration": 19,
+        "bytes": 0
+      },
+      {
+        "name": "app.css",
+        "duration": 10,
+        "bytes": 0
+      },
+      {
+        "name": "bootstrap.bundle.min.js",
+        "duration": 17,
+        "bytes": 0
+      },
+      {
+        "name": "flatpickr.min.js",
+        "duration": 24,
+        "bytes": 0
+      },
+      {
+        "name": "app.js",
+        "duration": 17,
+        "bytes": 0
+      }
+    ],
+    "iconsLoaded": true,
+    "bootstrapLoaded": true,
+    "flatpickrLoaded": false,
+    "dateInputs": 1,
+    "headings": [],
+    "role": "admin",
+    "width": 1440,
+    "screenshot": "admin_1440_measurement.png"
+  }
+]

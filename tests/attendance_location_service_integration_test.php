@@ -25,6 +25,9 @@ try {
         'office_latitude' => '3.139', 'office_longitude' => '101.6869',
         'office_radius_metres' => '100', 'office_public_ip' => '203.0.113.10',
     ] as $key => $value) $setting->execute([$key, $value]);
+    $pdo->prepare('INSERT INTO offices (name, code, latitude, longitude, radius_meters, public_ip, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)')
+        ->execute(['LASTO Kuala Lumpur UAT', 'KL-UAT', '3.1390000', '101.6869000', 100, '203.0.113.10', 1]);
+    $hqOfficeId = (int) $pdo->lastInsertId();
 
     $_SERVER['REMOTE_ADDR'] = '203.0.113.10';
     $insertAttendance = $pdo->prepare('INSERT INTO attendance (user_id,work_date) VALUES (?,?)');
@@ -46,6 +49,8 @@ try {
     expect_service(attendance_location_finalize($eventId, $userId, [
         'location_status' => 'captured', 'latitude' => 3.139, 'longitude' => 101.6869, 'accuracy_metres' => 80,
     ]), 'Capture could not be finalized');
+    $check($eventId, 'captured', 'within', 'office');
+    expect_service(attendance_location_finalize($eventId, $userId, ['location_status' => 'unavailable']), 'A retry of an already finalized event must be an idempotent success');
     $check($eventId, 'captured', 'within', 'office');
 
     $eventId = $start($attendanceIds[0], 'clock_out');
@@ -107,7 +112,7 @@ try {
 
     // 5. Test flexible roving policy (policy: any_branch)
     // Make sure HQ has coordinates set in offices table
-    $pdo->prepare('UPDATE offices SET latitude=3.139000, longitude=101.686900, is_active=1 WHERE id=1')->execute();
+    $pdo->prepare('UPDATE offices SET latitude=3.139000, longitude=101.686900, is_active=1 WHERE id=?')->execute([$hqOfficeId]);
     $setting->execute(['office_attendance_policy', 'any_branch']);
 
     $insertAttendance->execute([$userId, '2098-10-05']);
@@ -119,7 +124,7 @@ try {
 
     $eventRowRoving = $pdo->query("SELECT office_id, distance_metres, office_proximity FROM attendance_location_events WHERE id = {$eventIdRoving}")->fetch();
     expect_service($eventRowRoving['office_proximity'] === 'within', 'Roving policy must allow check-in at recognised HQ branch');
-    expect_service((int) $eventRowRoving['office_id'] === 1, 'Roving check-in should identify and record HQ office ID');
+    expect_service((int) $eventRowRoving['office_id'] === $hqOfficeId, 'Roving check-in should identify and record HQ office ID');
 
     echo "Attendance location service & multi-branch states passed; fixtures will be rolled back.\n";
 } finally {

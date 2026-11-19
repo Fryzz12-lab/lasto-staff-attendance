@@ -332,6 +332,8 @@
       const backdrop = document.getElementById('sidebarBackdrop');
       sidebar && sidebar.classList.remove('open');
       backdrop && backdrop.classList.remove('show');
+      document.getElementById('sidebarToggle')?.setAttribute('aria-expanded', 'false');
+      document.getElementById('mobileUserBtn')?.setAttribute('aria-expanded', 'false');
 
       window.scrollTo(0, 0);
       refreshUiAfterSwap();

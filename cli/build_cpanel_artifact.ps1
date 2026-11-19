@@ -29,7 +29,7 @@ foreach ($directory in @('admin', 'api', 'assets/css', 'assets/img', 'assets/js'
 }
 
 foreach ($name in @('config/.htaccess', 'config/config.php', 'config/database.php',
-        'config/local.php.example', 'cli/.htaccess', 'cli/create_admin.php',
+        'config/local.php.example', 'config/staging.local.php.example', 'cli/.htaccess', 'cli/create_admin.php',
         'cli/daily_attendance.php', 'cli/maintenance.php', 'cli/notification_reminders.php', 'cli/preflight.php',
         'storage/.htaccess', 'uploads/profiles/.htaccess', 'uploads/profiles/.gitkeep')) {
     $path = Join-Path $projectRoot $name
@@ -45,6 +45,35 @@ if ($IncludeLocalConfig) {
         throw 'config/local.php is missing'
     }
     $files.Add($localPath)
+}
+
+# Safety Verification: Prohibit packaging of private keys, credentials, logs, and temporary files
+$prohibitedPatterns = @(
+    '*vapid*.json',
+    '*keys.json',
+    '*.key',
+    '*.pem',
+    '*.log',
+    '*.bak',
+    '*.tmp',
+    'uat-manifest*.json'
+)
+
+foreach ($filePath in $files) {
+    $leaf = [System.IO.Path]::GetFileName($filePath)
+    foreach ($pattern in $prohibitedPatterns) {
+        if ($leaf -like $pattern) {
+            throw "Security violation: Prohibited file matching pattern '$pattern' detected: $filePath"
+        }
+    }
+}
+
+if (-not $IncludeLocalConfig) {
+    foreach ($filePath in $files) {
+        if ($filePath.EndsWith('config\local.php') -or $filePath.EndsWith('config/local.php')) {
+            throw "Security violation: config/local.php must not be packaged in deployment artifacts."
+        }
+    }
 }
 
 if (Test-Path -LiteralPath $temporaryPath) {
@@ -68,10 +97,14 @@ try {
 
 Copy-Item -LiteralPath (Join-Path $projectRoot 'database/cpanel_schema.sql') -Destination (Join-Path $artifactDir 'cpanel_schema.sql') -Force
 Copy-Item -LiteralPath (Join-Path $projectRoot 'database/cpanel_seed.sql') -Destination (Join-Path $artifactDir 'cpanel_seed.sql') -Force
+Copy-Item -LiteralPath (Join-Path $projectRoot 'database/cpanel_upgrade.sql') -Destination (Join-Path $artifactDir 'cpanel_upgrade.sql') -Force
 Copy-Item -LiteralPath (Join-Path $projectRoot 'database/migration_attendance_location.sql') -Destination (Join-Path $artifactDir 'migration_attendance_location.sql') -Force
 Copy-Item -LiteralPath (Join-Path $projectRoot 'database/migration_attendance_location_preference.sql') -Destination (Join-Path $artifactDir 'migration_attendance_location_preference.sql') -Force
 Copy-Item -LiteralPath (Join-Path $projectRoot 'database/migration_push_notifications.sql') -Destination (Join-Path $artifactDir 'migration_push_notifications.sql') -Force
 Copy-Item -LiteralPath (Join-Path $projectRoot 'database/migration_notification_center.sql') -Destination (Join-Path $artifactDir 'migration_notification_center.sql') -Force
+if (Test-Path -LiteralPath (Join-Path $projectRoot 'database/migration_login_rate_limits.sql') -PathType Leaf) {
+    Copy-Item -LiteralPath (Join-Path $projectRoot 'database/migration_login_rate_limits.sql') -Destination (Join-Path $artifactDir 'migration_login_rate_limits.sql') -Force
+}
 
 Move-Item -LiteralPath $temporaryPath -Destination $artifactPath -Force
 Write-Output "Built $artifactPath with $($files.Count) files; local config included: $IncludeLocalConfig"

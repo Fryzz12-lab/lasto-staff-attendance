@@ -110,8 +110,12 @@ for ($date = $start; $date <= $end; $date = $date->modify('+1 day')) {
 
 // Mark any past records that have a clock-in but no clock-out as incomplete
 try {
-    mark_incomplete_attendances();
+    $maintenanceErrors = mark_incomplete_attendances();
+    $errors += $maintenanceErrors;
     echo 'Incomplete attendances marked.' . PHP_EOL;
+    if ($maintenanceErrors > 0) {
+        fwrite(STDERR, "  {$maintenanceErrors} per-record maintenance failure(s) were logged." . PHP_EOL);
+    }
 } catch (Throwable $e) {
     $errors++;
     fwrite(STDERR, 'mark_incomplete_attendances failed: ' . $e->getMessage() . PHP_EOL);

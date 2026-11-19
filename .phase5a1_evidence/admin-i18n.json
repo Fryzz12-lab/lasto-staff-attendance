@@ -1,0 +1,34 @@
+[
+  {
+    "lang": "ms-MY",
+    "theme": "day",
+    "title": "Kehadiran Harian · LASTO TECHNOLOGY",
+    "width": 390,
+    "doc": 390,
+    "height": 2280,
+    "text": "LASTO TECHNOLOGY\nSISTEM KEHADIRAN STAF\nPapan Pemuka\nPengurusan Staf\nKehadiran Harian\nRekod Kehadiran\n1\nRekod Rehat\nPelarasan Hari Off\nWaktu Kerja & Polisi\nPermohonan Cuti / WFH\n1\nPermohonan Pembetulan\nLaporan\nLokasi Pejabat\nTetapan\nProfil Saya\nS\nSynthetic Administrator\nADMIN\nGLOB 3D: HIDUP\nKONSOL SIANG\nBahasa Melayu\nLOG KELUAR\nKEHADIRAN HARIAN\nS\nMemaparkan rekod untuk:\n31/10/2026\nPILIHAN TARIKH PANTAS\nHari ini\nSemalam\n2 hari lalu\nTARIKH\nSTAF\nSemua staf\nSynthetic Complete\nSynthetic Incomplete\nSynthetic Location Denied\nSynthetic Location Disabled\nSynthetic Location Enabled\nSynthetic Location Unavailable\nSynthetic Lunch\nSynthetic Overtime\nSynthetic Ready\nSynthetic Review\nSynthetic Short\nSynthetic Solat\nSynthetic WFH\nSynthetic Working\nSTATUS KEHADIRAN\nSemua Status\nHadir\nSelesai\nBelum Daftar Masuk\nHari Off Berjadual\nTidak Lengkap\nTidak Hadir\nLEWAT\nSemua Status\nYa\nSEDANG REHAT\nSemua Status\nYa\n",
+    "table": [
+      {
+        "width": 433,
+        "parent": 364
+      }
+    ],
+    "screenshot": "admin_today_ms_day.png"
+  },
+  {
+    "lang": "zh-CN",
+    "theme": "night",
+    "title": "每日考勤 · LASTO TECHNOLOGY",
+    "width": 390,
+    "doc": 390,
+    "height": 2328,
+    "text": "LASTO TECHNOLOGY\n员工考勤系统\n仪表盘\n员工管理\n每日考勤\n考勤记录\n1\n休息记录\n休息日调整\n工作时间与政策\n请假 / WFH 申请\n1\n更正申请\n报表\n办公室地点\n系统设置\n我的资料\nS\nSynthetic Administrator\nADMIN\n3D地球：开启\n全息夜景\n中文\n退出登录\n每日考勤\nS\n显示记录日期:\n31/10/2026\n日期快捷选择\n今天\n昨天\n前天\n日期\n员工\n全部员工\nSynthetic Complete\nSynthetic Incomplete\nSynthetic Location Denied\nSynthetic Location Disabled\nSynthetic Location Enabled\nSynthetic Location Unavailable\nSynthetic Lunch\nSynthetic Overtime\nSynthetic Ready\nSynthetic Review\nSynthetic Short\nSynthetic Solat\nSynthetic WFH\nSynthetic Working\n考勤状态\n所有状态\n出勤\n已完成\n未打卡\n排定休息日\n不完整\n缺勤\n迟到\n所有状态\n是\n休息中\n所有状态\n是\n工作安排\n所有状态\n居家办公 (WFH)\n结果会自动更新。\n重置筛选\n员工\t上班打卡\t下班打卡\t状态\t休息\t实际工时\t操作\nSynthetic Complete\t10:00 AM\t6:00 PM\t已完成\t0分\t8小时 00分\t查看详情\nSynthetic Incomplete\t—\t—\t未打卡\t0分\t0分\t查看详情\nSynthetic Location Denied\t10:00 AM\t—\t出勤\t0分\t8小时 51分\t查看详情\nSynthetic Location Disabled\t10:00 AM\t—\t出勤\t0分\t8小时 51分\t查看详情\nSynthetic Location Enabled\t10:00 AM\t—\t出勤\t0分\t8小时 51分\t查看详情\nSynthetic Location Unava",
+    "table": [
+      {
+        "width": 395,
+        "parent": 364
+      }
+    ],
+    "screenshot": "admin_today_zh_night.png"
+  }
+]

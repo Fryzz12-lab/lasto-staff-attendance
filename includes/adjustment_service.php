@@ -4,8 +4,9 @@ declare(strict_types=1);
 function adjustment_transaction(Closure $callback): void
 {
     $pdo = db();
-    $pdo->beginTransaction();
-    try { $callback(); $pdo->commit(); } catch (Throwable $e) { if ($pdo->inTransaction()) $pdo->rollBack(); throw $e; }
+    $owns = !$pdo->inTransaction();
+    if ($owns) $pdo->beginTransaction();
+    try { $callback(); if ($owns) $pdo->commit(); } catch (Throwable $e) { if ($owns && $pdo->inTransaction()) $pdo->rollBack(); throw $e; }
 }
 
 function adjustment_in_transaction(Closure $callback): void
@@ -17,7 +18,8 @@ function adjustment_in_transaction(Closure $callback): void
 function attendance_is_completed(array $attendance): bool
 {
     return !empty($attendance['clock_in']) && !empty($attendance['clock_out'])
-        && empty($attendance['open_break_id']);
+        && ($attendance['status'] ?? '') !== 'on_break'
+        && !in_array($attendance['break_review_status'] ?? 'none', ['under_review', 'correction_pending', 'rejected_unresolved'], true);
 }
 
 function ensure_offday_adjustment_review(int $attendanceId): ?int
@@ -59,14 +61,25 @@ function employee_balances(int $employeeId): array
     ];
 }
 
+/** Serialize balance mutations using the same employee-row lock as attendance. */
+function with_adjustment_employee_lock(int $employeeId, Closure $callback): void
+{
+    with_employee_lock($employeeId, $callback);
+}
+
 function decide_offday_adjustment(int $reviewId, string $decision, int $adminId, string $note, bool $overrideNegative = false): void
 {
     if (!in_array($decision, ['replacement_off','settle_cuti_ganti','no_adjustment'], true)) throw new InvalidArgumentException('Invalid adjustment decision.');
     if ($note === '') throw new InvalidArgumentException('A reason is required for every adjustment decision.');
-    adjustment_transaction(function () use ($reviewId,$decision,$adminId,$note,$overrideNegative): void {
-        $stmt = db()->prepare('SELECT r.*, a.clock_in, a.clock_out, a.user_id FROM offday_adjustment_reviews r JOIN attendance a ON a.id=r.attendance_id WHERE r.id=? FOR UPDATE');
+    $lookup = db()->prepare('SELECT a.user_id FROM offday_adjustment_reviews r JOIN attendance a ON a.id=r.attendance_id WHERE r.id=?');
+    $lookup->execute([$reviewId]);
+    $employeeId = (int) $lookup->fetchColumn();
+    if (!$employeeId) throw new InvalidArgumentException('This review is no longer pending or the attendance is incomplete.');
+    with_adjustment_employee_lock($employeeId, function () use ($reviewId,$employeeId,$decision,$adminId,$note,$overrideNegative): void {
+        $stmt = db()->prepare('SELECT r.*, a.clock_in, a.clock_out, a.user_id, a.status AS attendance_status, a.break_review_status FROM offday_adjustment_reviews r JOIN attendance a ON a.id=r.attendance_id WHERE r.id=? FOR UPDATE');
         $stmt->execute([$reviewId]); $review = $stmt->fetch();
-        if (!$review || $review['status'] !== 'pending' || !$review['clock_in'] || !$review['clock_out']) throw new InvalidArgumentException('This review is no longer pending or the attendance is incomplete.');
+        if (!$review || (int) $review['user_id'] !== $employeeId || $review['status'] !== 'pending' || !$review['clock_in'] || !$review['clock_out']) throw new InvalidArgumentException('This review is no longer pending or the attendance is incomplete.');
+        if (($review['attendance_status'] ?? '') === 'on_break' || in_array($review['break_review_status'] ?? 'none', ['under_review', 'correction_pending', 'rejected_unresolved'], true)) throw new InvalidArgumentException('Cannot adjust off-day attendance with an unresolved break discrepancy or active break.');
         $admin = db()->prepare("SELECT id FROM users WHERE id=? AND role='admin' AND is_active=1"); $admin->execute([$adminId]);
         if (!$admin->fetchColumn()) throw new InvalidArgumentException(__('msg_no_permission'));
         $amount = $decision === 'no_adjustment' ? 0 : 1;
@@ -84,9 +97,13 @@ function decide_offday_adjustment(int $reviewId, string $decision, int $adminId,
 function reverse_offday_adjustment(int $reviewId, int $adminId, string $note): void
 {
     if ($note === '') throw new InvalidArgumentException('A reversal note is required.');
-    adjustment_transaction(function () use ($reviewId,$adminId,$note): void {
+    $lookup = db()->prepare('SELECT a.user_id FROM offday_adjustment_reviews r JOIN attendance a ON a.id=r.attendance_id WHERE r.id=?');
+    $lookup->execute([$reviewId]);
+    $employeeId = (int) $lookup->fetchColumn();
+    if (!$employeeId) throw new InvalidArgumentException('Only a balance-affecting decision can be reversed.');
+    with_adjustment_employee_lock($employeeId, function () use ($reviewId,$employeeId,$adminId,$note): void {
         $stmt = db()->prepare('SELECT * FROM offday_adjustment_reviews WHERE id=? FOR UPDATE'); $stmt->execute([$reviewId]); $review = $stmt->fetch();
-        if (!$review || $review['status'] !== 'decided' || !$review['decision'] || $review['decision'] === 'no_adjustment') throw new InvalidArgumentException('Only a balance-affecting decision can be reversed.');
+        if (!$review || (int) $review['employee_id'] !== $employeeId || $review['status'] !== 'decided' || !$review['decision'] || $review['decision'] === 'no_adjustment') throw new InvalidArgumentException('Only a balance-affecting decision can be reversed.');
         $stmt = db()->prepare("SELECT * FROM staff_balance_ledger WHERE review_id=? AND source_type='offday_attendance' ORDER BY id DESC LIMIT 1 FOR UPDATE"); $stmt->execute([$reviewId]); $entry = $stmt->fetch();
         if (!$entry) throw new InvalidArgumentException('The ledger entry for this decision was not found.');
         $stmt = db()->prepare("SELECT id FROM users WHERE id=? AND role='admin' AND is_active=1"); $stmt->execute([$adminId]); if (!$stmt->fetchColumn()) throw new InvalidArgumentException(__('msg_no_permission'));
@@ -98,17 +115,19 @@ function reverse_offday_adjustment(int $reviewId, int $adminId, string $note): v
 
 function record_leave_replacement(int $leaveRequestId, int $employeeId, bool $required, int $adminId, ?string $note): void
 {
-    adjustment_in_transaction(function () use ($leaveRequestId,$employeeId,$required,$adminId,$note): void {
-        $stmt = db()->prepare("SELECT id FROM users WHERE id=? AND role='admin' AND is_active=1"); $stmt->execute([$adminId]);
-        if (!$stmt->fetchColumn()) throw new InvalidArgumentException(__('msg_no_permission'));
-        $stmt = db()->prepare('SELECT id FROM leave_replacement_reviews WHERE leave_request_id=? AND status="active" LIMIT 1 FOR UPDATE'); $stmt->execute([$leaveRequestId]);
-        if ($stmt->fetchColumn()) throw new InvalidArgumentException('A replacement decision already exists for this leave.');
-        $stmt = db()->prepare('INSERT INTO leave_replacement_reviews (leave_request_id,employee_id,requires_replacement,amount,admin_id,admin_note) VALUES (?,?,?,?,?,?)');
-        $amount = $required ? 1 : 0;
-        $stmt->execute([$leaveRequestId,$employeeId,$required ? 1 : 0,$amount,$adminId,$note ?: null]);
-        if ($required) {
-            db()->prepare('INSERT INTO staff_balance_ledger (employee_id,balance_type,amount,source_type,source_id,decision,admin_id,admin_note) VALUES (?,"cuti_perlu_ganti",?,"leave",?,?,?,?)')
-                ->execute([$employeeId,$amount,$leaveRequestId,'leave_requires_replacement',$adminId,$note ?: null]);
-        }
+    with_adjustment_employee_lock($employeeId, function () use ($leaveRequestId,$employeeId,$required,$adminId,$note): void {
+        adjustment_in_transaction(function () use ($leaveRequestId,$employeeId,$required,$adminId,$note): void {
+            $stmt = db()->prepare("SELECT id FROM users WHERE id=? AND role='admin' AND is_active=1"); $stmt->execute([$adminId]);
+            if (!$stmt->fetchColumn()) throw new InvalidArgumentException(__('msg_no_permission'));
+            $stmt = db()->prepare('SELECT id FROM leave_replacement_reviews WHERE leave_request_id=? AND status="active" LIMIT 1 FOR UPDATE'); $stmt->execute([$leaveRequestId]);
+            if ($stmt->fetchColumn()) throw new InvalidArgumentException('A replacement decision already exists for this leave.');
+            $stmt = db()->prepare('INSERT INTO leave_replacement_reviews (leave_request_id,employee_id,requires_replacement,amount,admin_id,admin_note) VALUES (?,?,?,?,?,?)');
+            $amount = $required ? 1 : 0;
+            $stmt->execute([$leaveRequestId,$employeeId,$required ? 1 : 0,$amount,$adminId,$note ?: null]);
+            if ($required) {
+                db()->prepare('INSERT INTO staff_balance_ledger (employee_id,balance_type,amount,source_type,source_id,decision,admin_id,admin_note) VALUES (?,"cuti_perlu_ganti",?,"leave",?,?,?,?)')
+                    ->execute([$employeeId,$amount,$leaveRequestId,'leave_requires_replacement',$adminId,$note ?: null]);
+            }
+        });
     });
 }

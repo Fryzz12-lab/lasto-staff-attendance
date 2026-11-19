@@ -41,6 +41,17 @@ function recovery_issue_token(int $userId, string $purpose, ?int $createdBy = nu
 function recovery_send_link(string $email, string $token, string $purpose, ?string $recipientName = null): bool
 {
     if (!recovery_mail_ready() || !filter_var($email, FILTER_VALIDATE_EMAIL)) return false;
+
+    // Fail-Closed Staging Email Isolation Guard: In staging, suppress outbound emails unless explicitly allowlisted
+    $isStaging = (function_exists('lasto_env') && lasto_env('LASTO_APP_ENV') === 'staging') || (getenv('LASTO_APP_ENV') === 'staging') || (defined('APP_ENV') && APP_ENV === 'staging');
+    if ($isStaging) {
+        $allowlistRaw = (string) getenv('LASTO_STAGING_EMAIL_ALLOWLIST');
+        $allowlist = array_filter(array_map('trim', explode(',', $allowlistRaw)));
+        if (empty($allowlist) || !in_array($email, $allowlist, true)) {
+            error_log("[STAGING ISOLATION] Outbound email to '{$email}' blocked. In staging, outbound emails are suppressed unless explicitly listed in LASTO_STAGING_EMAIL_ALLOWLIST.");
+            return false;
+        }
+    }
     $subject = match ($purpose) {
         'invite' => 'LASTO TECHNOLOGY account invitation',
         'verify_email' => 'LASTO TECHNOLOGY email verification',

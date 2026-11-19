@@ -1,0 +1,216 @@
+[
+  {
+    "page": "leave",
+    "title": "Leave / WFH Requests · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/staff/leave.php",
+    "fields": [
+      {
+        "name": "leave_date",
+        "type": "date",
+        "labelText": [],
+        "aria": null,
+        "labelledby": null,
+        "required": true,
+        "valid": false
+      },
+      {
+        "name": "leave_type",
+        "type": "select-one",
+        "labelText": [],
+        "aria": null,
+        "labelledby": null,
+        "required": true,
+        "valid": true
+      },
+      {
+        "name": "reason",
+        "type": "textarea",
+        "labelText": [],
+        "aria": null,
+        "labelledby": null,
+        "required": true,
+        "valid": false
+      }
+    ],
+    "formCount": 5,
+    "main": "REPLACEMENT LEAVE\n0\nAvailable to Use\n\nExtra days off you can use.\n\nDAYS TO REPLACE\n0\nDays\n\nNo replacement required\n\nPENDING\n0\nAPPROVED\n0\nREJECTED\n0\nNEW REQUEST\n\nLeave and WFH require admin approval. Approved WFH is a normal working day: clock in/out and follow the same hours, lateness and break rules.\n\nDATE\nTYPE\nSick Leave\nWork From Home (WFH)\nAnnual Leave\nEmergency\nOther\nREASON\nSubmit Request\nMY REQUESTS\nNo leave requests yet.",
+    "navButton": "<button type=\"button\" class=\"btn btn-light btn-sm sidebar-toggle d-lg-none\" id=\"sidebarToggle\" aria-label=\"Menu\">\n                <i class=\"bi bi-list\"></i>\n            </button>",
+    "validation": {
+      "valid": false,
+      "invalid": [
+        {
+          "name": "leave_date",
+          "type": "date",
+          "validation": "Please fill out this field."
+        },
+        {
+          "name": "reason",
+          "type": "textarea",
+          "validation": "Please fill out this field."
+        }
+      ],
+      "first": "leave_date"
+    }
+  },
+  {
+    "page": "corrections",
+    "title": "My Correction Requests · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/staff/corrections.php",
+    "fields": [
+      {
+        "name": "work_date",
+        "type": "date",
+        "labelText": [
+          "DATE *"
+        ],
+        "aria": null,
+        "labelledby": null,
+        "required": true,
+        "valid": true
+      },
+      {
+        "name": "target_mode",
+        "type": "radio",
+        "labelText": [
+          "Attendance Punches (In / Out)"
+        ],
+        "aria": null,
+        "labelledby": null,
+        "required": false,
+        "valid": true
+      },
+      {
+        "name": "target_mode",
+        "type": "radio",
+        "labelText": [
+          "Break Times"
+        ],
+        "aria": null,
+        "labelledby": null,
+        "required": false,
+        "valid": true
+      },
+      {
+        "name": "field_name",
+        "type": "radio",
+        "labelText": [
+          "Both Clock In & Out"
+        ],
+        "aria": null,
+        "labelledby": null,
+        "required": false,
+        "valid": true
+      },
+      {
+        "name": "field_name",
+        "type": "radio",
+        "labelText": [
+          "Clock In only"
+        ],
+        "aria": null,
+        "labelledby": null,
+        "required": false,
+        "valid": true
+      },
+      {
+        "name": "field_name",
+        "type": "radio",
+        "labelText": [
+          "Clock Out only"
+        ],
+        "aria": null,
+        "labelledby": null,
+        "required": false,
+        "valid": true
+      },
+      {
+        "name": "clock_in",
+        "type": "time",
+        "labelText": [
+          "CLOCK IN *"
+        ],
+        "aria": null,
+        "labelledby": null,
+        "required": true,
+        "valid": true
+      },
+      {
+        "name": "clock_out_date",
+        "type": "select-one",
+        "labelText": [],
+        "aria": null,
+        "labelledby": null,
+        "required": false,
+        "valid": true
+      },
+      {
+        "name": "clock_out",
+        "type": "time",
+        "labelText": [
+          "CLOCK OUT *"
+        ],
+        "aria": null,
+        "labelledby": null,
+        "required": true,
+        "valid": true
+      },
+      {
+        "name": "reason",
+        "type": "textarea",
+        "labelText": [
+          "REASON FOR CORRECTION *"
+        ],
+        "aria": null,
+        "labelledby": null,
+        "required": true,
+        "valid": false
+      }
+    ],
+    "formCount": 3,
+    "main": "You cannot edit historical Clock In/Out directly. Submit a request for Admin review.\nMy Attendance\nPENDING\n1\nAPPROVED\n0\nREJECTED\n0\nREQUEST CORRECTION\nDATE *\nTimes entered here apply to this date. To correct another day, select it in Daily Attendance and open that record.\nCORRECTION CATEGORY *\nAttendance Punches (In / Out)\nBreak Times\nCURRENTLY RECORDED\nIn: 10:00 AM Out: 6:00 PM COMPLETED\nREQUESTED CHANGE *\nBoth Clock In & Out\nClock In only\nClock Out only\nCLOCK IN *\nCLOCK OUT *\nSame Day (10-31)\nNext Day (11-01)\nFor overnight shifts, select 'Next Day'.\nREASON FOR CORRECTION *\nSave Correction\nREQ",
+    "navButton": "<button type=\"button\" class=\"btn btn-light btn-sm sidebar-toggle d-lg-none\" id=\"sidebarToggle\" aria-label=\"Menu\">\n                <i class=\"bi bi-list\"></i>\n            </button>"
+  },
+  {
+    "page": "admin_leave",
+    "title": "Leave / WFH Requests · LASTO TECHNOLOGY",
+    "url": "http://127.0.0.1:8093/admin/leave_requests.php",
+    "fields": [
+      {
+        "name": "status",
+        "type": "select-one",
+        "labelText": [
+          "REQUEST STATUS"
+        ],
+        "aria": null,
+        "labelledby": null,
+        "required": false,
+        "valid": true
+      },
+      {
+        "name": "from",
+        "type": "date",
+        "labelText": [
+          "FROM DATE"
+        ],
+        "aria": null,
+        "labelledby": null,
+        "required": false,
+        "valid": true
+      },
+      {
+        "name": "to",
+        "type": "date",
+        "labelText": [
+          "TO DATE"
+        ],
+        "aria": null,
+        "labelledby": null,
+        "required": false,
+        "valid": true
+      }
+    ],
+    "formCount": 5,
+    "main": "DATE SHORTCUTS\nToday\nThis week\nNext week\nThis month\nNext month\nPast 30 days\nREQUEST STATUS\nPending\nApproved\nRejected\nAll\nFROM DATE\nTO DATE\nResults update automatically.\nReset filters\nSynthetic Working\nPENDING\n03/11/2026 · Work From Home (WFH)\nSynthetic WFH review fixture\nApprove\nReject",
+    "navButton": "<button type=\"button\" class=\"btn btn-light btn-sm sidebar-toggle d-lg-none\" id=\"sidebarToggle\" aria-label=\"Menu\">\n                <i class=\"bi bi-list\"></i>\n            </button>"
+  }
+]

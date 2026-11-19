@@ -20,8 +20,13 @@ function lang_current(): string
 
 function __(string $key, array $replace = []): string
 {
+    return translate_for_language($key, lang_current(), $replace);
+}
+
+function translate_for_language(string $key, string $lang, array $replace = []): string
+{
     static $dicts = [];
-    $lang = lang_current();
+    if (!in_array($lang, ['en', 'ms', 'zh'], true)) $lang = 'en';
     if (!isset($dicts[$lang])) {
         $file = __DIR__ . '/../assets/lang/' . $lang . '.php';
         $dict = is_file($file) ? require $file : [];

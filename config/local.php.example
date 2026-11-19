@@ -18,6 +18,16 @@ return [
     'LASTO_DB_USER' => 'REPLACE_WITH_CPANEL_DATABASE_USER',
     'LASTO_DB_PASS' => 'REPLACE_WITH_LONG_RANDOM_PASSWORD',
     'LASTO_PUBLIC_ORIGIN' => 'https://attendance.lastotechnology.my',
+
+    // Web Push (RFC 8292 / VAPID) configuration for browser and mobile push notifications.
+    // Configure persistent EC P-256 keys for the production domain.
+    // NEVER commit or overwrite these keys once users and devices are subscribed.
+    'LASTO_VAPID_PUBLIC_KEY' => 'REPLACE_WITH_BASE64URL_P256_PUBLIC_KEY',
+    'LASTO_VAPID_PRIVATE_KEY' => 'REPLACE_WITH_BASE64URL_P256_PRIVATE_KEY',
+    'LASTO_VAPID_SUBJECT' => 'mailto:attendance-admin@lastotechnology.my',
+    // Optional: path to secure key JSON file stored outside public document root:
+    // 'LASTO_VAPID_KEY_FILE' => '/home/cpaneluser/etc/vapid.json',
+
     // Optional: enable PHP mail() after the host mailbox is tested.
     // 'LASTO_MAIL_TRANSPORT' => 'php_mail',
     // 'LASTO_MAIL_FROM' => 'noreply@lastotechnology.my',

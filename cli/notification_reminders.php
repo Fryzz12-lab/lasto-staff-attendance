@@ -14,4 +14,5 @@ foreach ($pdo->query("SELECT id FROM users WHERE role='staff' AND is_active=1")-
     $b=$pdo->prepare('SELECT id,start_time,allowed_minutes FROM break_records WHERE attendance_id=? AND end_time IS NULL ORDER BY id DESC LIMIT 1'); $b->execute([(int)$att['id']]); $break=$b->fetch();
     if ($break && (int)$break['allowed_minutes']>0) { $be=(new DateTimeImmutable((string)$break['start_time']))->modify('+'.(int)$break['allowed_minutes'].' minutes'); $bm=(int)floor(($be->getTimestamp()-$now->getTimestamp())/60); if ($bm>=0 && $bm<=5) { $key='break-ending-'.(int)$break['id']; if (notification_create($uid,'break_ending',$key,'Break ending soon','Your break is ending soon.','/staff/')) { push_send_to_user($uid,'Break ending soon','Your break is ending soon.','/staff/',$key,'break_ending'); $created++; } } }
 }
+$created += process_break_discrepancy_reminders($now);
 fwrite(STDOUT,"Reminder run complete: {$created} event attempts\n");

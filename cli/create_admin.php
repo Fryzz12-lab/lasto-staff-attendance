@@ -11,6 +11,13 @@ if (PHP_SAPI !== 'cli') {
     exit;
 }
 
+foreach ($argv ?? [] as $arg) {
+    if (str_starts_with($arg, '--password')) {
+        fwrite(STDERR, "Security Error: Do not pass passwords via command-line arguments. Passwords must be entered securely via the interactive prompt.\n");
+        exit(1);
+    }
+}
+
 require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/../includes/password_policy.php';
 

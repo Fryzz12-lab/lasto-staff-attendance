@@ -1,0 +1,17 @@
+{
+  "before": {
+    "url": "http://127.0.0.1:8093/staff/",
+    "title": "Dashboard · LASTO TECHNOLOGY",
+    "controller": true,
+    "online": true
+  },
+  "after": {
+    "url": "http://127.0.0.1:8093/staff/attendance.php",
+    "title": "My Attendance · LASTO TECHNOLOGY",
+    "text": "LASTO TECHNOLOGY\nSTAFF ATTENDANCE SYSTEM\nDashboard\nMy Attendance\nMy Breaks\nMy Schedule\nWorking Hours & Policy\nLeave / WFH Requests\nMy Profile\nS\nSynthetic Ready\nSTAFF\n3D GLOBE: ON\nHOLO NIGHT\nEnglish\nLOGOUT\nMY ATTENDANCE\n1\nS\nMy Correction Requests\nDATE SHORTCUTS\nToday\nYesterday\nThis week\nThis month\nLast month\nFROM DATE\nTO DATE\nResults update automatically.\nReset filters\nATTENDANCE RECORDS\n31/10/2026 TODAY\nNOT CLOCKED IN\n30/10/2026\nCOMPLETED\n10:00 AM → 6:00 PM\nOn Time\nWorking Time:\n8h 00m\nBreaks:\n0m\nRequest Correction\n29/10/2026\nCOMPLETED\n10:00 AM → 6:00 PM\nOn Time\nWorking Time:\n7h 30m\nBreaks:\n0m\nRequest Correction\n© 2026 LASTO TECHNOLOGY · Staff Attendance System\nv1.0.0",
+    "online": false,
+    "controller": true,
+    "main": "My Correction Requests\nDATE SHORTCUTS\nToday\nYesterday\nThis week\nThis month\nLast month\nFROM DATE\nTO DATE\nResults update automatically.\nReset filters\nATTENDANCE RECORDS\n31/10/2026 TODAY\nNOT CLOCKED IN\n30/10/2026\nCOMPLETED\n10:00 AM → 6:00 PM\nOn Time\nWorking Time:\n8h 00m\nBreaks:\n0m\nRequest Correction\n29/10/2026\nCOMPLETED\n10:00 AM → 6:00 PM\nOn Time\nWorking Time:\n7h 30m\nBreaks:\n0m\nRequest Correction"
+  },
+  "screenshot": "service-worker-offline.png"
+}

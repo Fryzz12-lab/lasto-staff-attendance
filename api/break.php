@@ -30,6 +30,40 @@ if (!csrf_verify(is_string($token) ? $token : null)) {
 $action = $input['action'] ?? '';
 $userId = (int) current_user()['id'];
 
+$hasIdempotencyKey = array_key_exists('HTTP_IDEMPOTENCY_KEY', $_SERVER);
+if ($hasIdempotencyKey) {
+    require_once __DIR__ . '/../includes/api_idempotency.php';
+    $requestKey = (string) $_SERVER['HTTP_IDEMPOTENCY_KEY'];
+    if ($action === 'start') {
+        if (!is_string($input['type'] ?? null)) {
+            json_response(['success' => false, 'outcome' => 'invalid_request', 'message' => __('msg_invalid_break_type')], 400);
+        }
+        $type = $input['type'];
+        idempotent_attendance_api_response($userId, $requestKey, 'break_start', ['type' => $type], static function () use ($userId, $type): array {
+            $attendance = get_attendance($userId, today_str());
+            $result = start_break($userId, $type);
+            return [
+                'result' => $result,
+                'attendance_id' => $attendance['id'] ?? (get_attendance($userId, today_str())['id'] ?? null),
+                'break_id' => $result['break_id'] ?? null,
+            ];
+        });
+    }
+    if ($action === 'end') {
+        idempotent_attendance_api_response($userId, $requestKey, 'break_end', [], static function () use ($userId): array {
+            $attendance = get_attendance($userId, today_str());
+            $activeBreak = $attendance ? get_active_break_for_attendance($userId, (int) $attendance['id']) : null;
+            $result = end_break($userId);
+            return [
+                'result' => $result,
+                'attendance_id' => $activeBreak['attendance_id'] ?? ($attendance['id'] ?? null),
+                'break_id' => $activeBreak['id'] ?? null,
+            ];
+        });
+    }
+    json_response(['success' => false, 'outcome' => 'invalid_request', 'message' => __('msg_unknown_action')], 400);
+}
+
 try {
     if ($action === 'start') {
         $type = (string) ($input['type'] ?? '');

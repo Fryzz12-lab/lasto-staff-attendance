@@ -18,6 +18,7 @@ function report_filter_rows(array $rows, string $report): array
                 || ($r['clock_in'] && !$r['clock_out'] && $r['work_date'] < today_str()),
             'leave' => (int) $r['is_day_off'] === 1 || $r['status'] === 'day_off',
             'wfh' => !empty($r['is_wfh']),
+            'discrepancies' => !empty($r['break_review_status']) && in_array($r['break_review_status'], ['under_review', 'correction_pending', 'rejected_unresolved'], true),
             default => true,
         };
     }));
@@ -31,6 +32,25 @@ function report_attendance_export_matrix(array $rows): array
 {
     $out = [];
     foreach ($rows as $r) {
+        $reviewStatus = (string) ($r['break_review_status'] ?? 'none');
+        $provMinutes = isset($r['provisional_work_minutes']) && $r['provisional_work_minutes'] !== null ? (int) $r['provisional_work_minutes'] : null;
+
+        $provLabel = '-';
+        if ($provMinutes !== null) {
+            $provLabel = format_minutes($provMinutes);
+        }
+
+        $reviewLabel = match ($reviewStatus) {
+            'under_review' => __('st_under_review'),
+            'correction_pending' => __('st_correction_pending'),
+            'rejected_unresolved' => __('st_rejected_unresolved'),
+            'admin_verified' => __('st_admin_verified'),
+            'resolved' => __('st_resolved'),
+            default => '-',
+        };
+
+        $isDisputed = in_array($reviewStatus, ['under_review', 'correction_pending', 'rejected_unresolved'], true);
+
         $out[] = [
             format_date((string) $r['work_date']),
             (string) $r['full_name'],
@@ -38,7 +58,11 @@ function report_attendance_export_matrix(array $rows): array
             format_time($r['clock_out'] ? (string) $r['clock_out'] : null),
             format_minutes((int) $r['late_minutes']),
             format_minutes((int) $r['total_break_minutes']),
-            format_minutes((int) $r['work_minutes']),
+            $isDisputed
+                ? format_minutes((int) $r['work_minutes']) . ' [Under Review - Prov: ' . $provLabel . ']'
+                : format_minutes((int) $r['work_minutes']),
+            $reviewLabel,
+            $provLabel,
             status_label((string) $r['status']),
             attendance_work_arrangement($r),
         ];
@@ -59,6 +83,8 @@ function report_attendance_headers(): array
         __('late'),
         __('total_break_time'),
         __('total_working_time'),
+        __('break_review_status_col'),
+        __('provisional_work_time_unverified'),
         __('status'),
         __('work_arrangement'),
     ];
@@ -68,7 +94,7 @@ function report_attendance_headers(): array
 function report_attendance_context(array $rows, string $scope): array
 {
     $staff = [];
-    $counts = ['late' => 0, 'absent' => 0, 'incomplete' => 0, 'missing' => 0, 'open' => 0];
+    $counts = ['late' => 0, 'absent' => 0, 'incomplete' => 0, 'missing' => 0, 'open' => 0, 'unresolved_breaks' => 0];
     foreach ($rows as $row) {
         $staff[(int) $row['user_id']] = true;
         $counts['late'] += (int) ((int) $row['late_minutes'] > 0 || $row['status'] === 'late');
@@ -77,16 +103,20 @@ function report_attendance_context(array $rows, string $scope): array
         if (!empty($row['clock_in']) && empty($row['clock_out'])) {
             $counts[$row['work_date'] < today_str() ? 'missing' : 'open']++;
         }
+        if (!empty($row['break_review_status']) && in_array($row['break_review_status'], ['under_review', 'correction_pending', 'rejected_unresolved'], true)) {
+            $counts['unresolved_breaks']++;
+        }
     }
     $review = [];
     foreach (['late' => 'late_arrivals', 'absent' => 'report_recorded_absences', 'incomplete' => 'incomplete_records',
-        'missing' => 'missing_clockout_count', 'open' => 'report_open_shifts'] as $type => $key) {
+        'missing' => 'missing_clockout_count', 'open' => 'report_open_shifts', 'unresolved_breaks' => 'unresolved_discrepancies'] as $type => $key) {
         if ($counts[$type] > 0) $review[__($key)] = number_format($counts[$type]);
     }
     return [
         'scope' => $scope,
         'staff_count' => count($staff),
         'record_count' => count($rows),
+        'unresolved_breaks_count' => $counts['unresolved_breaks'],
         'review' => $review,
         'basis' => __('report_attendance_basis'),
         'records' => $rows,
@@ -292,7 +322,7 @@ function report_emit_pdf_html(
     };
 
     // Analyze data structure and determine adaptive layout mode
-    $isAttendance = (count($headers) === 9);
+    $isAttendance = (count($headers) >= 9);
     $records = $context['records'] ?? [];
     $isSingleStaff = ($employee !== null);
 
@@ -1186,6 +1216,11 @@ function report_emit_pdf_html(
 
     // ——— Section B: Attendance Details ———
     echo '<div class="report-details-section">';
+    if (!empty($context['unresolved_breaks_count']) && $context['unresolved_breaks_count'] > 0) {
+        echo '<div style="background:#fffbeb;border:1.5px solid #f59e0b;padding:10px 14px;border-radius:6px;margin-bottom:14px;color:#92400e;font-size:8.5pt;line-height:1.4;">'
+            . '<strong>' . e(__('discrepancy_payroll_warning')) . '</strong>'
+            . '</div>';
+    }
 
     if ($layoutMode === 'all_multi' || $layoutMode === 'all_single') {
         // All Staff Grouped by Date (A4 Portrait 6-Column Layout)
@@ -1300,6 +1335,9 @@ function report_emit_pdf_html(
 
                 if ($isActiveShift) {
                     $workedHtml = '<span class="status-in-progress">' . e(__('in_progress')) . '</span>';
+                } elseif (in_array($r['break_review_status'] ?? '', ['under_review', 'correction_pending', 'rejected_unresolved'], true)) {
+                    $provMins = isset($r['provisional_work_minutes']) ? (int)$r['provisional_work_minutes'] : 0;
+                    $workedHtml = '<div class="duration-main" style="color:#b45309;">' . e(format_minutes((int)($r['work_minutes'] ?? 0))) . '</div><div class="sub-late" style="color:#b45309;font-weight:700;">Prov: ' . e(format_minutes($provMins)) . ' *</div>';
                 } else {
                     $workedHtml = '<span class="duration-main">' . e(format_minutes((int)($r['work_minutes'] ?? 0))) . '</span>';
                 }
@@ -1352,6 +1390,7 @@ function report_emit_pdf_html(
         echo '<th scope="col" class="text-center">' . e(__('status')) . '</th>';
         echo '</tr></thead><tbody>';
 
+        $statusColumnIndex = array_search(__('status'), $headers, true);
         foreach ($matrix as $rowIndex => $row) {
             $r = $context['records'][$rowIndex] ?? [];
             $workDate = (string)($r['work_date'] ?? '');
@@ -1361,7 +1400,7 @@ function report_emit_pdf_html(
             $clockOut = (string)($row[3] ?? '—');
             $lateMins = (int)($r['late_minutes'] ?? 0);
             $breakStr = (string)($row[5] ?? '0m');
-            $statusHtml = $formatCell((string)($row[7] ?? ''));
+            $statusHtml = $formatCell($statusColumnIndex !== false ? (string)($row[$statusColumnIndex] ?? '') : '');
             $isWfh = !empty($r['is_wfh']);
 
             $status = (string)($r['status'] ?? '');
@@ -1372,6 +1411,9 @@ function report_emit_pdf_html(
 
             if ($isActiveShift) {
                 $workedHtml = '<span class="status-in-progress">' . e(__('in_progress')) . '</span>';
+            } elseif (in_array($r['break_review_status'] ?? '', ['under_review', 'correction_pending', 'rejected_unresolved'], true)) {
+                $provMins = isset($r['provisional_work_minutes']) ? (int)$r['provisional_work_minutes'] : 0;
+                $workedHtml = '<div class="duration-main" style="color:#b45309;">' . e(format_minutes((int)($r['work_minutes'] ?? 0))) . '</div><div class="sub-late" style="color:#b45309;font-weight:700;">Prov: ' . e(format_minutes($provMins)) . ' *</div>';
             } else {
                 $workedHtml = '<span class="duration-main">' . e((string)($row[6] ?? '0m')) . '</span>';
             }

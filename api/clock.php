@@ -31,6 +31,34 @@ $action = $input['action'] ?? '';
 $user = current_user();
 $userId = (int) $user['id'];
 
+$hasIdempotencyKey = array_key_exists('HTTP_IDEMPOTENCY_KEY', $_SERVER);
+if ($hasIdempotencyKey) {
+    require_once __DIR__ . '/../includes/api_idempotency.php';
+    $requestKey = (string) $_SERVER['HTTP_IDEMPOTENCY_KEY'];
+    if ($action === 'clock_in') {
+        idempotent_attendance_api_response($userId, $requestKey, 'clock_in', [], static function () use ($userId): array {
+            $result = clock_in($userId);
+            return [
+                'result' => $result,
+                'attendance_id' => $result['attendance_id'] ?? (get_attendance($userId, today_str())['id'] ?? null),
+            ];
+        });
+    }
+    if ($action === 'clock_out') {
+        idempotent_attendance_api_response($userId, $requestKey, 'clock_out', [], static function () use ($userId): array {
+            $attendance = get_attendance($userId, today_str());
+            $activeBreak = get_active_break($userId);
+            $result = clock_out($userId);
+            return [
+                'result' => $result,
+                'attendance_id' => $attendance['id'] ?? null,
+                'break_id' => $activeBreak['id'] ?? null,
+            ];
+        });
+    }
+    json_response(['success' => false, 'outcome' => 'invalid_request', 'message' => __('msg_unknown_action')], 400);
+}
+
 try {
     if ($action === 'location_preference') {
         $preference = $input['preference'] ?? null;
